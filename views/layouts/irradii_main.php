@@ -735,6 +735,11 @@ $this->registerJs("
   ga('create', 'UA-66028133-1', 'auto');
   ga('send', 'pageview');
 
+  // Initialize SmartAdmin Widgets
+  if (typeof pageSetUp === 'function') {
+      pageSetUp();
+  }
+
 ", $this::POS_END);
         ?>
         <div id="payAndGoModal" role="dialog" tabindex="-1" class="modal fade">
