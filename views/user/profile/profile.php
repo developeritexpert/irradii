@@ -297,19 +297,15 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                         <header class="user-profile-header">
                             <span class="widget-icon"> <i class="fa fa-eye"></i> </span>
                             <h2>My Information</h2>
-
                         </header>
-
                         <!-- widget div-->
                         <div>
-
                             <!-- widget edit box -->
                             <div class="jarviswidget-editbox">
                                 <!-- This area used as dropdown edit box -->
 
                             </div>
                             <!-- end widget edit box -->
-
                             <!-- widget content -->
                             <div class="widget-body">
 
@@ -368,8 +364,6 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                     </div>
                                                 </section>
                                             </div>
-                                            
-
                                         </div>
                                     </div>
 
