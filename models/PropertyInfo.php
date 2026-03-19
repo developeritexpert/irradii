@@ -53,9 +53,64 @@ class PropertyInfo extends ActiveRecord
         return $this->hasOne(Zipcode::class, ['zip_id' => 'property_zipcode']);
     }
 
+    public function getCounty()
+    {
+        return $this->hasOne(County::class, ['county_id' => 'property_county_id']);
+    }
+
+    public function getUser()
+    {
+        return $this->hasOne(User::class, ['id' => 'mid']);
+    }
+
+    public function getUserprofile()
+    {
+        return $this->hasOne(UserProfiles::class, ['mid' => 'mid']);
+    }
+
     public function getPropertyInfoAdditionalBrokerageDetails()
     {
         return $this->hasOne(PropertyInfoAdditionalBrokerageDetails::class, ['property_id' => 'property_id']);
+    }
+
+    public function getPropertyInfoAdditionalBrokerageDetailsHistory()
+    {
+        return $this->hasOne(PropertyInfoAdditionalBrokerageDetailsHistory::class, ['property_id' => 'property_id']);
+    }
+
+    public function getPropertyInfoAdditionalDetails()
+    {
+        return $this->hasOne(PropertyInfoAdditionalDetails::class, ['property_id' => 'property_id']);
+    }
+
+    public function getPropertyInfoAdditionalDetailsHistory()
+    {
+        return $this->hasOne(PropertyInfoAdditionalDetailsHistory::class, ['property_id' => 'property_id']);
+    }
+
+    public function getPropertyInfoDetails()
+    {
+        return $this->hasOne(PropertyInfoDetails::class, ['property_id' => 'property_id']);
+    }
+
+    public function getPropertyInfoDetailsHistory()
+    {
+        return $this->hasOne(PropertyInfoDetailsHistory::class, ['property_id' => 'property_id']);
+    }
+
+    public function getPropertyInfoHistory()
+    {
+        return $this->hasOne(PropertyInfoHistory::class, ['property_id' => 'property_id']);
+    }
+
+    public function getPropertyInfoPhoto()
+    {
+        return $this->hasMany(PropertyInfoPhoto::class, ['property_id' => 'mls_sysid']);
+    }
+
+    public function getEventLogs()
+    {
+        return $this->hasMany(PropertyInfoEventLog::class, ['property_id' => 'property_id']);
     }
 
     public function getBrokerageJoin()
@@ -107,6 +162,41 @@ class PropertyInfo extends ActiveRecord
         }
 
         return $discont;
+    }
+
+    public function getEstimatedEquity($trueMV, $price)
+    {
+        if ($trueMV > $price) {
+            return $trueMV - $price;
+        }
+        return 0;
+    }
+
+    public function countPhoto()
+    {
+        $count = 0;
+        if (!empty($this->photo1)) {
+            $count++;
+        }
+        $photos = $this->propertyInfoPhoto;
+        if (!empty($photos)) {
+            foreach ($photos as $photo) {
+                for ($i = 2; $i <= 40; $i++) {
+                    $name = 'photo' . $i;
+                    if (!empty($photo->$name)) {
+                        $count++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        return $count;
+    }
+
+    public function getStatus()
+    {
+        return $this->propertyInfoAdditionalBrokerageDetails->status ?? '';
     }
 
     public function getUpdatedDateViaStatus()

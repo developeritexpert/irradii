@@ -51,7 +51,7 @@ class SiteHelper {
      * Send to user mail
      */
     public static function sendMail($email,$subject,$message) {
-//        $adminEmail = Yii::app()->params['adminEmail'];
+//        $adminEmail = Yii::$app->params['adminEmail'];
         
         $mail = new YiiMailer();
         $mail->clearLayout();//if layout is already set in config
@@ -68,7 +68,7 @@ class SiteHelper {
     }
     
     public static function isAdmin() {
-        $roles=Rights::getAssignedRoles(Yii::app()->user->Id); 
+        $roles=Rights::getAssignedRoles(Yii::$app->user->Id); 
         if(in_array('Admin', array_keys($roles))) {
             return true;
         }
@@ -94,7 +94,7 @@ class SiteHelper {
         foreach ($search_results as $search_result) {
             $discont = 0;
 
-            if (($search_result->percentage_depreciation_value >= Yii::app()->params['underValueDeals'])) {
+            if (($search_result->percentage_depreciation_value >= Yii::$app->params['underValueDeals'])) {
                 $discont = $search_result->percentage_depreciation_value;
             }
             if ($discont == 0) {
@@ -104,7 +104,7 @@ class SiteHelper {
                 }
             }
 
-            $is_discont = $discont >= Yii::app()->params['underValueDeals'];
+            $is_discont = $discont >= Yii::$app->params['underValueDeals'];
             if (isset($search_result->propertyInfoAdditionalBrokerageDetails->status)) {
                 $status = strtoupper($search_result->propertyInfoAdditionalBrokerageDetails->status);
                 $colorScheme = self::getColorScheme($status,$is_discont);
@@ -114,7 +114,7 @@ class SiteHelper {
             }
 
             /*User property status*/
-            $user_id = Yii::app()->user->getId();
+            $user_id = Yii::$app->user->getId();
             $user_status_label = '';
             if($user_id != null){
                 $user_property_info = SiteHelper::getUserPropertyStatus($user_id,$search_result->mls_sysid,$search_result->mls_name);
@@ -139,7 +139,7 @@ class SiteHelper {
             }
             $dat_status = $colorScheme['status'];
             $col1 = '';
-            $col1 .= '<h6 class=""><a href="'.Yii::app()->createUrl('property/details', array( 'slug'=>$search_result->slug->slug)).'"> ' . $search_result->fullAddress . '</a><span class="status-label pull-right">'.$user_status_label . $status_label .'</span></h6>' ;
+            $col1 .= '<h6 class=""><a href="'.Yii::$app->createUrl('property/details', array( 'slug'=>$search_result->slug->slug)).'"> ' . $search_result->fullAddress . '</a><span class="status-label pull-right">'.$user_status_label . $status_label .'</span></h6>' ;
             $col1 .= '<div style="position: relative;">';
             $col1 .= "<a class='property_info_row_map exclude-reinclude' data-lat='"
                         . $search_result->getlatitude . "' data-lon='" 
@@ -147,7 +147,7 @@ class SiteHelper {
                         . $dat_status . "' data-discont='"
                         . $discont ."' data-address= '"
                         . $search_result->property_street . "' data-property_id='"
-                        . $search_result->property_id . "' href=" . Yii::app()->createUrl('property/details', array( 'slug'=>$search_result->slug->slug)) . " > " 
+                        . $search_result->property_id . "' href=" . Yii::$app->createUrl('property/details', array( 'slug'=>$search_result->slug->slug)) . " > " 
                         . CPathCDN::checkPhoto($search_result, "img-responsive" ) . "</a>";
 
 
@@ -217,15 +217,15 @@ class SiteHelper {
     }
 
     public static function forMembersOnly($value) {
-        if (Yii::app()->user->isGuest) {
+        if (Yii::$app->user->isGuest) {
             return '<a data-dismiss="modal" data-toggle="modal" href="/user/login" data-target="#modal_login" >Members Only</a>';
         } else {
             return $value;
         }
     }
     public static function isMember() {
-        if (!Yii::app()->user->isGuest) {
-            $user_id = Yii::app()->user->id ? Yii::app()->user->id : null;
+        if (!Yii::$app->user->isGuest) {
+            $user_id = Yii::$app->user->id ? Yii::$app->user->id : null;
             if ($user_id == null) {
                 return false;
             }
@@ -242,14 +242,14 @@ class SiteHelper {
     }
 
     public static function forFullPaidMembersOnly($value) {
-        if (Yii::app()->user->isGuest) {
+        if (Yii::$app->user->isGuest) {
             return '<a data-dismiss="modal" data-toggle="modal" href="/user/login" data-target="#modal_login" >Members Only</a>';
         } else {
-            if ( self::isAdmin() || Yii::app()->controller->getExpireUser() > 0) {
+            if ( self::isAdmin() || Yii::$app->controller->getExpireUser() > 0) {
                 return $value;
             } else {
                 $subscriptions_left = 31 - Subscriptions::model()->count('subscription_id = :subscription_id', array(':subscription_id'=>'1'));
-                return '<a href="'.Yii::app()->params['linkToBuyingSubscr'].'" rel="popover-hover" data-placement="top" data-original-title="For only $99.00 a month, get FULL ACCESS MEMBERSHIP gives you the competitive advantage with our EXCLUSIVE search filters, library of analytics tools, time saving deal finding automation features, and full access to the complete live database of property listings. ACT NOW only '.$subscriptions_left.' memberships left." >Full Paid Members Only</a>';
+                return '<a href="'.Yii::$app->params['linkToBuyingSubscr'].'" rel="popover-hover" data-placement="top" data-original-title="For only $99.00 a month, get FULL ACCESS MEMBERSHIP gives you the competitive advantage with our EXCLUSIVE search filters, library of analytics tools, time saving deal finding automation features, and full access to the complete live database of property listings. ACT NOW only '.$subscriptions_left.' memberships left." >Full Paid Members Only</a>';
             }
         }
     }
@@ -337,7 +337,7 @@ class SiteHelper {
     }
     public static function buildPaymentFormFreeTrial($formConf){
         $subscr_form_data = PayPalIpn::getSubscriptionFormData(1);
-        $user_id =  Yii::app()->user->id;
+        $user_id =  Yii::$app->user->id;
         $current_plan = 1;
         $custom_data = array('user_id' => $user_id, 'service_id' => $current_plan);
         $form = '
@@ -362,7 +362,7 @@ class SiteHelper {
     public static function getColorIfUnderValueOrEquityDeals($details)
     {
         $discont = $details->getDiscontValue();
-        $condition = $discont >= Yii::app()->params['underValueDeals'];
+        $condition = $discont >= Yii::$app->params['underValueDeals'];
         $colorScheme = $condition ? 'scheme-text-success' : '';
 
         return $colorScheme;
@@ -372,7 +372,7 @@ class SiteHelper {
     {
         $discont = $details->getDiscontValue();
         $status = $details->propertyInfoAdditionalBrokerageDetails->status;
-        $condition = $discont >= Yii::app()->params['underValueDeals'];
+        $condition = $discont >= Yii::$app->params['underValueDeals'];
         $colorScheme = SiteHelper::getColorScheme($status,$condition);
 
         return $colorScheme;
@@ -529,8 +529,8 @@ class SiteHelper {
 
     public static function getUserProfile(){
         $profile = '';
-        if(!Yii::app()->user->isGuest) {
-            $userModel = User::model()->with('profile', 'profession')->findByPk(Yii::app()->user->id);
+        if(!Yii::$app->user->isGuest) {
+            $userModel = User::model()->with('profile', 'profession')->findByPk(Yii::$app->user->id);
             $profile = $userModel->profile;
         }
         return $profile;
