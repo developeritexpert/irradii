@@ -1,0 +1,219 @@
+<?php
+
+use yii\helpers\Html;
+use yii\helpers\Url;
+use yii\widgets\ActiveForm;
+
+/* @var $this yii\web\View */
+/* @var $model app\models\LoginForm */
+
+$themePath = Yii::$app->view->theme->baseUrl ?? '';
+
+$this->params['signin'] = Html::a('Create account', ['/user/registration'], ['class'=>'btn btn-danger']);
+$this->params['body_ID'] = 'login';
+
+$title = Yii::$app->request->get('title');
+$act_content = Yii::$app->request->get('content');
+
+?>
+
+<div id="main" role="main">
+<div id="content" class="container">
+<div class="row">
+
+<div class="col-xs-12 col-sm-12 col-md-7 col-lg-8 hidden-xs hidden-sm">
+
+<div class="row">
+<div class="hero">
+
+<div class="pull-left login-desc-box-ll col-xs-12 col-sm-12 col-md-6 col-lg-5">
+
+<h1 class="txt-color-red login-header-big">Irradii Real Estate</h1>
+
+<h4 class="paragraph-header">
+Real estate search just got a whole lot smarter!
+Irradii is your eye into a market full of valuable real estate opportunities all around you.
+</h4>
+
+<div class="login-app-icons">
+
+<a href="<?= Url::to(['property/search']) ?>" class="btn btn-danger btn-sm">
+Search Now
+</a>
+
+<a href="<?= Url::to(['blog/index']) ?>" class="btn btn-danger btn-sm">
+Visit our Blog
+</a>
+
+</div>
+</div>
+
+<div class="pull-right login-desc-box-ll col-xs-12 col-sm-12 col-md-6 col-lg-7" style="overflow: hidden;">
+</div>
+
+</div>
+
+<div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+
+<h5 class="about-heading">
+Find real estate opportunities all around you!
+</h5>
+
+<p>
+Our patent pending search technology crunches data on millions of
+property records each night to filter and find the best market
+value opportunities available each morning.
+Wake up each morning to a list of properties available for sale
+today that are 20% - 50%+ below market value!
+</p>
+
+</div>
+
+<div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+
+<h5 class="about-heading">Our Promise to You -</h5>
+
+<p>
+We are dedicated to providing the most accurate real estate values,
+with tools to help you make stronger, faster and more educated real
+estate decisions - an edge that can save or make you tens of
+thousands of dollars.
+</p>
+
+</div>
+
+</div>
+</div>
+
+<div class="col-xs-12 col-sm-12 col-md-5 col-lg-4">
+
+<div class="well no-padding">
+<div class="form">
+
+<?php $form = ActiveForm::begin([
+'id' => 'login-form',
+'options' => ['class' => 'smart-form client-form']
+]); ?>
+
+<header>
+Sign In
+</header>
+
+<fieldset>
+
+<section>
+
+<label class="label">E-mail</label>
+
+<label class="input<?= $model->hasErrors('username') ? ' state-error' : '' ?>">
+<i class="icon-append fa fa-user"></i>
+
+<?= $form->field($model,'username')
+->textInput(['maxlength'=>130])
+->label(false) ?>
+
+<b class="tooltip tooltip-top-right">
+<i class="fa fa-user txt-color-teal"></i>
+Please enter email address/username
+</b>
+
+</label>
+
+</section>
+
+<section>
+
+<label class="label">Password</label>
+
+<label class="input<?= $model->hasErrors('password') ? ' state-error' : '' ?>">
+<i class="icon-append fa fa-lock"></i>
+
+<?= $form->field($model,'password')
+->passwordInput(['maxlength'=>32])
+->label(false) ?>
+
+<b class="tooltip tooltip-top-right">
+<i class="fa fa-lock txt-color-teal"></i>
+Enter your password
+</b>
+
+</label>
+
+<div class="note">
+
+<?= Html::a(
+'Forgot password?',
+Url::to(['/user/recovery'])
+) ?>
+
+</div>
+
+</section>
+
+<section>
+
+<label class="checkbox">
+<input type="checkbox" name="remember" checked>
+<i></i>Stay signed in
+</label>
+
+</section>
+
+</fieldset>
+
+<footer>
+
+<?= Html::submitButton(
+'Sign in',
+['class'=>'btn btn-primary']
+) ?>
+
+</footer>
+
+<?php ActiveForm::end(); ?>
+
+</div>
+</div>
+
+<h5 class="text-center">
+- Or sign in using -
+</h5>
+                <?= \yii\authclient\widgets\AuthChoice::widget([
+                    'baseAuthUrl' => ['user/auth']
+                ]) ?>
+            </div>
+            <!-- END RIGHT PANEL -->
+        </div>
+    </div>
+</div>
+
+<?php
+
+if ($title && $act_content) {
+
+$js = "
+
+var title = '".$title."';
+var mess = '".$act_content."';
+
+$.SmartMessageBox({
+
+title : '<span class=\"txt-color-orangeDark\"><strong>'+title+'</strong></span>',
+content : mess,
+buttons : '[Ok]'
+
+}, function(ButtonPressed) {
+
+if (ButtonPressed == 'Ok') {
+$('#MsgBoxBack').addClass('animated fadeOutUp');
+}
+
+});
+
+";
+
+$this->registerJs($js, \yii\web\View::POS_END);
+
+}
+
+?>
