@@ -642,11 +642,20 @@ $this->registerJs("
             'depends' => [\yii\web\JqueryAsset::class]
         ]);
 
-        // 2. Google Maps - Updated for Yii2 and API Key requirement
+        // 2. Google Maps - Must load before alerts.js which uses it
         $this->registerJsFile('https://maps.googleapis.com/maps/api/js?key=' . Yii::$app->params['googleMapsKey'] . '&libraries=drawing,places', [
             'position' => $this::POS_END,
-            'async' => true,
-            'defer' => true
+            'depends' => [\yii\web\JqueryAsset::class]
+        ]);
+
+        $this->registerJsFile('@web/js/jquery-ui.min.js', [
+            'position' => $this::POS_END,
+            'depends' => [\yii\web\JqueryAsset::class]
+        ]);
+
+        $this->registerJsFile('@web/js/alerts.js', [
+            'position' => $this::POS_END,
+            'depends' => [\yii\web\JqueryAsset::class]
         ]);
 
         // 3. DataTables Sorting Plugins (Must load after jQuery)

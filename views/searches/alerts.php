@@ -321,14 +321,14 @@ $this->title = 'Searches/Alerts';
 
                                             <p><a  href="javascript:void(0);"
                                                    class="savedSearchLinkedEmails"
+                                                   style="color: #a90329;"
                                                    data-type="email"
                                                    data-pk="0"
                                                    data-name="email"
                                                    data-saved_search_id=<?php echo $savedSearch->id?>
                                                    data-url="<?php echo Url::to(['searches/editable'])?>"
                                                    data-emptytext="Add"
-                                                   data-original-title="Enter email">
-                                                </a>
+                                                   data-original-title="Enter email">Add</a>
                                             </p>
                                         </td>
 
@@ -479,8 +479,9 @@ you can add as many as you like
 
 
 
+
 <?php
-$this->registerJsFile("@web/js/alerts.js", ['depends' => [\yii\web\JqueryAsset::class]]);
+// alerts.js registration moved to layout to ensure it loads after concat-build.min.js
 ?>
 
 
