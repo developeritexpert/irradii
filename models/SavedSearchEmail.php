@@ -9,7 +9,7 @@ class SavedSearchEmail extends ActiveRecord
 {
     public static function tableName()
     {
-        return '{{%tbl_saved_search_emails}}';
+        return '{{%saved_search_emails}}';
     }
 
     public function rules()

@@ -407,7 +407,6 @@ $this->title = 'Searches/Alerts';
                         </div>
                         <!-- end widget edit box -->
 
-
                         <?php foreach($partials as $partial): ?>
                             <?php echo  $partial ?>
 

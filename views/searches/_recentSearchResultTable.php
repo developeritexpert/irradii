@@ -24,13 +24,13 @@
         <?php foreach($property_models as $property_model): ?>
 
             <tr>
-                <td><?php // echo $this->render('@app/views/property/_property_image_block', ['property_model' => $property_model])?></td>
-                <td><?php // echo $this->render('@app/views/property/_property_address_block', ['property_model' => $property_model])?></td>
-                <td><?php // echo $this->render('@app/views/property/_property_status_mark', ['property_model' => $property_model])?></td>
-                <td><?php // echo $this->render('@app/views/property/_property_price_block', ['property_model' => $property_model])?></td>
-                <td><?php // echo $this->render('@app/views/property/_property_sqft_block', ['property_model' => $property_model])?></td>
-                <td><?php // echo $this->render('@app/views/property/_property_bedbath_block', ['property_model' => $property_model])?></td>
-                <td><?php // echo $this->render('@app/views/property/_property_date_block', ['property_model' => $property_model])?></td>
+                <td><?= $this->render('@app/views/property/_property_image_block', ['property_model' => $property_model])?></td>
+                <td><?= $this->render('@app/views/property/_property_address_block', ['property_model' => $property_model])?></td>
+                <td><?= $this->render('@app/views/property/_property_status_mark', ['property_model' => $property_model])?></td>
+                <td><?= $this->render('@app/views/property/_property_price_block', ['property_model' => $property_model])?></td>
+                <td><?= $this->render('@app/views/property/_property_sqft_block', ['property_model' => $property_model])?></td>
+                <td><?= $this->render('@app/views/property/_property_bedbath_block', ['property_model' => $property_model])?></td>
+                <td><?= $this->render('@app/views/property/_property_date_block', ['property_model' => $property_model])?></td>
             </tr>
 
         <?php endforeach; ?>

@@ -92,7 +92,7 @@ class SavedSearch extends ActiveRecord
 
     public static function tableName()
     {
-        return '{{%tbl_saved_searches}}';
+        return '{{%saved_searches}}';
     }
 
     public static function getAllSaleTypes()
@@ -486,7 +486,7 @@ class SavedSearch extends ActiveRecord
         }
 
         if (empty($resArray[0]['matches'])) {
-            return [];
+            return $this->dbFallbackSearch($params);
         }
 
         $property_ids = [];
@@ -588,5 +588,332 @@ class SavedSearch extends ActiveRecord
             $address = implode(' ', $address_arr);
         }
         return $address;
+    }
+
+    /**
+     * Database-based fallback search for when Sphinx is unavailable.
+     * Performs basic filtering on PropertyInfo table.
+     */
+    /**
+     * Database-based fallback search for when Sphinx is unavailable.
+     * Mirrors the Yii1 Sphinx makeSearch logic using database queries.
+     * Handles: sale_type, property_type, price, sqft, bed, bath, year_built,
+     * lot_size, garage, pool, bmarket, city, state, zipcode, address, keywords.
+     */
+    private function dbFallbackSearch($params)
+    {
+        $query = PropertyInfo::find()->select('property_info.property_id');
+        $criteria = $this->savedSearchCriteria;
+
+        // Collect criteria into a keyed array for multi-pass processing
+        $criteriaMap = [];
+        foreach ($criteria as $criteria_item) {
+            $attr_name = $criteria_item->attr_name;
+            $attr_value = @unserialize($criteria_item->attr_value);
+
+            if ($attr_value === false && $criteria_item->attr_value !== 'b:0;') {
+                $attr_value = $criteria_item->attr_value;
+            }
+
+            if (empty($attr_value) && $attr_value !== 0 && $attr_value !== '0') {
+                continue;
+            }
+
+            $criteriaMap[$attr_name] = $attr_value;
+        }
+
+        // Track whether we need the brokerage details join
+        $needsBrokerageJoin = false;
+
+        // --- sale_type handling (matches Yii1 Sphinx logic) ---
+        if (!empty($criteriaMap['sale_type'])) {
+            $sale_type = $criteriaMap['sale_type'];
+            $needsBrokerageJoin = true;
+
+            // Active statuses used across most sale types
+            $activeStatuses = ['Active', 'Active Exclusive Right', 'Active-Exclusive Right',
+                'Auction', 'Exclusive Agency', 'For Sale'];
+
+            switch ($sale_type) {
+                case 'For Sale':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses]);
+                    // Exclude rentals (property_type = 9)
+                    $query->andWhere(['not', ['property_info.property_type' => 9]]);
+                    break;
+
+                case 'Under Value':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses]);
+                    $query->andWhere(['>=', 'property_info.percentage_depreciation_value', 5]);
+                    $query->andWhere(['<', 'property_info.percentage_depreciation_value', 15]);
+                    $query->andWhere(['property_info.property_type' => [0,1,2,3,4,5,6,7,8,16]]);
+                    break;
+
+                case 'Equity Deals':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses]);
+                    $query->andWhere(['>=', 'property_info.percentage_depreciation_value', 15]);
+                    $query->andWhere(['property_info.property_type' => [0,1,2,3,4,5,6,7,8,16]]);
+                    break;
+
+                case 'Foreclosures':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses])
+                        ->andWhere(['property_info_additional_brokerage_details.foreclosure' => 'yes']);
+                    $query->andWhere(['not', ['property_info.property_type' => 9]]);
+                    break;
+
+                case 'Shortsales':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses])
+                        ->andWhere(['property_info_additional_brokerage_details.short_sale' => 'yes']);
+                    $query->andWhere(['not', ['property_info.property_type' => 9]]);
+                    break;
+
+                case 'Owner Will Carry':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses])
+                        ->andWhere(['like', 'property_info_additional_brokerage_details.financing_considered', 'OWC']);
+                    $query->andWhere(['not', ['property_info.property_type' => 9]]);
+                    break;
+
+                case 'AITD Opportunities':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses])
+                        ->andWhere(['like', 'property_info_additional_brokerage_details.financing_considered', 'AITD']);
+                    $query->andWhere(['not', ['property_info.property_type' => 9]]);
+                    break;
+
+                case 'For Rent':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->andWhere(['property_info.property_type' => 9]);
+                    break;
+
+                case 'ALL Sale Types':
+                    $query->andWhere(['property_info.visible' => '1']);
+                    break;
+
+                case 'All Property Records':
+                    $query->andWhere(['property_info.visible' => '1']);
+                    break;
+
+                case 'Mid Cap Rental Potential':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses]);
+                    $query->andWhere(['not', ['property_info.property_type' => 9]]);
+                    // mid_cap is a Sphinx computed attribute; approximate with cap_rate range
+                    break;
+
+                case 'High Cap Rental Potential':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses]);
+                    $query->andWhere(['not', ['property_info.property_type' => 9]]);
+                    break;
+
+                case 'Rental Properties With Equity':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->andWhere(['>=', 'property_info.percentage_depreciation_value', 6]);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses]);
+                    break;
+
+                case 'High Cap And High Equity Opportunities':
+                    $query->andWhere(['property_info.property_status' => 'Active']);
+                    $query->andWhere(['>=', 'property_info.percentage_depreciation_value', 10]);
+                    $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                        ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses]);
+                    break;
+            }
+        }
+
+        // --- property_type ---
+        if (!empty($criteriaMap['property_type']) && is_array($criteriaMap['property_type'])) {
+            $mapped_types = [];
+            $sub_types = [];
+            foreach ($criteriaMap['property_type'] as $type_code) {
+                if ($type_code == 'AK') {
+                    $mapped_types[] = 1;
+                    $sub_types[] = 'Attached';
+                } elseif ($type_code == 'HI') {
+                    $mapped_types[] = 1;
+                    $sub_types[] = 'Detached';
+                } else {
+                    $mapped = $this->mapPropertyTypeCode($type_code);
+                    if ($mapped !== null) {
+                        $mapped_types[] = $mapped;
+                    }
+                }
+            }
+            $mapped_types = array_unique(array_filter($mapped_types));
+            if (!empty($mapped_types)) {
+                $query->andWhere(['property_info.property_type' => $mapped_types]);
+            }
+            if (!empty($sub_types)) {
+                $query->andWhere(['property_info.sub_type' => $sub_types]);
+            }
+        }
+
+        // --- Location filters ---
+        if (!empty($criteriaMap['city'])) {
+            $query->joinWith('city')->andWhere(['city.city_name' => $criteriaMap['city']]);
+        }
+        if (!empty($criteriaMap['state'])) {
+            $query->joinWith('state')->andWhere(['state.state_code' => $criteriaMap['state']]);
+        }
+        if (!empty($criteriaMap['zipcode'])) {
+            $query->joinWith('zipcode')->andWhere(['zipcode.zip_code' => $criteriaMap['zipcode']]);
+        }
+
+        // --- Address / Keywords ---
+        if (!empty($criteriaMap['address'])) {
+            $address = trim($criteriaMap['address']);
+            // Case-insensitive match for "City, State, USA" pattern
+            if (preg_match('/^([^,]+),\s*([A-Z]{2}),\s*USA$/i', $address, $matches)) {
+                $cityName = trim($matches[1]);
+                $stateCode = strtoupper(trim($matches[2]));
+                $query->joinWith('city')->andWhere(['or', 
+                    ['city.city_name' => $cityName],
+                    ['city.city_name' => strtoupper($cityName)]
+                ]);
+                $query->joinWith('state')->andWhere(['state.state_code' => $stateCode]);
+            } else {
+                $query->andWhere(['like', 'property_info.property_street', $address]);
+            }
+        }
+        if (!empty($criteriaMap['keywords'])) {
+            $query->andWhere(['or',
+                ['like', 'property_info.property_street', $criteriaMap['keywords']],
+                ['like', 'property_info.public_remarks', $criteriaMap['keywords']]
+            ]);
+        }
+
+        // --- Price ---
+        if (!empty($criteriaMap['min_price'])) {
+            $query->andWhere(['>=', 'property_info.property_price', $this->cleanNumeric($criteriaMap['min_price'])]);
+        }
+        if (!empty($criteriaMap['max_price'])) {
+            $query->andWhere(['<=', 'property_info.property_price', $this->cleanNumeric($criteriaMap['max_price'])]);
+        }
+
+        // --- Bed / Bath ---
+        if (!empty($criteriaMap['bed'])) {
+            $val = $this->cleanNumeric($criteriaMap['bed']);
+            if ($val > 0) {
+                $query->andWhere(['>=', 'property_info.bedrooms', $val]);
+            }
+        }
+        if (!empty($criteriaMap['bath'])) {
+            $val = $this->cleanNumeric($criteriaMap['bath']);
+            if ($val > 0) {
+                $query->andWhere(['>=', 'property_info.bathrooms', $val]);
+            }
+        }
+
+        // --- Square footage ---
+        if (!empty($criteriaMap['min_sqft'])) {
+            $query->andWhere(['>=', 'property_info.house_square_footage', $this->cleanNumeric($criteriaMap['min_sqft'])]);
+        }
+        if (!empty($criteriaMap['max_sqft'])) {
+            $query->andWhere(['<=', 'property_info.house_square_footage', $this->cleanNumeric($criteriaMap['max_sqft'])]);
+        }
+
+        // --- Year built ---
+        if (!empty($criteriaMap['min_year_built'])) {
+            $val = $this->cleanNumeric(trim($criteriaMap['min_year_built'], 'Yr'));
+            if ($val > 0) {
+                $query->andWhere(['>=', 'property_info.year_biult_id', $val]);
+            }
+        }
+        if (!empty($criteriaMap['max_year_built'])) {
+            $val = $this->cleanNumeric(trim($criteriaMap['max_year_built'], 'Yr'));
+            if ($val > 0) {
+                $query->andWhere(['<=', 'property_info.year_biult_id', $val]);
+            }
+        }
+
+        // --- Lot size ---
+        if (!empty($criteriaMap['min_lot_size'])) {
+            $query->andWhere(['>=', 'property_info.lot_acreage', (float)$criteriaMap['min_lot_size']]);
+        }
+        if (!empty($criteriaMap['max_lot_size'])) {
+            $query->andWhere(['<=', 'property_info.lot_acreage', (float)$criteriaMap['max_lot_size']]);
+        }
+
+        // --- Garage ---
+        if (isset($criteriaMap['garage'])) {
+            $query->andWhere(['property_info.garages' => $criteriaMap['garage']]);
+        }
+
+        // --- Pool ---
+        if (isset($criteriaMap['pool'])) {
+            $query->andWhere(['property_info.pool' => ($criteriaMap['pool'] == 1) ? 1 : 0]);
+        }
+
+        // --- Below market (bmarket) ---
+        if (!empty($criteriaMap['bmarket'])) {
+            $bmarketVal = $this->cleanNumeric($criteriaMap['bmarket']);
+            if ($bmarketVal > 0) {
+                $query->andWhere(['>=', 'property_info.percentage_depreciation_value', $bmarketVal]);
+            }
+        }
+
+        // --- Bounding Box (latitude1, latitude2, longitude1, longitude2) ---
+        if (isset($criteriaMap['latitude1'], $criteriaMap['latitude2'], $criteriaMap['longitude1'], $criteriaMap['longitude2'])) {
+            $latMin = min((float)$criteriaMap['latitude1'], (float)$criteriaMap['latitude2']);
+            $latMax = max((float)$criteriaMap['latitude1'], (float)$criteriaMap['latitude2']);
+            $lonMin = min((float)$criteriaMap['longitude1'], (float)$criteriaMap['longitude2']);
+            $lonMax = max((float)$criteriaMap['longitude1'], (float)$criteriaMap['longitude2']);
+
+            $query->andWhere(['between', 'property_info.getlatitude', $latMin, $latMax]);
+            $query->andWhere(['between', 'property_info.getlongitude', $lonMin, $lonMax]);
+        }
+
+        $results = $query->orderBy(['property_info.property_id' => SORT_DESC])
+            ->limit($params['limit'])
+            ->asArray()
+            ->all();
+
+        return array_column($results, 'property_id');
+    }
+
+    /**
+     * Strip non-numeric characters from price/value strings like "$400,000".
+     */
+    private function cleanNumeric($val)
+    {
+        if (is_numeric($val)) return (int)$val;
+        if (!is_string($val)) return (int)$val;
+        return (int)preg_replace('/[^0-9]/', '', $val);
+    }
+
+    /**
+     * Map legacy property type codes (used in search forms) to database integer values.
+     * Matches Yii1 SavedSearch::makeSearch property_type switch logic.
+     */
+    private function mapPropertyTypeCode($code)
+    {
+        $mapping = [
+            'AK' => 1, 'HI' => 1, // Single Family (Attached/Detached)
+            'NV' => 1,
+            'OR' => 16, // High Rise (matches Yii1 line 384)
+            'CA1' => 2, // Condo
+            'TH' => 3,  // Townhouse
+            'DP' => 4, 'TP' => 4, 'FP' => 4, // Multi Family (Duplex/Triplex/Fourplex)
+            'AZ' => 6,  // Mobile Home
+            'CO' => 7,  // Manufactured Home
+            'AL' => 5,  // Land
+            'Rental' => 9, // Rental
+        ];
+        return $mapping[$code] ?? (is_numeric($code) ? (int)$code : null);
     }
 }

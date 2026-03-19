@@ -43,7 +43,7 @@ class SavedSearchCriteria extends ActiveRecord
 
     public static function tableName()
     {
-        return '{{%tbl_saved_search_criteria}}';
+        return '{{%saved_search_criteria}}';
     }
 
     public function rules()

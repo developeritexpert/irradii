@@ -89,6 +89,7 @@ class SearchesController extends Controller
             if (class_exists(PropertyInfo::class) && !empty($searchResults)) {
                 $property_models = PropertyInfo::find()
                     ->where(['property_id' => $searchResults])
+                    ->with(['slug', 'city', 'state', 'zipcode', 'propertyInfoAdditionalBrokerageDetails', 'brokerageJoin'])
                     ->orderBy(['property_id' => SORT_DESC])
                     ->all();
             }

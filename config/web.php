@@ -66,6 +66,16 @@ $config = [
             ],
         ],
         'db' => $db,
+        'search' => [
+            'class' => 'app\components\search\DGSphinxSearch',
+            'server' => '127.0.0.1',
+            'port' => 9312,
+            'maxQueryTime' => 3000,
+            'fieldWeights' => [
+                'name' => 10000,
+                'keywords' => 100,
+            ],
+        ],
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
