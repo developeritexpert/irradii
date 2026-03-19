@@ -116,4 +116,12 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return $this->hasOne(UserProfiles::class, ['mid' => 'id']);
     }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProfession()
+    {
+        return $this->hasMany(TblAuthAssignment::class, ['userid' => 'id']);
+    }
 }

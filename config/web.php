@@ -71,6 +71,10 @@ $config = [
             'showScriptName' => false,
             'rules' => [
                 'user/login' => 'login/login',
+                'searches/alerts' => 'searches/alerts',
+                'searches/delete' => 'searches/delete',
+                'searches/editable' => 'searches/editable',
+                'searches/unsubscribe/<email>' => 'searches/unsubscribe',
             ],
         ],
     ],
