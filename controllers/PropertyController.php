@@ -1,4 +1,23 @@
-<?php
+namespace app\controllers;
+
+use Yii;
+use yii\web\Controller;
+use yii\web\HttpException;
+use app\components\SiteHelper;
+use app\components\CPathCDN;
+use yii\helpers\Json;
+use yii\db\Expression;
+use app\models\User;
+use app\models\PropertyInfo;
+use app\models\TblUserPropertyInfo;
+use app\models\City;
+use app\models\County;
+use app\models\State;
+use app\models\Zipcode;
+use app\models\PropertyInfoSlug;
+
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 
 class PropertyController extends Controller {
 
@@ -7,7 +26,7 @@ class PropertyController extends Controller {
      * using two-column layout. See 'protected/views/layouts/column2.php'.
      */
     //public $defaultAction = 'details';
-    public $layout = '//layouts/irradii';
+    public $layout = 'irradii_main';
     private $_lat;
     private $_lon;
     private $tail = false;
@@ -105,13 +124,13 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 1-0: ' . $time ,'ERROR'); // 8.1081488132477
+//Yii::info('Step 1-0: ' . $time ,'ERROR'); // 8.1081488132477
 
-        if (!Yii::app()->user->isGuest  || Yii::app()->user->isGuest /**/ ) { // @TODO This for demonstration ONLY
-            if (!Yii::app()->user->isGuest) {
-                $model = User::model()->cache(1000, null, 3)->with('profile', 'profession')->findByPk(Yii::app()->user->id);
+        if (!Yii::$app->user->isGuest  || Yii::$app->user->isGuest /**/ ) { // @TODO This for demonstration ONLY
+            if (!Yii::$app->user->isGuest) {
+                $model = User::model()->cache(1000, null, 3)->with('profile', 'profession')->findByPk(Yii::$app->user->id);
                 if (!is_object($model)) {
-                    $this->redirect(Yii::app()->createUrl('/user/login'));
+                    $this->redirect(Yii::$app->createUrl('/user/login'));
                 }
                 $profile = $model->profile;
                 $user_id = $model->id;
@@ -145,15 +164,15 @@ class PropertyController extends Controller {
                     ));
 
                     if($user_property_info == NULL){
-                        $command = Yii::app()->db->createCommand();
+                        $command = Yii::$app->db->createCommand();
                         $command->insert('tbl_user_property_info', array(
                             'user_id' => $user_id,
                             'mls_sysid'=>$mls_sysid,
                             'mls_name'=>$mls_name,
                             'user_property_status' => 'Viewed',
-                            'create_date'=>new CDbExpression('NOW()'),
-                            'last_changed_date'=>new CDbExpression('NOW()'),
-                            'last_viewed_date'=>new CDbExpression('NOW()')
+                            'create_date'=>new new Expression('NOW()'),
+                            'last_changed_date'=>new new Expression('NOW()'),
+                            'last_viewed_date'=>new new Expression('NOW()')
                         ));
                         $user_property_info = TblUserPropertyInfo::model()->findByAttributes(array(
                             'user_id'=>$user_id,'mls_sysid'=>$mls_sysid, 'mls_name'=>$mls_name
@@ -163,11 +182,11 @@ class PropertyController extends Controller {
                         if(strtotime($details->property_uploaded_date) > strtotime($user_property_info->last_viewed_date)){
                             $user_property_info->user_property_status = 'Updated';
                         }
-                        $command = Yii::app()->db->createCommand();
+                        $command = Yii::$app->db->createCommand();
                         $command->update(
                             'tbl_user_property_info',
                             array(
-                                'last_viewed_date'=>new CDbExpression('NOW()')
+                                'last_viewed_date'=>new new Expression('NOW()')
                             ),
                             'user_id=:user_id AND
                             mls_name=:mls_name AND
@@ -185,7 +204,7 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 1: ' . $time ,'ERROR'); // 0.73820209503174
+//Yii::info('Step 1: ' . $time ,'ERROR'); // 0.73820209503174
             // temprarily : for old urls with id
             if(empty($details) && is_numeric($slug)) {
                 $details = PropertyInfo::model()->cache(1000,null,10)->with(
@@ -216,7 +235,7 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 2: ' . $time ,'ERROR'); // 0.7689750194549
+//Yii::info('Step 2: ' . $time ,'ERROR'); // 0.7689750194549
 
             if ($details->subdivision != '') {
                 $market_info['subdivision'] = TblCronMarketInfoSubdivision::model()->cache(1000,null,1)->findByAttributes(
@@ -254,7 +273,7 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 3: ' . $time ,'ERROR'); // 0.034250020980835
+//Yii::info('Step 3: ' . $time ,'ERROR'); // 0.034250020980835
 
 
             $market_info['zipcode'] = TblCronMarketInfoZipcode::model()->cache(1000,null,1)->findByAttributes(
@@ -319,19 +338,19 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 4: ' . $time ,'ERROR'); // 0.42208790779114
+//Yii::info('Step 4: ' . $time ,'ERROR'); // 0.42208790779114
 
             $similar_homes = $this->getSimilarHomesForSale($details->property_id,$details->property_zipcode, $details->property_price, $details->house_square_footage, $details->property_type, $details->year_biult_id);
             $s_homes = '';
             if($similar_homes){
                 $s_homes = $this->getSimilarHomes($similar_homes);
-//Yii::log('getSimilarHomes: ' . print_r($s_homes,1) ,'ERROR');
-//Yii::log('getSimilarHomesForSale: ' . print_r($similar_homes,1) ,'ERROR');
+//Yii::info('getSimilarHomes: ' . print_r($s_homes,1) ,'ERROR');
+//Yii::info('getSimilarHomesForSale: ' . print_r($similar_homes,1) ,'ERROR');
             }
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 5: ' . $time ,'ERROR'); // 0.012144088745117
+//Yii::info('Step 5: ' . $time ,'ERROR'); // 0.012144088745117
 
             $c_properties = '';
             $comparebles_properties = '';
@@ -348,15 +367,15 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 6: ' . $time ,'ERROR'); // 0.00029706954956055
+//Yii::info('Step 6: ' . $time ,'ERROR'); // 0.00029706954956055
 
             $countExcludeProperties = $this->countPropertiesExclude((object)$comparebles_properties);
-//Yii::log('estimated_value_subject_property 2: ' . $comparebles_properties['estimated_value_subject_property'] ,'ERROR');
+//Yii::info('estimated_value_subject_property 2: ' . $comparebles_properties['estimated_value_subject_property'] ,'ERROR');
 
                 $shape = '{}';
                 $excluded_by_shape = '[]';
-                if (Yii::app()->session->sessionID) {
-                    $session_id = Yii::app()->session->sessionID;
+                if (Yii::$app->session->sessionID) {
+                    $session_id = Yii::$app->session->sessionID;
                     $property_id = $details->property_id;
 
                     $mapShape = DetailsMapShape::model()->findByAttributes(array(
@@ -371,8 +390,8 @@ class PropertyController extends Controller {
                 }
 
             $this->render('property_details', array(
-                'model' => Yii::app()->user->isGuest ? '' : $model,
-                'profile' => Yii::app()->user->isGuest ? '' : $profile,
+                'model' => Yii::$app->user->isGuest ? '' : $model,
+                'profile' => Yii::$app->user->isGuest ? '' : $profile,
                 'details' => $details,
                 'user_property_info' => isset($user_property_info) ? $user_property_info : null,
                 'market_info' => (object) $market_info,
@@ -387,14 +406,14 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 7: ' . $time ,'ERROR'); // 1.7910590171814
+//Yii::info('Step 7: ' . $time ,'ERROR'); // 1.7910590171814
 
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start1;
-//Yii::log('Step All: ' . $time ,'ERROR'); // 11.875414848328
+//Yii::info('Step All: ' . $time ,'ERROR'); // 11.875414848328
             } else {
-//                throw new CHttpException(404,'Page does not exist asd.klfgans.gkln.');
-                throw new CHttpException(404,'This property could be gone already!');
+//                throw new new HttpException(404,'Page does not exist asd.klfgans.gkln.');
+                throw new new HttpException(404,'This property could be gone already!');
             }
         } else {
             $this->redirect('/user/login');
@@ -402,7 +421,7 @@ class PropertyController extends Controller {
     }
 
     public function actionGetCompPropertyDetails() {
-        if(Yii::app()->request->isAjaxRequest) {
+        if(Yii::$app->request->isAjaxRequest) {
             $id = isset($_POST['property_id']) ? $_POST['property_id'] : 0;
             $result = array();
             $property_type_array = array('0' => 'Unknown', '1' => 'Single Family Home', '2' => 'Condo', '3' => 'Townhouse', '4' => 'Multi Family', '5' => 'Land', '6' => 'Mobile Home', '7' => 'Manufactured Home', '8' => 'Time Share', '9' => 'Rental', '16' => 'High Rise');
@@ -428,7 +447,7 @@ class PropertyController extends Controller {
                 $discont = $details->getDiscontValue();
                 $tmv = $details->estimated_price;
                 $result['discont'] = '';
-                if ($discont >= Yii::app()->params['underValueDeals']) {
+                if ($discont >= Yii::$app->params['underValueDeals']) {
                     $result['discont'] = '<span class="label bg-color-greenDark">' . round($discont) . '% Below TMV</span>';
                 }
 
@@ -448,7 +467,7 @@ class PropertyController extends Controller {
                 }
                 $result['property_id'] = $details->property_id;
                 $result['property_street'] = $details->property_street;
-                $result['url'] = Yii::app()->createUrl('property/details', array( 'slug'=>$details->slug->slug));
+                $result['url'] = Yii::$app->createUrl('property/details', array( 'slug'=>$details->slug->slug));
                 $result['city'] = $details->city->city_name . ', ' . $details->state->state_code . ' ' . $details->zipcode->zip_code;
                 $result['subdivision'] = $details->subdivision;
                 $result['type'] =  (array_key_exists($details->property_type, $property_type_array)) ? $property_type_array[$details->property_type] : '';
@@ -457,16 +476,16 @@ class PropertyController extends Controller {
             }
 
 
-//            echo CJSON::encode($details);
+//            echo Json::encode($details);
             echo json_encode($result);
 
-            Yii::app()->end();
+            Yii::$app->end();
         }
     }
 
     public function actionUpdateMinStage() {
-        if (Yii::app()->request->isAjaxRequest) {
-            $session = Yii::app()->session;
+        if (Yii::$app->request->isAjaxRequest) {
+            $session = Yii::$app->session;
             $min_stages = array();
             $property_id = isset($_POST['property_id']) ? $_POST['property_id'] : 0;
             $min_stage = isset($_POST['min_stage']) ? $_POST['min_stage'] : 0;
@@ -486,18 +505,18 @@ class PropertyController extends Controller {
             );
 
             echo json_encode($response);
-            Yii::app()->end();
+            Yii::$app->end();
         }
     }
     
     public function actionUpdateUserPropertyStatus() {
-        if (Yii::app()->request->isAjaxRequest) {
+        if (Yii::$app->request->isAjaxRequest) {
             $response = array();
             $raw_slug = explode('slug=',$_POST['property_slug']);
             $slug = isset($raw_slug[1]) ? $raw_slug[1] : $_POST['property_slug'];
-            $model = User::model()->cache(1000, null, 3)->with('profile', 'profession')->findByPk(Yii::app()->user->id);
+            $model = User::model()->cache(1000, null, 3)->with('profile', 'profession')->findByPk(Yii::$app->user->id);
             if (!is_object($model)) {
-                $this->redirect(Yii::app()->createUrl('/user/login'));
+                $this->redirect(Yii::$app->createUrl('/user/login'));
             }
             $user_id = $model->id;
             $details = PropertyInfo::model()->cache(1000,null,1)->with(array(
@@ -511,7 +530,7 @@ class PropertyController extends Controller {
             ))->find();
             $mls_sysid = $details->mls_sysid;
             $mls_name = $details->mls_name;
-            $command = Yii::app()->db->createCommand();
+            $command = Yii::$app->db->createCommand();
 //            var_dump($mls_sysid, $mls_name); die('q');
             if($_POST['type'] == 'status'){
                 $userPropertyStatus=$_POST['user_property_status'];
@@ -526,7 +545,7 @@ class PropertyController extends Controller {
                     'tbl_user_property_info',
                     array(
                         'user_property_status' => $userPropertyStatus,
-                        'last_changed_date'=>new CDbExpression('NOW()')
+                        'last_changed_date'=>new new Expression('NOW()')
                     ),
                     'user_id=:user_id AND
                     mls_sysid=:mls_sysid',
@@ -552,7 +571,7 @@ class PropertyController extends Controller {
                     'tbl_user_property_info',
                     array(
                         'user_property_note' => $userPropertyNote,
-                        'last_changed_date'=>new CDbExpression('NOW()')
+                        'last_changed_date'=>new new Expression('NOW()')
                     ),
                     'user_id=:user_id AND
                     mls_name=:mls_name AND
@@ -573,11 +592,11 @@ class PropertyController extends Controller {
         }
 
         echo json_encode($response);
-        Yii::app()->end();
+        Yii::$app->end();
     }
 
     private function getMinStage($property_id) {
-        $session = Yii::app()->session;
+        $session = Yii::$app->session;
         $min_stages = array();
         $min_stage = 1;
 
@@ -593,8 +612,8 @@ class PropertyController extends Controller {
     }
 
     public function actionUpdateExcludedStatuses() {
-        if (Yii::app()->request->isAjaxRequest) {
-            $session = Yii::app()->session;
+        if (Yii::$app->request->isAjaxRequest) {
+            $session = Yii::$app->session;
             $excluded_statuses = array();
             $property_id = isset($_POST['property_id']) ? $_POST['property_id'] : 0;
             $excluded_statuses_for_prop = isset($_POST['excluded_statuses']) ? $_POST['excluded_statuses'] : array();
@@ -623,12 +642,12 @@ class PropertyController extends Controller {
 //            echo json_encode($session['excluded_statuses']);
 //            echo json_encode($this->getExcludedStatusesStr($property_id));
             echo json_encode($response);
-            Yii::app()->end();
+            Yii::$app->end();
         }
     }
 
     public function actionGetMoreConfidenceInfo(){
-        if(Yii::app()->request->isAjaxRequest){
+        if(Yii::$app->request->isAjaxRequest){
             $id = isset($_POST['property_id']) ? $_POST['property_id'] : 0;
             $this->tail = isset($_POST['tail']) ? $_POST['tail'] : false;
             $result = array();
@@ -673,8 +692,8 @@ class PropertyController extends Controller {
                 $result['c_properties'] = $c_properties;
                 $result['comparebles'] = $comparebles_properties;
             }
-            echo CJSON::encode($result);
-            Yii::app()->end();
+            echo Json::encode($result);
+            Yii::$app->end();
         }
     }
 
@@ -683,7 +702,7 @@ class PropertyController extends Controller {
         foreach ($similar_homes as $similar_home) {
 
             $discont = 0;
-            if (($similar_home['percentage_depreciation_value'] >= Yii::app()->params['underValueDeals'])) {
+            if (($similar_home['percentage_depreciation_value'] >= Yii::$app->params['underValueDeals'])) {
                 $discont = $similar_home['percentage_depreciation_value'];
             }
             if ($discont == 0) {
@@ -695,7 +714,7 @@ class PropertyController extends Controller {
 
             $similar_home = (object) $similar_home;
             $similar_home->fullAddress = $this->getFullAddress($similar_home);
-            $col1 = "<a href=" . Yii::app()->createUrl('property/details', array('slug'=>$similar_home->slug)) . " >" 
+            $col1 = "<a href=" . Yii::$app->createUrl('property/details', array('slug'=>$similar_home->slug)) . " >" 
                     . CPathCDN::checkPhoto($similar_home, "thumb-img-140", 0 ). "</a>";
             
             $col2 = '';
@@ -706,7 +725,7 @@ class PropertyController extends Controller {
             if (isset($similar_home->status)) {
                 $similar_stat = strtoupper($similar_home->status);
 
-                $conditon = $discont >= Yii::app()->params['underValueDeals'];
+                $conditon = $discont >= Yii::$app->params['underValueDeals'];
                 $colorScheme = SiteHelper::getColorScheme($similar_stat, $conditon);
 
                 $similar_widget__property_status = '<span class="label '.$colorScheme['label-color'].' ">';
@@ -780,7 +799,7 @@ class PropertyController extends Controller {
         $widget__property_status='';
 
         $discont = 0;
-        if (($comparebles_property->percentage_depreciation_value >= Yii::app()->params['underValueDeals'])) {
+        if (($comparebles_property->percentage_depreciation_value >= Yii::$app->params['underValueDeals'])) {
             $discont = $comparebles_property->percentage_depreciation_value;
         }
         if ($discont == 0) {
@@ -792,7 +811,7 @@ class PropertyController extends Controller {
 
         if (isset($comparebles_property->status)) {
             $comp_stat = strtoupper($comparebles_property->status);
-            $conditon = $discont >= Yii::app()->params['underValueDeals'];
+            $conditon = $discont >= Yii::$app->params['underValueDeals'];
             $colorScheme = SiteHelper::getColorScheme($comp_stat, $conditon);
 
             $widget__property_status = '<span class="label '.$colorScheme['label-color'].' ">';
@@ -814,8 +833,8 @@ class PropertyController extends Controller {
                     data-excluded="'.$excluded.'"
                     data-address= "' . $comparebles_property->property_street . '"
                     data-property_id= "' . $comparebles_property->property_id . '"
-                    data-property="' . Yii::app()->createUrl('property/details',array('slug'=> ($comparebles_property->property_id != $details->property_id)?$comparebles_property->slug:$details->slug->slug))
-                . '"     href="'. Yii::app()->createUrl('property/details',array('slug'=> ($comparebles_property->property_id != $details->property_id)?$comparebles_property->slug:$details->slug->slug)) . '">' . $comparebles_property->property_street;
+                    data-property="' . Yii::$app->createUrl('property/details',array('slug'=> ($comparebles_property->property_id != $details->property_id)?$comparebles_property->slug:$details->slug->slug))
+                . '"     href="'. Yii::$app->createUrl('property/details',array('slug'=> ($comparebles_property->property_id != $details->property_id)?$comparebles_property->slug:$details->slug->slug)) . '">' . $comparebles_property->property_street;
         } else {
 
             $col1 = '';
@@ -826,8 +845,8 @@ class PropertyController extends Controller {
                         data-excluded="'.$excluded.'"
                         data-address= "' . $comparebles_property->property_street . '"
                         data-property_id= "' . $comparebles_property->property_id . '"
-                        data-property="' . Yii::app()->createUrl('property/details',array('slug'=> ($comparebles_property->property_id != $details->property_id)?$comparebles_property->slug:$details->slug->slug))
-                            . '"     href="'. Yii::app()->createUrl('property/details',array('slug'=> ($comparebles_property->property_id != $details->property_id)?$comparebles_property->slug:$details->slug->slug)) . '">' . $comparebles_property->property_street;
+                        data-property="' . Yii::$app->createUrl('property/details',array('slug'=> ($comparebles_property->property_id != $details->property_id)?$comparebles_property->slug:$details->slug->slug))
+                            . '"     href="'. Yii::$app->createUrl('property/details',array('slug'=> ($comparebles_property->property_id != $details->property_id)?$comparebles_property->slug:$details->slug->slug)) . '">' . $comparebles_property->property_street;
         }
         if ($comparebles_property->photo1) {
             $comparebles_property->fullAddress = $this->getFullAddress($comparebles_property);
@@ -1005,7 +1024,7 @@ class PropertyController extends Controller {
 
         //<!--Days on Market -->
         $col22 = '';
-        $dtz  = new DateTimeZone(isset(Yii::app()->timeZone)?Yii::app()->timeZone:"UTC");
+        $dtz  = new DateTimeZone(isset(Yii::$app->timeZone)?Yii::$app->timeZone:"UTC");
         $datetime_now = new DateTime();
         $datetime_now->setTimezone($dtz);
         if($comparebles_property->property_id != $details->property_id){
@@ -1101,7 +1120,7 @@ class PropertyController extends Controller {
 
             if ($result_query_delete->exid == '') {
                 $row = array();
-                $row['mid'] = Yii::app()->user->id;
+                $row['mid'] = Yii::$app->user->id;
                 $row['session_id'] = $session_id;
                 $row['product_id'] = $del_id;
                 $model = new ExcludeProperty;
@@ -1183,7 +1202,7 @@ class PropertyController extends Controller {
         //was AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN ('HISTORY','EXPIRED','AUCTION')
         //AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN (". $excluded_statuses_str .")
 
-        $result_query = Yii::app()->db->createCommand($sql="SELECT
+        $result_query = Yii::$app->db->createCommand($sql="SELECT
                     count(`property_info`.`property_id`) AS count_property,
 
                     AVG( IF ( `property_info`.`house_square_footage`, `property_info`.`property_price` / `property_info`.`house_square_footage`, 0 ) ) AS comps_house_footage_average,
@@ -1249,7 +1268,7 @@ class PropertyController extends Controller {
                           {$compare_house_views}
                           {$compare_sub_type}
                           AND `property_info`.`property_id` != '" . $property_id . "'")->queryRow();
-//Yii::log('actionComparePropertyInfo sql: ' . $sql ,'ERROR');
+//Yii::info('actionComparePropertyInfo sql: ' . $sql ,'ERROR');
 
         return (object) $result_query;
     }
@@ -1260,7 +1279,7 @@ class PropertyController extends Controller {
     }
 
     public function actionTable2Tail() {
-        if (Yii::app()->request->isAjaxRequest) {
+        if (Yii::$app->request->isAjaxRequest) {
             $result = array();
             $result['status'] = 'error';
             $result['row'] = '';
@@ -1270,8 +1289,8 @@ class PropertyController extends Controller {
                 $result['status'] = 'success';
                 $result['row'] = TTable2Tail::model()->findByAttributes(array('df' => $df_count));
             }
-            echo CJSON::encode($result);
-            Yii::app()->end();
+            echo Json::encode($result);
+            Yii::$app->end();
         } else {
             $this->redirect('/');
         }
@@ -1285,7 +1304,7 @@ class PropertyController extends Controller {
         //was AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN ('HISTORY','EXPIRED','AUCTION')
         //AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN (". $excluded_statuses_str .")
 
-        $result_query = Yii::app()->db->createCommand("SELECT
+        $result_query = Yii::$app->db->createCommand("SELECT
             `property_info`.*,
             `property_info_details`.*,
             `property_info_additional_brokerage_details`.*,
@@ -1321,7 +1340,7 @@ class PropertyController extends Controller {
     }
 
     private function getExcludedStatusesStr($property_id) {
-        $session = Yii::app()->session;
+        $session = Yii::$app->session;
         $excluded_status_types_for_prop = $this->default_excluded_status_types;
         $excluded_statuses_for_prop = array();
         $default_excluded_statuses = array('DEFAULT');
@@ -1357,19 +1376,19 @@ class PropertyController extends Controller {
     }
     
     private function getExcludeProperty($session_id) {
-        $result_query = Yii::app()->db->createCommand("SELECT `exclude_property`.`product_id` 
+        $result_query = Yii::$app->db->createCommand("SELECT `exclude_property`.`product_id` 
                                        FROM `exclude_property`
                                        WHERE `exclude_property`.`session_id` = '" . $session_id . "'")->queryAll();
         return (object) $result_query;
     }
 
     public function actionUpdatePropsByShape() {
-        if (Yii::app()->request->isAjaxRequest) {
-            if (!Yii::app()->session->sessionID) {
-                Yii::app()->session->open();
+        if (Yii::$app->request->isAjaxRequest) {
+            if (!Yii::$app->session->sessionID) {
+                Yii::$app->session->open();
             }
 
-            $session_id = Yii::app()->session->sessionID;
+            $session_id = Yii::$app->session->sessionID;
             $property_id = isset($_POST['property_id']) ? $_POST['property_id'] : 0;
             $properties_for_excluding = isset($_POST['propertiesForExcluding']) ? $_POST['propertiesForExcluding'] : '';
             $properties_for_excluding = json_decode($properties_for_excluding, true);
@@ -1404,7 +1423,7 @@ class PropertyController extends Controller {
             foreach ($properties_for_excluding as $prop_id => $prop) {
                 $model = new ExcludeProperty;
                 $row = array();
-                $row['mid'] = Yii::app()->user->isGuest ? 0 : Yii::app()->user->id;
+                $row['mid'] = Yii::$app->user->isGuest ? 0 : Yii::$app->user->id;
                 $row['session_id'] = $session_id;
                 $row['product_id'] = $prop_id;
                 $model->attributes = $row;
@@ -1440,17 +1459,17 @@ class PropertyController extends Controller {
     }
 
     public function actionAddExcludeProperty() {
-        if (Yii::app()->request->isAjaxRequest) {
+        if (Yii::$app->request->isAjaxRequest) {
             $result = 'error';
-            if (!Yii::app()->session->sessionID) {
-                Yii::app()->session->open();
+            if (!Yii::$app->session->sessionID) {
+                Yii::$app->session->open();
             }
             $property_id = isset($_POST['property_id']) ? $_POST['property_id'] : 0;
             if ($property_id) {
                 $model = new ExcludeProperty;
                 $row = array();
-                $row['mid'] = Yii::app()->user->isGuest ? 0 : Yii::app()->user->id;
-                $row['session_id'] = Yii::app()->session->sessionID;
+                $row['mid'] = Yii::$app->user->isGuest ? 0 : Yii::$app->user->id;
+                $row['session_id'] = Yii::$app->session->sessionID;
                 $row['product_id'] = $property_id;
                 $model->attributes = $row;
                 if ($model->validate()) {
@@ -1461,21 +1480,21 @@ class PropertyController extends Controller {
                 exit();
             }
         } else {
-            $this->redirect(Yii::app()->createUrl("/"));
+            $this->redirect(Yii::$app->createUrl("/"));
         }
     }
 
     public function actionDeleteExcludeProperty() {
-        if (Yii::app()->request->isAjaxRequest) {
+        if (Yii::$app->request->isAjaxRequest) {
             $result = 'error';
-            if (!Yii::app()->session->sessionID) {
-                Yii::app()->session->open();
+            if (!Yii::$app->session->sessionID) {
+                Yii::$app->session->open();
             }
             $property_id = isset($_POST['property_id']) ? $_POST['property_id'] : 0;
             if ($property_id) {
                 $criteria = new CDbCriteria();
                 $criteria->condition = "product_id = :product_id AND session_id = :sesion_id";
-                $criteria->params = array(':product_id' => $property_id, ':sesion_id' => Yii::app()->session->sessionID);
+                $criteria->params = array(':product_id' => $property_id, ':sesion_id' => Yii::$app->session->sessionID);
                 ExcludeProperty::model()->deleteAll($criteria);
                 $result = 'success';
             }
@@ -1483,7 +1502,7 @@ class PropertyController extends Controller {
             exit();
         } else {
 
-            $this->redirect(Yii::app()->createUrl("/"));
+            $this->redirect(Yii::$app->createUrl("/"));
         }
     }
 
@@ -1524,10 +1543,10 @@ class PropertyController extends Controller {
         $curStage = $this->getMinStage($property_id);
         $gettoday_date = date('Y-m-d');
         $comp_time = date('Y-m-d', time() - 200 * 24 * 60 * 60);
-        if (!Yii::app()->session->sessionID) {
-            Yii::app()->session->open();
+        if (!Yii::$app->session->sessionID) {
+            Yii::$app->session->open();
         }
-        $session_id = Yii::app()->session->sessionID;
+        $session_id = Yii::$app->session->sessionID;
         if ($del_id) {
             $this->actionExcludeProperty($del_id, $session_id);
         }
@@ -1564,7 +1583,7 @@ class PropertyController extends Controller {
                                             $sub_type
                 );
         $result['estimated_value_subject_property_stage'] = $result['estimated_value_subject_property'];
-//Yii::log('estimated_value_subject_property 0-0: ' . print_r(array($result['estimated_value_subject_property'],$result['percentage_depreciation_value'],$result['current_stage'],$result['estimated_price_dollar']),1) ,'ERROR');
+//Yii::info('estimated_value_subject_property 0-0: ' . print_r(array($result['estimated_value_subject_property'],$result['percentage_depreciation_value'],$result['current_stage'],$result['estimated_price_dollar']),1) ,'ERROR');
             if (($result['estimated_value_subject_property'] < 500)
                     ||  ($result['percentage_depreciation_value'] < -1000) 
                     ||  ($result['percentage_depreciation_value'] > 95)) {
@@ -1597,15 +1616,15 @@ class PropertyController extends Controller {
             natsort($result['comparable_price_sparkline']);
             
         }
-//Yii::log('estimated_value_subject_property 0-1: ' . $result['estimated_value_subject_property'] ,'ERROR');
+//Yii::info('estimated_value_subject_property 0-1: ' . $result['estimated_value_subject_property'] ,'ERROR');
         return $result;
     }
 
     private function getCompMin($stage) {
         $comp_min = 0;
 
-        if ($stage <= Yii::app()->params['maxCalcStages']) {
-            $comps_min = Yii::app()->db->createCommand()
+        if ($stage <= Yii::$app->params['maxCalcStages']) {
+            $comps_min = Yii::$app->db->createCommand()
                 ->select('min_comp')
                 ->from('compare_estimated_price_table')
                 ->where('stage=:stage', array(':stage'=>$stage))
@@ -1692,7 +1711,7 @@ class PropertyController extends Controller {
         }
         $compare_subdivision = '';
         if (!empty($select_estimated_price_result->subdivision_comp) && !empty($subdivision)) {
-            $compare_subdivision = "AND property_info.subdivision = " . Yii::app()->db->quoteValue($subdivision);
+            $compare_subdivision = "AND property_info.subdivision = " . Yii::$app->db->quoteValue($subdivision);
         }
         $compare_house_views ='';
         if(!empty($select_estimated_price_result->house_views_comp) && !empty($house_views_list)){
@@ -1707,7 +1726,7 @@ class PropertyController extends Controller {
         }
         $compare_sub_type = '';
         if (!empty($select_estimated_price_result->sub_type_comp) && !empty($sub_type)) {
-            $compare_sub_type = "AND property_info.sub_type = " . Yii::app()->db->quoteValue($sub_type);
+            $compare_sub_type = "AND property_info.sub_type = " . Yii::$app->db->quoteValue($sub_type);
         }
             
         $estimated_value_subject_property = 0;
@@ -1839,7 +1858,7 @@ class PropertyController extends Controller {
                         || $pool > 0 && $qualifying_value_pool_amenties <= 0 
                     ) {
                         $curStage++;
-                        if($curStage <= Yii::app()->params['maxCalcStages']) {
+                        if($curStage <= Yii::$app->params['maxCalcStages']) {
                             unset($result_query);
                             unset($result_queryAllRows);
                             unset($result['result_query']);
@@ -1904,7 +1923,7 @@ class PropertyController extends Controller {
 
                 $estimated_value_subject_property = $weighted_value_square_footage+$weighted_value_lot_footage+$weighted_value_bathrooms_amenties +$weighted_value_bedrooms_amenties +$weighted_value_garages_amenties +$weighted_value_pool_amenties;
                 $estimated_price_dollar = $estimated_value_subject_property;
-//Yii::log(print_r(array($weighted_value_square_footage, $weighted_value_lot_footage, $weighted_value_amenties,$estimated_value_subject_property),1) ,'ERROR');
+//Yii::info(print_r(array($weighted_value_square_footage, $weighted_value_lot_footage, $weighted_value_amenties,$estimated_value_subject_property),1) ,'ERROR');
                 $result['estimated_price'] = $estimated_price;
                 $result['estimated_price_dollar'] = $estimated_price_dollar;
                 $result['estimated_value_subject_property'] = $estimated_value_subject_property;
@@ -1917,7 +1936,7 @@ class PropertyController extends Controller {
                     }
             } else {
                 $curStage++;
-                if($curStage <= Yii::app()->params['maxCalcStages']) {
+                if($curStage <= Yii::$app->params['maxCalcStages']) {
                     unset($result_query);
                     unset($result_queryAllRows);  
                     $this->calculateEstimatedPriceStage(
@@ -1968,7 +1987,7 @@ class PropertyController extends Controller {
 
     public function actionFavorites() {
         $response = array();
-        if (Yii::app()->user->isGuest) {
+        if (Yii::$app->user->isGuest) {
             $response[] = "This option is available only for authed.";
         } else {
             $property_id = isset($_POST['propery_id']) ? $_POST['propery_id'] : '';
@@ -1976,7 +1995,7 @@ class PropertyController extends Controller {
                 $row = array();
                 $row['SavedListing'] = array();
                 $row['SavedListing']['property_id'] = $property_id;
-                $row['SavedListing']['mid'] = Yii::app()->user->id;
+                $row['SavedListing']['mid'] = Yii::$app->user->id;
                 $row['SavedListing']['save_date'] = date('Y-m-d');
                 $model = new SavedListing;
                 $model->attributes = $row['SavedListing'];
@@ -2013,7 +2032,7 @@ class PropertyController extends Controller {
                     AND ( `t1`.`property_type` = {$property_type})
                     AND ( `t1`.`year_biult_id` BETWEEN {$year_biult}-10 AND {$year_biult}+10)
                     AND ( `t1`.`property_id` != {$id})";
-        $command = Yii::app()->db->createCommand($sql);
+        $command = Yii::$app->db->createCommand($sql);
         return $command->queryAll(); //cache(1000, null)->
     }
 
@@ -2027,7 +2046,7 @@ class PropertyController extends Controller {
     public function loadModel($id) {
         $model = PropertyInfo::model()->findByPk($id);
         if ($model === null)
-            throw new CHttpException(404, 'The requested page does not exist.');
+            throw new new HttpException(404, 'The requested page does not exist.');
         return $model;
     }
 
@@ -2038,7 +2057,7 @@ class PropertyController extends Controller {
     protected function performAjaxValidation($model) {
         if (isset($_POST['ajax']) && $_POST['ajax'] === 'property-info-form') {
             echo CActiveForm::validate($model);
-            Yii::app()->end();
+            Yii::$app->end();
         }
     }
 
@@ -2053,7 +2072,7 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 0-0: ' . $time ,'ERROR'); // 3.5838282108307
+//Yii::info('Step 0-0: ' . $time ,'ERROR'); // 3.5838282108307
         if(!empty($model)) {
             $model->views = $model->views + 1;
             $model->update();
@@ -2061,20 +2080,20 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 0-1: ' . $time ,'ERROR'); // 4.5241408348083
+//Yii::info('Step 0-1: ' . $time ,'ERROR'); // 4.5241408348083
     }
 
     public function actionSaveAgent() {
-        if (Yii::app()->request->isAjaxRequest) {
-            if (!Yii::app()->user->isGuest) {
+        if (Yii::$app->request->isAjaxRequest) {
+            if (!Yii::$app->user->isGuest) {
                 $agent_id = isset($_POST['agent_id']) ? $_POST['agent_id'] : 0;
                 if ($agent_id !== 0) {
-                    $model = SavedAgent::model()->findByAttributes(array('agent_id' => $agent_id, 'mid' => Yii::app()->user->id));
+                    $model = SavedAgent::model()->findByAttributes(array('agent_id' => $agent_id, 'mid' => Yii::$app->user->id));
                     if (!$model) {
                         $row = array();
                         $row['saved_id'] = null;
                         $row['agent_id'] = $agent_id;
-                        $row['mid'] = Yii::app()->user->id;
+                        $row['mid'] = Yii::$app->user->id;
                         $row['saved_timestamp'] = $_SERVER['REQUEST_TIME'];
                         $model = new SavedAgent;
                         $model->attributes = $row;
@@ -2082,38 +2101,38 @@ class PropertyController extends Controller {
                             $model->save();
                         } else {
                             header("Content-type: application/json");
-                            echo CJSON::encode($model->getErrors());
-                            Yii::app()->end();
+                            echo Json::encode($model->getErrors());
+                            Yii::$app->end();
                         }
                     } else {
                         echo 'already saved';
-                        Yii::app()->end();
+                        Yii::$app->end();
                     }
                 }
             }
         } else {
-            throw new CHttpException(404, 'The requested page does not exist.');
+            throw new new HttpException(404, 'The requested page does not exist.');
         }
     }
 
     public function actionDetachAgent() {
-        if (Yii::app()->request->isAjaxRequest) {
+        if (Yii::$app->request->isAjaxRequest) {
             $result = array();
             $result['status'] = 'error';
-            if (!Yii::app()->user->isGuest) {
+            if (!Yii::$app->user->isGuest) {
                 $agent_id = isset($_POST['agent_id']) ? $_POST['agent_id'] : 0;
                 if ($agent_id !== 0) {
-                    $model = SavedAgent::model()->deleteAllByAttributes(array('agent_id' => $agent_id, 'mid' => Yii::app()->user->id));
+                    $model = SavedAgent::model()->deleteAllByAttributes(array('agent_id' => $agent_id, 'mid' => Yii::$app->user->id));
                     if ($model) {
                         $result['status'] = 'success';
                     }
                 }
             }
             header("Content-type: application/json");
-            echo CJSON::encode($result);
-            Yii::app()->end();
+            echo Json::encode($result);
+            Yii::$app->end();
         } else {
-            throw new CHttpException(404, 'The requested page does not exist.');
+            throw new new HttpException(404, 'The requested page does not exist.');
         }
     }
 
@@ -2373,7 +2392,7 @@ class PropertyController extends Controller {
             }
 
         }
-//Yii::log($query,'ERROR');
+//Yii::info($query,'ERROR');
         $keywords = '';
         if ($searchForm['keywords']) {
             $keywords = strpos($searchForm['keywords'], ',') ?
@@ -2687,7 +2706,7 @@ class PropertyController extends Controller {
             }
         }
 
-//Yii::log('Property Search ' . $query ,'ERROR'); // 0.25762701034546
+//Yii::info('Property Search ' . $query ,'ERROR'); // 0.25762701034546
 
         $resArray = array();
         if ($query != '') {
@@ -2700,10 +2719,10 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 1: ' . $time ,'ERROR'); // 0.25762701034546
+//Yii::info('Step 1: ' . $time ,'ERROR'); // 0.25762701034546
         if (!empty($resArray)) {
             if (count($resArray['matches']) > 0) {
-//Yii::log('resArray: ' . print_r($resArray['matches'][0],1) ,'ERROR');
+//Yii::info('resArray: ' . print_r($resArray['matches'][0],1) ,'ERROR');
                 $list_pk = array();
                 $list_weight = array();
                 foreach ($resArray['matches'] as $matches) {
@@ -2713,7 +2732,7 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 2: ' . $time ,'ERROR'); // 0.00050592422485352
+//Yii::info('Step 2: ' . $time ,'ERROR'); // 0.00050592422485352
 
                 $results = PropertyInfo::model()->cache(1000, null)->with('city', 'county', 'state', 'zipcode'
                         , 'propertyInfoAdditionalBrokerageDetails', 'brokerage_join', 'slug',
@@ -2721,16 +2740,16 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 3: ' . $time ,'ERROR'); // 0.76244592666626
+//Yii::info('Step 3: ' . $time ,'ERROR'); // 0.76244592666626
 
                 if (!empty($results)) {
-//Yii::log('results: ' . print_r($results[0],1) ,'ERROR');
+//Yii::info('results: ' . print_r($results[0],1) ,'ERROR');
                     $result['count_result'] = count($results);
                     $result['result'] = $this->actionGetSearchResult($results, $list_weight, $user_id);
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 4: ' . $time ,'ERROR'); // 0.68614220619202
+//Yii::info('Step 4: ' . $time ,'ERROR'); // 0.68614220619202
 
                     $result['res_map_layout'] = SiteHelper::getSearchMapResult($results, $list_weight, $user_id);
                     $result['status'] = 'success';
@@ -2738,25 +2757,25 @@ class PropertyController extends Controller {
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start;
 //$time_start = $time_end;
-//Yii::log('Step 6: ' . $time ,'ERROR'); // 0.47263383865356
+//Yii::info('Step 6: ' . $time ,'ERROR'); // 0.47263383865356
 
                 }
             }
         }
 //$time_end = microtime(TRUE);
 //$time = $time_end - $time_start1;
-//Yii::log('Step All: ' . $time ,'ERROR'); // 2.1794710159302
+//Yii::info('Step All: ' . $time ,'ERROR'); // 2.1794710159302
         return $result;
     }
 
     public function actionSearch() {
         $expire_user = $this->getExpireUser();
         $user_id = null;
-        if (!Yii::app()->user->isGuest) {
-            $dependency = new CDbCacheDependency('SELECT lastvisit_at FROM tbl_users WHERE id='.Yii::app()->user->id);
-            $model = User::model()->cache(1000,$dependency, 1)->with('profile', 'profession')->findByPk(Yii::app()->user->id);
+        if (!Yii::$app->user->isGuest) {
+            $dependency = new CDbCacheDependency('SELECT lastvisit_at FROM tbl_users WHERE id='.Yii::$app->user->id);
+            $model = User::model()->cache(1000,$dependency, 1)->with('profile', 'profession')->findByPk(Yii::$app->user->id);
             if (!is_object($model)) {
-                $this->redirect(Yii::app()->createUrl('/user/login'));
+                $this->redirect(Yii::$app->createUrl('/user/login'));
             }
             $profile = $model->profile;
             $user_id = $model->id;
@@ -2766,18 +2785,18 @@ class PropertyController extends Controller {
             $result['count_result'] = 0;
             $result['result'] = array();
             $result['status'] = 'failed';
-            if (Yii::app()->request->isAjaxRequest) {
+            if (Yii::$app->request->isAjaxRequest) {
 
                 // save search criteria
                 $doSaveSearch = (isset($_POST['save_search_checkbox']) && intval($_POST['save_search_checkbox']) == 1) ? true : false;
-                if($doSaveSearch == true && !Yii::app()->user->isGuest){
+                if($doSaveSearch == true && !Yii::$app->user->isGuest){
 
                     $db_datetime_format = 'Y-m-d H:i:s';
                     $now = new DateTime('now');
 
                     $savedSearchData = array(
                         'name' => (isset($_POST['save_search_title']) && trim($_POST['save_search_title']) !='') ? trim($_POST['save_search_title']) : $now->format($db_datetime_format),
-                        'user_id' => Yii::app()->user->getId(),
+                        'user_id' => Yii::$app->user->getId(),
                     );
 
                     $criteria=new CDbCriteria;
@@ -2802,7 +2821,7 @@ class PropertyController extends Controller {
                             $savedSearchEmail = new SavedSearchEmail();
                             $savedSearchEmail->setAttributes(array(
                                 'saved_search_id' => $savedSearchModel->id,
-                                'email' => Yii::app()->user->username
+                                'email' => Yii::$app->user->username
                             ));
                             $savedSearchEmail->save();
                             $savedSearchModel->refresh();
@@ -2915,8 +2934,8 @@ class PropertyController extends Controller {
                 } else {
                     $result = $searchFormModel->getErrors();
                 }
-                echo CJSON::encode($result);
-                Yii::app()->end();
+                echo Json::encode($result);
+                Yii::$app->end();
             }
             $search_fields = array();
             if(isset($_POST['top-search-submit'])){
@@ -2944,8 +2963,8 @@ class PropertyController extends Controller {
 
             $general_search_fields = array();
 
-            if(Yii::app()->request->isPostRequest){
-                $general_search_fields = $this->fillSearchFields(Yii::app()->request);
+            if(Yii::$app->request->isPostRequest){
+                $general_search_fields = $this->fillSearchFields(Yii::$app->request);
 
                 if(isset($general_search_fields['geodistance_rectangle']) ||
                     isset($general_search_fields['geodistance_circle']) ||
@@ -2955,8 +2974,8 @@ class PropertyController extends Controller {
                     $general_search_fields['map_boundary'] = $factory->create($general_search_fields);
                 }
 
-                $general_search_fields['searchOnLoad'] = Yii::app()->request->getParam('searchOnLoad');
-                $general_search_fields['save_search_title'] = Yii::app()->request->getParam('save_search_title');
+                $general_search_fields['searchOnLoad'] = Yii::$app->request->getParam('searchOnLoad');
+                $general_search_fields['save_search_title'] = Yii::$app->request->getParam('save_search_title');
             }
 
 
@@ -2966,7 +2985,7 @@ class PropertyController extends Controller {
 
 
             $this->render('search', array(
-                    'profile' => Yii::app()->user->isGuest ? '' : $profile,
+                    'profile' => Yii::$app->user->isGuest ? '' : $profile,
                     'search_results' => $result,
                     'expire_user' => $expire_user, 
                     'top_search' => $search_fields,
@@ -3000,7 +3019,7 @@ class PropertyController extends Controller {
 
         foreach ($search_results as $search_result) {
             $discont = 0;
-            if (($search_result['percentage_depreciation_value'] >= Yii::app()->params['underValueDeals'])) {
+            if (($search_result['percentage_depreciation_value'] >= Yii::$app->params['underValueDeals'])) {
                 $discont = $search_result['percentage_depreciation_value'];
             }
             if ($discont == 0) {
@@ -3029,13 +3048,13 @@ class PropertyController extends Controller {
                 $col0 .= $list_weight[$search_result->property_id]. '-' . strtotime($search_result->property_updated_date);
             }
 
-            $col1 = "<a href=" . Yii::app()->createUrl('property/details' , array( 'slug'=>$search_result->slug->slug)) ." class='exclude-reinclude' data-property_id='". $search_result->property_id ."' >";
+            $col1 = "<a href=" . Yii::$app->createUrl('property/details' , array( 'slug'=>$search_result->slug->slug)) ." class='exclude-reinclude' data-property_id='". $search_result->property_id ."' >";
             $col1 .= CPathCDN::checkPhoto($search_result, "thumb-img-140", 0 );
             $col1 .= '</a>';
 
             $discont = $search_result->getDiscontValue();
 
-            if ($discont >= Yii::app()->params['underValueDeals'] && ($prop_stat_caps != 'HISTORY' && $prop_stat_caps != 'EXPIRED')) {
+            if ($discont >= Yii::$app->params['underValueDeals'] && ($prop_stat_caps != 'HISTORY' && $prop_stat_caps != 'EXPIRED')) {
                 $col1 .= '<br><span class="label bg-color-greenDark">' . round($discont) . '% Below TMV</span>';
             }
 
@@ -3060,7 +3079,7 @@ class PropertyController extends Controller {
                     $col2 .= ucwords(strtolower($brokerage_name));
                 }
             }
-            $col2 = "<a class=\"property-title\" href=" . Yii::app()->createUrl('property/details' , array( 'slug'=>$search_result->slug->slug)) . " >".$col2."</a>";
+            $col2 = "<a class=\"property-title\" href=" . Yii::$app->createUrl('property/details' , array( 'slug'=>$search_result->slug->slug)) . " >".$col2."</a>";
 
             $col3 = '';
             $col3 .= $status;
@@ -3092,7 +3111,7 @@ class PropertyController extends Controller {
             if ($search_result->estimated_price > 0) {
                 $col4 .= $trueMarket . ' $' . number_format($search_result->estimated_price,0,'.',',');
 //                $col4 .= $trueMarket . ' $' . money_format('%i', $search_result->estimated_price);
-                if ($discont >= Yii::app()->params['underValueDeals']) {
+                if ($discont >= Yii::$app->params['underValueDeals']) {
                     $estimatedEquity = $search_result->getEstimatedEquity($search_result->estimated_price, $search_result->property_price);
                      $estimatedEquity = number_format($estimatedEquity,0,'.',',');
 //                    $estimatedEquity = money_format('%i', $estimatedEquity);
@@ -3129,7 +3148,7 @@ class PropertyController extends Controller {
                         . '" data-status="' . $status_p
                         . '" data-address= "' . $search_result->property_street
                         . '" data-property_id="' . $search_result->property_id
-                        . '" href="' . Yii::app()->createUrl('property/details', array( 'slug'=>$search_result->slug->slug))
+                        . '" href="' . Yii::$app->createUrl('property/details', array( 'slug'=>$search_result->slug->slug))
                         . '" >
                         <button type="button" class="btn btn-primary btn-sm"> <i class="fa fa-search-plus"></i> </button> </a>'
                         .'<button onclick="showinmap(this)" property_id="'.$search_result->property_id.'" type="button" class="show-in-map btn btn-success btn-sm"> <i class="fa fa-map-marker"></i> </button>'
@@ -3152,18 +3171,18 @@ class PropertyController extends Controller {
     }
 
     public function actionAddFavorites() {
-        if (Yii::app()->request->isAjaxRequest) {
+        if (Yii::$app->request->isAjaxRequest) {
             $property_id = isset($_POST['property']) ? $_POST['property'] : 0;
             $result = "This option is available only for authed.";
-            if (!Yii::app()->user->isGuest) {
+            if (!Yii::$app->user->isGuest) {
                 if ($property_id > 0) {
                     $model = new SavedListing;
-                    $earlier_saved = $model->countByAttributes(array('property_id' => $property_id, 'mid' => Yii::app()->user->id));
+                    $earlier_saved = $model->countByAttributes(array('property_id' => $property_id, 'mid' => Yii::$app->user->id));
                     if (!$earlier_saved) {
                         $row = array();
                         $row['save_id'] = null;
                         $row['property_id'] = $property_id;
-                        $row['mid'] = Yii::app()->user->id;
+                        $row['mid'] = Yii::$app->user->id;
                         $row['save_date'] = date("Y-m-d");
                         $model->attributes = $row;
                         if ($model->validate()) {
@@ -3175,26 +3194,26 @@ class PropertyController extends Controller {
                     }
                 }
             }
-            echo CJSON::encode($result);
-            Yii::app()->end();
+            echo Json::encode($result);
+            Yii::$app->end();
         }
     }
 
     public function actionDeleteFavorites() {
-        if (Yii::app()->request->isAjaxRequest) {
+        if (Yii::$app->request->isAjaxRequest) {
             $property_id = isset($_POST['property']) ? $_POST['property'] : 0;
             $result = array();
-            if (!Yii::app()->user->isGuest) {
+            if (!Yii::$app->user->isGuest) {
                 if ($property_id > 0) {
-                    $model = SavedListing::model()->deleteAllByAttributes(array('property_id' => $property_id, 'mid' => Yii::app()->user->id));
+                    $model = SavedListing::model()->deleteAllByAttributes(array('property_id' => $property_id, 'mid' => Yii::$app->user->id));
                     if ($model) {
                         $result[] = "The property was deleted from favorites.";
                     }
                 }
             }
 
-            echo CJSON::encode($result);
-            Yii::app()->end();
+            echo Json::encode($result);
+            Yii::$app->end();
         }
     }
     
@@ -3222,13 +3241,13 @@ class PropertyController extends Controller {
                     }
             }
         if (isset($photoArr[0]) && strtolower(substr($photoArr[0]->photo1, 0, 4)) === 'http') {
-            $file_headers=!empty(Yii::app()->cache)?Yii::app()->cache->get($photoArr[0]->photo1):false;
+            $file_headers=!empty(Yii::$app->cache)?Yii::$app->cache->get($photoArr[0]->photo1):false;
             if($file_headers===false)
             {
     //            $file_headers = @get_headers($photoArr[0]->photo1);
                 $file_headers = CPathCDN::checkS3Photo($photoArr[0]->photo1);
-                if(!empty(Yii::app()->cache)) {
-                    Yii::app()->cache->set($photoArr[0]->photo1,$file_headers, 1000);
+                if(!empty(Yii::$app->cache)) {
+                    Yii::$app->cache->set($photoArr[0]->photo1,$file_headers, 1000);
                 }
             }
             if($file_headers[0] != 'HTTP/1.1 404 Not Found') {
@@ -3319,8 +3338,8 @@ class PropertyController extends Controller {
      */
     public function actionHistory($id){
         $profile = '';
-        if(!Yii::app()->user->isGuest) {
-            $userModel = User::model()->with('profile', 'profession')->findByPk(Yii::app()->user->id);
+        if(!Yii::$app->user->isGuest) {
+            $userModel = User::model()->with('profile', 'profession')->findByPk(Yii::$app->user->id);
             $profile = $userModel->profile;
         }
 
@@ -3359,7 +3378,7 @@ class PropertyController extends Controller {
         $this->render('propertyHistoryDetailsView', array(
             'property' => $property,
             'actualInfo' => $actualInfo,
-            'profile' => Yii::app()->user->isGuest ? '' : $profile,
+            'profile' => Yii::$app->user->isGuest ? '' : $profile,
         ));
     }
     

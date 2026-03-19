@@ -24,6 +24,7 @@ $guest = Yii::$app->user->isGuest ? 0 : 1;
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <!--<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">-->
         <meta http-equiv="Content-Language" content="en">
+        <?= Html::csrfMetaTags() ?>
 <?php $this->head() ?>
 <?php if (isset(Yii::$app->seo)) { Yii::$app->seo->run(); } ?>
 <?php /*/ ?>
@@ -639,7 +640,7 @@ $this->registerJs("
         // 1. Main JS Build (Includes Bootstrap etc.)
         $this->registerJsFile('@web/js/concat-build.min.js', [
             'position' => $this::POS_END,
-            'depends' => [\yii\web\JqueryAsset::class]
+            'depends' => [\yii\web\JqueryAsset::class, \yii\web\YiiAsset::class]
         ]);
 
         // 2. Google Maps - Updated for Yii2 and API Key requirement

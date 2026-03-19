@@ -1,0 +1,1 @@
+<?php namespace app\models; use yii\db\ActiveRecord; class PropertyInfoAdditionalBrokerageDetails extends ActiveRecord { public static function tableName() { return 'property_info_additional_brokerage_details'; } }

@@ -12,6 +12,7 @@ use app\models\LoginForm;
 use app\models\RegistrationForm;
 use app\models\UserProfiles;
 use app\models\AuthItem;
+use app\models\AuthAssignment;
 use app\models\ProfessionFieldCollection;
 use app\models\ChangePasswordForm;
 use app\components\SiteHelper;
@@ -54,7 +55,7 @@ class UserController extends Controller
                         'roles' => ['?'], // guests
                     ],
                     [
-                        'actions' => ['profile','logout'],
+                        'actions' => ['profile','logout','closeinvites'],
                         'allow' => true,
                         'roles' => ['@'], // logged users
                     ],
@@ -113,18 +114,53 @@ public function actionLogin()
             $profile->save();
         }
 
-        // Fetch professions (Removied per user request)
-        $all_profession = [];
-        $my_profession = [];
-        $profession_collection = [];
+        // Fetch all professions (Roles in tbl_AuthItem where type = 2)
+        $all_profession = AuthItem::find()
+            ->where(['type' => 2])
+            ->andWhere(['not in', 'name', ['Admin', 'Guest', 'Superadmin', 'Authenticated']]) 
+            ->all();
+        
+        // Fetch current user assignments from tbl_AuthAssignment
+        $my_profession = AuthAssignment::find()
+            ->where(['userid' => (string)$model->id])
+            ->all();
+        
+        // Extract profession names for collection lookup
+        $profession_names = [];
+        foreach ($my_profession as $p) {
+            $profession_names[] = $p->itemname;
+        }
+
+        // Fetch appearance configuration based on active roles
+        $profession_collection = ProfessionFieldCollection::find()
+            ->where(['in', 'authitem_name', $profession_names])
+            ->all();
 
         $modelChangePassword = new ChangePasswordForm();
         
-        // Check for invites and other flags
-        $invites = true; // Temporary
+        // Check for invites in session
+        $invites = Yii::$app->session->get('closeinvites', false);
         $anotherUserId = ($id !== null && SiteHelper::isAdmin()) ? $id : null;
         
-        // Temporary subscr_form_data
+        // Handle post request for profile saving...
+        if ($model->load(Yii::$app->request->post()) && $profile->load(Yii::$app->request->post())) {
+            if ($model->save() && $profile->save()) {
+                // Save many-to-many professions (Roles in tbl_AuthAssignment)
+                AuthAssignment::deleteAll(['userid' => (string)$model->id]);
+                if (!empty($model->professionsArray) && is_array($model->professionsArray)) {
+                    foreach ($model->professionsArray as $pName) {
+                        $pAssign = new AuthAssignment();
+                        $pAssign->userid = (string)$model->id;
+                        $pAssign->itemname = $pName;
+                        $pAssign->save();
+                    }
+                }
+                Yii::$app->session->setFlash('profileMessage', 'Profile has been updated.');
+                return $this->refresh();
+            }
+        }
+        
+        // Subscription form data (PLACEHOLDER)
         $subscr_form_data = [
             'subscriptions_left' => 10,
             'amount' => 19,
@@ -142,6 +178,16 @@ public function actionLogin()
             'anotherUserId' => $anotherUserId,
             'subscr_form_data' => $subscr_form_data,
         ]);
+    }
+
+    /**
+     * AJAX action to close/ignore invites modal
+     */
+    public function actionCloseinvites()
+    {
+        Yii::$app->session->set('closeinvites', true);
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return ['status' => 'success'];
     }
 
     /**

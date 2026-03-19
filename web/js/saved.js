@@ -111,7 +111,7 @@
                 user_id: 10,
                 excluded_statuses:excluded_statuses
             }
-            data[jqueryOne('meta[name=\"csrf-param\"]').attr('content')] = jqueryOne('meta[name=\"csrf-token\"]').attr('content');
+            data[$('meta[name="csrf-param"]').attr('content')] = $('meta[name="csrf-token"]').attr('content');
             $.ajax({
                 url: '/saved/get-saved-properties',
                 data: data,

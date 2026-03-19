@@ -10,12 +10,34 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     const STATUS_ACTIVE = 1;
     const STATUS_BANNED = -1;
     const STATUS_BANED = -1; // for backward compatibility
+    
+    public $avatar_image;
+    public $company_logo;
+    public $certifications;
+    public $professionsArray = [];
+    public $state;
+    public $street_number;
+    public $street_address;
+    public $country;
+    public $city;
+    public $zipcode;
+
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
         return 'tbl_users';
+    }
+
+    public static function model($className = __CLASS__)
+    {
+        return new static();
+    }
+
+    public static function findByPk($pk)
+    {
+        return static::findOne($pk);
     }
 
     /**
@@ -31,6 +53,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['password', 'activkey', 'accessToken', 'authKey'], 'string', 'max' => 255],
             [['create_at', 'lastvisit_at'], 'safe'],
             [['state', 'country', 'city', 'zipcode', 'street_number', 'street_address'], 'safe'],
+            [['avatar_image', 'company_logo', 'certifications', 'professionsArray'], 'safe'],
         ];
     }
 
