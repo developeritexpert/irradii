@@ -789,7 +789,8 @@ class PropertyController extends Controller
             }
         }
 
-        foreach ($comparebles_properties->result_queryAllRows as $comparebles_property) {
+        $comps = array_slice($comparebles_properties->result_queryAllRows, 0, 5);
+        foreach ($comps as $comparebles_property) {
             $comparebles_property = (object)$comparebles_property;
             $result[] = $this->makeComparableRowForProperty($comparebles_property, $details, $excludedPropertiesIDs);
         }
@@ -801,107 +802,269 @@ class PropertyController extends Controller
     /**
      * Build a single row of comparable property data for the table.
      */
+    // private function makeComparableRowForProperty($comparebles_property, $details, $excludedPropertiesIDs = [])
+    // {
+    //     $underValueDeals = Yii::$app->params['underValueDeals'] ?? 5;
+
+    //     $slug_val = ($comparebles_property->property_id != $details->property_id)
+    //         ? ($comparebles_property->slug ?? '')
+    //         : ($details->slug ? $details->slug->slug : '');
+    //     $propUrl  = \yii\helpers\Url::to(['property/details', 'slug' => $slug_val]);
+
+    //     $photo = CPathCDN::checkPhoto($comparebles_property, 'thumb-img-80', 0);
+    //     $col1  = '<a class="property_info_row" data-property="' . $propUrl . '" href="' . $propUrl . '">'
+    //         . $comparebles_property->property_street . $photo . '</a>';
+    //     // Excluded checkbox
+    //     // $col1 = '';
+    //     // $isExcluded = in_array($comparebles_property->property_id, $excludedPropertiesIDs);
+    //     // if (isset($comparebles_property->selfProp) && $comparebles_property->selfProp) {
+    //     //     $col1 = '<input type="checkbox" disabled>';
+    //     // } else {
+    //     //     $checked = $isExcluded ? 'checked' : '';
+    //     //     $col1 = '<input type="checkbox" class="exclude_property" data-id="' . $comparebles_property->property_id . '" ' . $checked . '>';
+    //     // }
+
+    //     // TMV / Estimated price
+    //     $discont = 0;
+    //     if ($comparebles_property->percentage_depreciation_value >= $underValueDeals) {
+    //         $discont = $comparebles_property->percentage_depreciation_value;
+    //     }
+    //     if ($discont == 0 && !empty($comparebles_property->estimated_price) && $comparebles_property->estimated_price > 0) {
+    //         $calc = 100 - ($comparebles_property->property_price * 100 / $comparebles_property->estimated_price);
+    //         if ($calc > 0) {
+    //             $discont = $calc;
+    //         }
+    //     }
+
+    //     $condition   = $discont >= $underValueDeals;
+    //     $statusVal  = $comparebles_property->property_id != $details->property_id
+    //         ? ($comparebles_property->status ?? '')
+    //         : $details->getStatus();
+    //     $similar_stat = strtoupper($statusVal);
+    //     $colorScheme  = SiteHelper::getColorScheme($similar_stat, $condition);
+
+    //     $slug_val = ($comparebles_property->property_id != $details->property_id)
+    //         ? ($comparebles_property->slug ?? '')
+    //         : ($details->slug ? $details->slug->slug : '');
+    //     $propUrl  = \yii\helpers\Url::to(['property/details', 'slug' => $slug_val]);
+
+    //     $col2  = '<span class="label ' . $colorScheme['label-color'] . '">' . ucfirst($statusVal) . '</span>';
+    //     $col3  = number_format($comparebles_property->property_price);
+    //     // $photo = CPathCDN::checkPhoto($comparebles_property, 'thumb-img-80', 0);
+    //     // $col4  = '<a class="property_info_row" data-property="' . $propUrl . '" href="' . $propUrl . '">'
+    //     //     . $comparebles_property->property_street . $photo . '</a>';
+    //     $col4  = number_format($comparebles_property->property_price);
+
+    //     // $col5  = $comparebles_property->bedrooms;
+    //     $col5 = !empty($comparebles_property->estimated_price) ? '$' . number_format($comparebles_property->estimated_price) : '';
+
+    //     // $col6  = $comparebles_property->bathrooms;
+    //     $col6 = $comparebles_property->year_biult_id;
+
+    //     $col7  = $comparebles_property->lot_acreage;
+    //     $col8  = $comparebles_property->house_square_footage;
+    //     $col9  = $comparebles_property->bedrooms;
+
+    //     // $col9  = !empty($comparebles_property->property_price) && !empty($comparebles_property->house_square_footage)
+    //     //     ? number_format($comparebles_property->property_price / $comparebles_property->house_square_footage, 2)
+    //     //     : '';
+    //     $col10  = $comparebles_property->bathrooms;
+
+    //     $col11 = !empty($comparebles_property->estimated_price) ? '$' . number_format($comparebles_property->estimated_price) : '';
+    //     $col12 = $discont > 0 ? round($discont, 2) . '%' : '';
+    //     $col13 = $comparebles_property->subdivision ?? '';
+    //     $col14 = '';
+
+    //     // Days on market
+    //     $dtz          = new DateTimeZone('UTC');
+    //     $datetime_now = new DateTime();
+    //     $datetime_now->setTimezone($dtz);
+    //     $propertyDate = $comparebles_property->property_id != $details->property_id
+    //         ? (!empty($comparebles_property->entry_date)
+    //             ? $comparebles_property->entry_date
+    //             : $comparebles_property->property_uploaded_date)
+    //         : (!empty($details->propertyInfoAdditionalBrokerageDetails->entry_date)
+    //             ? $details->propertyInfoAdditionalBrokerageDetails->entry_date
+    //             : $details->property_uploaded_date);
+    //     $datetime_exp = new DateTime($propertyDate, $dtz);
+    //     $col22        = $datetime_now->diff($datetime_exp)->days;
+
+    //     $col23 = $comparebles_property->garages;
+    //     $col24 = $comparebles_property->pool;
+
+    //     $col25 = $comparebles_property->property_id != $details->property_id
+    //         ? ($comparebles_property->house_faces ?? '')
+    //         : ($details->propertyInfoDetails->house_faces ?? '');
+    //     $col26 = $comparebles_property->property_id != $details->property_id
+    //         ? ($comparebles_property->house_views ?? '')
+    //         : ($details->propertyInfoDetails->house_views ?? '');
+    //     $col27 = $comparebles_property->property_id != $details->property_id
+    //         ? ($comparebles_property->flooring_description ?? '')
+    //         : ($details->propertyInfoAdditionalDetails->flooring_description ?? '');
+    //     $col28 = $comparebles_property->property_id != $details->property_id
+    //         ? ($comparebles_property->furnishings_description ?? '')
+    //         : ($details->propertyInfoAdditionalDetails->furnishings_description ?? '');
+    //     $col29 = $comparebles_property->property_id != $details->property_id
+    //         ? ($comparebles_property->financing_considered ?? '')
+    //         : ($details->propertyInfoAdditionalBrokerageDetails->financing_considered ?? '');
+
+    //     $col15 = '';  // placeholder for additional fields
+    //     $col16 = '';
+    //     $col17 = '';
+    //     $col18 = '';
+    //     $col19 = '';
+    //     $col20 = '';
+    //     $col21 = '';
+
+    //     return [$col1, $col2, $col3, $col4, $col5, $col6, $col7, $col8, $col9, $col10,
+    //         $col23, $col11, $col12, $col13, $col15, $col24, $col16, $col17,
+    //         $col25, $col26, $col27, $col28, $col29, $col18, $col19, $col20, $col21, $col22, $col14];
+    // }
+
     private function makeComparableRowForProperty($comparebles_property, $details, $excludedPropertiesIDs = [])
-    {
-        $underValueDeals = Yii::$app->params['underValueDeals'] ?? 5;
+{
+    $underValueDeals = Yii::$app->params['underValueDeals'] ?? 5;
 
-        // Excluded checkbox
-        $col1 = '';
-        $isExcluded = in_array($comparebles_property->property_id, $excludedPropertiesIDs);
-        if (isset($comparebles_property->selfProp) && $comparebles_property->selfProp) {
-            $col1 = '<input type="checkbox" disabled>';
-        } else {
-            $checked = $isExcluded ? 'checked' : '';
-            $col1 = '<input type="checkbox" class="exclude_property" data-id="' . $comparebles_property->property_id . '" ' . $checked . '>';
-        }
+    /* ===================== BASIC ===================== */
 
-        // TMV / Estimated price
-        $discont = 0;
-        if ($comparebles_property->percentage_depreciation_value >= $underValueDeals) {
-            $discont = $comparebles_property->percentage_depreciation_value;
-        }
-        if ($discont == 0 && !empty($comparebles_property->estimated_price) && $comparebles_property->estimated_price > 0) {
-            $calc = 100 - ($comparebles_property->property_price * 100 / $comparebles_property->estimated_price);
-            if ($calc > 0) {
-                $discont = $calc;
-            }
-        }
+    $slug = ($comparebles_property->property_id != $details->property_id)
+        ? ($comparebles_property->slug ?? '')
+        : ($details->slug->slug ?? '');
 
-        $condition   = $discont >= $underValueDeals;
-        $statusVal  = $comparebles_property->property_id != $details->property_id
-            ? ($comparebles_property->status ?? '')
-            : $details->getStatus();
-        $similar_stat = strtoupper($statusVal);
-        $colorScheme  = SiteHelper::getColorScheme($similar_stat, $condition);
+    $propertyUrl = \yii\helpers\Url::to(['property/details', 'slug' => $slug]);
 
-        $slug_val = ($comparebles_property->property_id != $details->property_id)
-            ? ($comparebles_property->slug ?? '')
-            : ($details->slug ? $details->slug->slug : '');
-        $propUrl  = \yii\helpers\Url::to(['property/details', 'slug' => $slug_val]);
+    $photo = CPathCDN::checkPhoto($comparebles_property, 'thumb-img-80', 0);
 
-        $col2  = number_format($comparebles_property->property_price);
-        $col3  = '<span class="label ' . $colorScheme['label-color'] . '">' . ucfirst($statusVal) . '</span>';
-        $col4  = '<a data-property="' . $propUrl . '" href="' . $propUrl . '">'
-            . $comparebles_property->property_street . '</a>';
-        $col5  = $comparebles_property->bedrooms;
-        $col6  = $comparebles_property->bathrooms;
-        $col7  = $comparebles_property->lot_acreage;
-        $col8  = $comparebles_property->house_square_footage;
-        $col9  = !empty($comparebles_property->property_price) && !empty($comparebles_property->house_square_footage)
-            ? number_format($comparebles_property->property_price / $comparebles_property->house_square_footage, 2)
-            : '';
-        $col10 = $comparebles_property->year_biult_id;
-        $col11 = !empty($comparebles_property->estimated_price) ? '$' . number_format($comparebles_property->estimated_price) : '';
-        $col12 = $discont > 0 ? round($discont, 2) . '%' : '';
-        $col13 = $comparebles_property->subdivision ?? '';
-        $col14 = CPathCDN::checkPhoto($comparebles_property, 'thumb-img-80', 0);
+    /* ===================== ADDRESS ===================== */
+    $addressHtml = '<a class="property_info_row" href="' . $propertyUrl . '">' .
+        $comparebles_property->property_street . $photo . '</a>';
 
-        // Days on market
-        $dtz          = new DateTimeZone('UTC');
-        $datetime_now = new DateTime();
-        $datetime_now->setTimezone($dtz);
-        $propertyDate = $comparebles_property->property_id != $details->property_id
-            ? (!empty($comparebles_property->entry_date)
-                ? $comparebles_property->entry_date
-                : $comparebles_property->property_uploaded_date)
-            : (!empty($details->propertyInfoAdditionalBrokerageDetails->entry_date)
-                ? $details->propertyInfoAdditionalBrokerageDetails->entry_date
-                : $details->property_uploaded_date);
-        $datetime_exp = new DateTime($propertyDate, $dtz);
-        $col22        = $datetime_now->diff($datetime_exp)->days;
+    /* ===================== DISCOUNT ===================== */
+    $discountPercent = 0;
 
-        $col23 = $comparebles_property->garages;
-        $col24 = $comparebles_property->pool;
-
-        $col25 = $comparebles_property->property_id != $details->property_id
-            ? ($comparebles_property->house_faces ?? '')
-            : ($details->propertyInfoDetails->house_faces ?? '');
-        $col26 = $comparebles_property->property_id != $details->property_id
-            ? ($comparebles_property->house_views ?? '')
-            : ($details->propertyInfoDetails->house_views ?? '');
-        $col27 = $comparebles_property->property_id != $details->property_id
-            ? ($comparebles_property->flooring_description ?? '')
-            : ($details->propertyInfoAdditionalDetails->flooring_description ?? '');
-        $col28 = $comparebles_property->property_id != $details->property_id
-            ? ($comparebles_property->furnishings_description ?? '')
-            : ($details->propertyInfoAdditionalDetails->furnishings_description ?? '');
-        $col29 = $comparebles_property->property_id != $details->property_id
-            ? ($comparebles_property->financing_considered ?? '')
-            : ($details->propertyInfoAdditionalBrokerageDetails->financing_considered ?? '');
-
-        $col15 = '';  // placeholder for additional fields
-        $col16 = '';
-        $col17 = '';
-        $col18 = '';
-        $col19 = '';
-        $col20 = '';
-        $col21 = '';
-
-        return [$col1, $col2, $col3, $col4, $col5, $col6, $col7, $col8, $col9, $col10,
-            $col23, $col11, $col12, $col13, $col15, $col24, $col16, $col17,
-            $col25, $col26, $col27, $col28, $col29, $col18, $col19, $col20, $col21, $col22, $col14];
+    if ($comparebles_property->percentage_depreciation_value >= $underValueDeals) {
+        $discountPercent = $comparebles_property->percentage_depreciation_value;
     }
 
+    if ($discountPercent == 0 && !empty($comparebles_property->estimated_price)) {
+        $calc = 100 - ($comparebles_property->property_price * 100 / $comparebles_property->estimated_price);
+        if ($calc > 0) {
+            $discountPercent = $calc;
+        }
+    }
+
+    /* ===================== STATUS ===================== */
+    $statusValue = ($comparebles_property->property_id != $details->property_id)
+        ? ($comparebles_property->status ?? '')
+        : $details->getStatus();
+
+    $colorScheme = SiteHelper::getColorScheme(strtoupper($statusValue), $discountPercent >= $underValueDeals);
+
+    $statusLabel = '<span class="label ' . $colorScheme['label-color'] . '">' . ucfirst($statusValue) . '</span>';
+
+    /* ===================== PRICES ===================== */
+    $listPrice      = number_format($comparebles_property->property_price);
+    $salePrice      = number_format($comparebles_property->property_price);
+    $estimatedPrice = !empty($comparebles_property->estimated_price)
+        ? '$' . number_format($comparebles_property->estimated_price)
+        : '';
+
+    /* ===================== PROPERTY DETAILS ===================== */
+    $pricePerSqFt = (!empty($comparebles_property->house_square_footage))
+        ? number_format($comparebles_property->property_price / $comparebles_property->house_square_footage, 2)
+        : '';
+
+    $squareFootage = $comparebles_property->house_square_footage;
+    $bedrooms      = $comparebles_property->bedrooms;
+    $bathrooms     = $comparebles_property->bathrooms;
+    $lotSize       = $comparebles_property->lot_acreage;
+    $yearBuilt     = $comparebles_property->year_biult_id;
+
+    /* ===================== EXTRA ===================== */
+    $distance = ''; // (you removed logic, keep placeholder)
+
+    $stories = '';
+    $spa     = '';
+    $condition = '';
+
+    $foreclosure = '';
+    $shortSale   = '';
+    $bankOwned   = '';
+
+    $originalPrice = '';
+    $subdivision   = $comparebles_property->subdivision ?? '';
+
+    /* ===================== DAYS ON MARKET ===================== */
+    $dtz = new DateTimeZone('UTC');
+    $now = new DateTime();
+    $now->setTimezone($dtz);
+
+    $propertyDate = ($comparebles_property->property_id != $details->property_id)
+        ? ($comparebles_property->entry_date ?? $comparebles_property->property_uploaded_date)
+        : ($details->propertyInfoAdditionalBrokerageDetails->entry_date ?? $details->property_uploaded_date);
+
+    $daysOnMarket = (new DateTime($propertyDate, $dtz))->diff($now)->days;
+
+    /* ===================== FEATURES ===================== */
+    $garage = $comparebles_property->garages;
+    $pool   = $comparebles_property->pool;
+
+    $houseFaces = ($comparebles_property->property_id != $details->property_id)
+        ? ($comparebles_property->house_faces ?? '')
+        : ($details->propertyInfoDetails->house_faces ?? '');
+
+    $houseViews = ($comparebles_property->property_id != $details->property_id)
+        ? ($comparebles_property->house_views ?? '')
+        : ($details->propertyInfoDetails->house_views ?? '');
+
+    $flooring = ($comparebles_property->property_id != $details->property_id)
+        ? ($comparebles_property->flooring_description ?? '')
+        : ($details->propertyInfoAdditionalDetails->flooring_description ?? '');
+
+    $furnishing = ($comparebles_property->property_id != $details->property_id)
+        ? ($comparebles_property->furnishings_description ?? '')
+        : ($details->propertyInfoAdditionalDetails->furnishings_description ?? '');
+
+    $financing = ($comparebles_property->property_id != $details->property_id)
+        ? ($comparebles_property->financing_considered ?? '')
+        : ($details->propertyInfoAdditionalBrokerageDetails->financing_considered ?? '');
+
+    /* ===================== TOOL BUTTON ===================== */
+    $actions = '';
+
+    /* ===================== RETURN (MATCH OLD ORDER) ===================== */
+    return [
+        $addressHtml,        // col1
+        $statusLabel,        // col2
+        $listPrice,          // col3
+        $salePrice,          // col4
+        $estimatedPrice,     // col5
+        $yearBuilt,          // col6 (date replaced)
+        $pricePerSqFt,       // col7
+        $squareFootage,      // col8
+        $bedrooms,           // col9
+        $bathrooms,          // col10
+        $garage,             // col23
+        $lotSize,            // col11
+        $yearBuilt,          // col12
+        $distance,           // col13
+        $stories,            // col15
+        $pool,               // col24
+        $spa,                // col16
+        $condition,          // col17
+        $houseFaces,         // col25
+        $houseViews,         // col26
+        $flooring,           // col27
+        $furnishing,         // col28
+        $financing,          // col29
+        $foreclosure,        // col18
+        $shortSale,          // col19
+        $bankOwned,          // col20
+        $originalPrice,      // col21
+        $daysOnMarket,       // col22
+        $actions             // col14
+    ];
+}
     /**
      * Build current property's own comparable row.
      */

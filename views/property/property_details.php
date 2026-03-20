@@ -26,7 +26,38 @@ $property_type_array = [
     '8' => 'Time Share', '9' => 'Rental', '16' => 'High Rise',
 ];
 $pool_array = ['0' => 'No', '1' => 'Yes'];
-
+?>
+<style>
+/* Comparable property hover image */
+.property_info_row {
+    position: relative;
+    display: inline-block;
+}
+.property_info_row img.thumb-img-80 {
+    display: none;
+    position: absolute;
+    z-index: 99999;
+    width: 180px;
+    left: 40px;
+    bottom: 20px;
+    box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.5);
+    border: 1px solid #ccc;
+    background-color: #fff;
+    padding: 2px;
+}
+/* For the first few rows, show image below instead of above to prevent cutoff */
+.datatable_col_reorder tr:nth-child(1) .property_info_row:hover img.thumb-img-80,
+.datatable_col_reorder tr:nth-child(2) .property_info_row:hover img.thumb-img-80,
+.datatable_col_reorder tr:nth-child(3) .property_info_row:hover img.thumb-img-80 {
+    display: block !important;
+    top: 20px;
+    bottom: auto;
+}
+.property_info_row:hover img.thumb-img-80 {
+    display: block !important;
+}
+</style>
+<?php
 $discont = method_exists($details, 'getDiscontValue') ? $details->getDiscontValue() : 0;
 
 $postfix_after_rounded = ($details->property_type == 9) ? '' : 'K';
@@ -1385,7 +1416,7 @@ $this->registerJs("
             'sDom': '<\\'dt-top-row\\'Clf>r<\\'dt-wrapper\\'t><\\'dt-row dt-bottom-row\\'<\\'row\\'<\\'col-sm-6\\'i><\\'col-sm-6 text-right\\'p>>',
             'aaData': c_properties,
             'bDeferRender': true,
-            'iDisplayLength' : 25,
+            'iDisplayLength' : 6,
             'bAutoWidth': false,
             'stateSave': true,
             'aoColumns': [
@@ -1396,7 +1427,7 @@ $this->registerJs("
                 { 'bVisible' : false }, { 'bVisible' : false }, { 'bVisible' : false }, { 'bVisible' : false },
                 { 'bVisible' : false }, { 'bVisible' : false }, { 'bVisible' : false }, { 'bVisible' : false },
                 { 'bVisible' : false, 'sType': 'currency' }, { 'bVisible' : false },
-                { 'sType': 'num-html' },
+                { 'bVisible' : false, 'sType': 'num-html' },
             ],
             'bScrollCollapse': false,
             'fnDrawCallback': function () {
