@@ -294,6 +294,61 @@ class EstimatedPrice
                     $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
                 );
 
+                // UI parity: ensure we have enough rows to render on the first stage.
+                // If we only got a couple of matches, relax the zipcode filter (or property_type)
+                // so the table can show ~6 comparable properties like the Yii1 project.
+                if ((int)$curStage === 1 && is_array($result_queryAllRows) && count($result_queryAllRows) < 5) {
+                    $compare_property_zipcode = '';
+                    $total_count = $this->countComparePropertyInfo(
+                        $session_id,
+                        $gettoday_date,
+                        $comp_time,
+                        $compare_property_type,
+                        $compare_property_zipcode,
+                        $compare_property_year_build,
+                        $compare_lot_sq_footage,
+                        $compare_house_sq_footage,
+                        $compare_property_lon,
+                        $compare_property_lat,
+                        $property_id,
+                        $compare_bedrooms,
+                        $compare_bathrooms,
+                        $compare_subdivision,
+                        $compare_house_views,
+                        $compare_sub_type
+                    );
+                    $result_queryAllRows = $this->actionComparePropertyInfoAllRows(
+                        $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
+                        $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
+                    );
+
+                    if (is_array($result_queryAllRows) && count($result_queryAllRows) < 5) {
+                        $compare_property_type = '';
+                        $total_count = $this->countComparePropertyInfo(
+                            $session_id,
+                            $gettoday_date,
+                            $comp_time,
+                            $compare_property_type,
+                            $compare_property_zipcode,
+                            $compare_property_year_build,
+                            $compare_lot_sq_footage,
+                            $compare_house_sq_footage,
+                            $compare_property_lon,
+                            $compare_property_lat,
+                            $property_id,
+                            $compare_bedrooms,
+                            $compare_bathrooms,
+                            $compare_subdivision,
+                            $compare_house_views,
+                            $compare_sub_type
+                        );
+                        $result_queryAllRows = $this->actionComparePropertyInfoAllRows(
+                            $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
+                            $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
+                        );
+                    }
+                }
+
                 $result_query = $this->actionComparePropertyInfo(
                     $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
                     $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type

@@ -1385,9 +1385,11 @@ $this->registerJs("
             'sDom': '<\\'dt-top-row\\'Clf>r<\\'dt-wrapper\\'t><\\'dt-row dt-bottom-row\\'<\\'row\\'<\\'col-sm-6\\'i><\\'col-sm-6 text-right\\'p>>',
             'aaData': c_properties,
             'bDeferRender': true,
-            'iDisplayLength' : 25,
+            'iDisplayLength' : 6,
+            'bPaginate': false,
+            'bLengthChange': false,
             'bAutoWidth': false,
-            'stateSave': true,
+            'stateSave': false,
             'aoColumns': [
                 { 'sType': 'num-html' }, null, { 'sType': 'currency' }, { 'sType': 'currency' },
                 null, null, { 'sType': 'currency' }, { 'sType': 'natural' },
@@ -1404,7 +1406,7 @@ $this->registerJs("
                 highlightDetailInComparableTable($(this));
                 getDataCurrentPage($(this));
             },
-            bStateSave: true,
+            bStateSave: false,
             fnStateSave: function(oSettings, oData) {
                 localStorage.setItem('DataTables_' + this.fnSettings().sTableId, JSON.stringify(oData));
             },

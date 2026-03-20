@@ -214,7 +214,7 @@ class PropertyController extends Controller
                 '',
                 $details->property_id,
                 $details->property_type,
-                $details->property_zipcode,
+                    $details->property_zipcode,
                 $details->getlatitude, $details->getlongitude, $details->year_biult_id,
                 $details->lot_acreage, $details->house_square_footage, $details->bathrooms,
                 $details->garages, $details->pool, $details->percentage_depreciation_value,
@@ -841,8 +841,33 @@ class PropertyController extends Controller
 
         $col2  = number_format($comparebles_property->property_price);
         $col3  = '<span class="label ' . $colorScheme['label-color'] . '">' . ucfirst($statusVal) . '</span>';
-        $col4  = '<a data-property="' . $propUrl . '" href="' . $propUrl . '">'
-            . $comparebles_property->property_street . '</a>';
+        $excluded = $isExcluded ? 1 : 0;
+        $isSelf = ($comparebles_property->property_id == $details->property_id);
+        $status_p = !empty($colorScheme['status']) ? $colorScheme['status'] : '';
+
+        $photoHtml = '';
+        if (!empty($comparebles_property->photo1)) {
+            // Match Yii1 hover behavior: CSS shows `.thumb-img` only on `a:hover` inside `.datatable_col_reorder`.
+            $photoHtml = CPathCDN::checkPhoto($comparebles_property, 'thumb-img', 0);
+        }
+
+        $streetEscaped = htmlspecialchars((string)$comparebles_property->property_street, ENT_QUOTES, 'UTF-8');
+        $lat = isset($comparebles_property->getlatitude) ? (string)$comparebles_property->getlatitude : '';
+        $lon = isset($comparebles_property->getlongitude) ? (string)$comparebles_property->getlongitude : '';
+
+        $col4 = '<a class="property_info_row"'
+            . ' data-lat="' . $lat . '"'
+            . ' data-lon="' . $lon . '"'
+            . ' data-status="' . htmlspecialchars((string)$status_p, ENT_QUOTES, 'UTF-8') . '"'
+            . ' data-self="' . ($isSelf ? '1' : '0') . '"'
+            . ' data-excluded="' . $excluded . '"'
+            . ' data-address="' . $streetEscaped . '"'
+            . ' data-property_id="' . (int)$comparebles_property->property_id . '"'
+            . ' data-property="' . $propUrl . '"'
+            . ' href="' . $propUrl . '">'
+            . $streetEscaped
+            . $photoHtml
+            . '</a>';
         $col5  = $comparebles_property->bedrooms;
         $col6  = $comparebles_property->bathrooms;
         $col7  = $comparebles_property->lot_acreage;
@@ -854,7 +879,9 @@ class PropertyController extends Controller
         $col11 = !empty($comparebles_property->estimated_price) ? '$' . number_format($comparebles_property->estimated_price) : '';
         $col12 = $discont > 0 ? round($discont, 2) . '%' : '';
         $col13 = $comparebles_property->subdivision ?? '';
-        $col14 = CPathCDN::checkPhoto($comparebles_property, 'thumb-img-80', 0);
+        // Keep the column shape stable, but do not render an always-visible image.
+        // Image is now embedded in `$col4` and shown on hover.
+        $col14 = '';
 
         // Days on market
         $dtz          = new DateTimeZone('UTC');
