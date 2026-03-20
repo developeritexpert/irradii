@@ -211,18 +211,36 @@ class PropertyController extends Controller
             $house_views = !empty($details->propertyInfoDetails->house_views)
                 ? $details->propertyInfoDetails->house_views : '';
             $comparebles_properties = $this->getComparePropertyInfo(
-                '', $details->property_id, $details->property_type, $details->property_zipcode,
+                '',
+                $details->property_id,
+                $details->property_type,
+                $details->property_zipcode,
                 $details->getlatitude, $details->getlongitude, $details->year_biult_id,
                 $details->lot_acreage, $details->house_square_footage, $details->bathrooms,
                 $details->garages, $details->pool, $details->percentage_depreciation_value,
-                $details->estimated_price, $details->bedrooms, $details->subdivision,
+                $details->estimated_price, $details->property_price, $details->bedrooms, $details->subdivision,
                 $details->fundamentals_factor, $details->conditional_factor,
                 $house_views, $details->sub_type
             );
-            $c_properties = $this->getCompareblesProperties((object)$comparebles_properties, $details);
+
+            // Ensure we have an object with an object for result_query
+            if (is_array($comparebles_properties) && isset($comparebles_properties['result_query']) && is_array($comparebles_properties['result_query'])) {
+                $comparebles_properties['result_query'] = (object)$comparebles_properties['result_query'];
+            }
+            $comparebles_properties = (object)$comparebles_properties;
+
+            // In some cases `getComparePropertyInfo()` may return an object
+            // whose `result_query` property is still an array.
+            // The view checks `is_object($comparebles_properties->result_query ...)`,
+            // so ensure it is always an object when present.
+            if (isset($comparebles_properties->result_query) && is_array($comparebles_properties->result_query)) {
+                $comparebles_properties->result_query = (object)$comparebles_properties->result_query;
+            }
+
+            $c_properties = $this->getCompareblesProperties($comparebles_properties, $details);
         }
 
-        $countExcludeProperties = $this->countPropertiesExclude((object)$comparebles_properties);
+        $countExcludeProperties = $this->countPropertiesExclude(is_object($comparebles_properties) ? $comparebles_properties : (object)$comparebles_properties);
 
         // Map shape from session
         $shape            = '{}';
@@ -248,7 +266,7 @@ class PropertyController extends Controller
             'market_info'            => (object)$market_info,
             'similar_homes'          => $similar_homes,
             's_homes'                => $s_homes,
-            'comparebles_properties' => (object)$comparebles_properties,
+            'comparebles_properties' => is_object($comparebles_properties) ? $comparebles_properties : (object)$comparebles_properties,
             'c_properties'           => $c_properties,
             'countExcludeProperties' => $countExcludeProperties,
             'shape'                  => $shape,
@@ -453,11 +471,14 @@ class PropertyController extends Controller
             $house_views = !empty($details->propertyInfoDetails->house_views)
                 ? $details->propertyInfoDetails->house_views : '';
             $comparebles_properties = $this->getComparePropertyInfo(
-                '', $details->property_id, $details->property_type, $details->property_zipcode,
+                '',
+                $details->property_id,
+                $details->property_type,
+                $details->property_zipcode,
                 $details->getlatitude, $details->getlongitude, $details->year_biult_id,
                 $details->lot_acreage, $details->house_square_footage, $details->bathrooms,
                 $details->garages, $details->pool, $details->percentage_depreciation_value,
-                $details->estimated_price, $details->bedrooms, $details->subdivision,
+                $details->estimated_price, $details->property_price, $details->bedrooms, $details->subdivision,
                 $details->fundamentals_factor, $details->conditional_factor,
                 $house_views, $details->sub_type
             );
@@ -942,7 +963,7 @@ class PropertyController extends Controller
         $del_id, $property_id, $property_type, $property_zipcode,
         $property_lat, $property_lon, $year_biult_id,
         $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
-        $percentage_depreciation_value, $estimated_price, $bedrooms,
+        $percentage_depreciation_value, $estimated_price, $property_price, $bedrooms,
         $subdivision, $fundamentals_factor, $conditional_factor,
         $house_views, $sub_type
     ) {
@@ -979,7 +1000,7 @@ class PropertyController extends Controller
             $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
             $percentage_depreciation_value, $estimated_price, $bedrooms,
             $subdivision, $fundamentals_factor, $conditional_factor,
-            $house_views_list, $sub_type, 0
+            $house_views_list, $sub_type, $property_price
         );
 
         $result['estimated_value_subject_property_stage'] = $result['estimated_value_subject_property'] ?? 0;
@@ -1006,6 +1027,11 @@ class PropertyController extends Controller
     private function getHouseViewsArr($house_views_list, $house_views)
     {
         $house_views_ret   = [];
+        // If we don't have any house-views text for this property, don't build a restrictive
+        // NOT LIKE filter (empty string would otherwise mark every view as "not present").
+        if (trim((string)$house_views) === '') {
+            return [];
+        }
         $house_views_lower = strtolower($house_views);
         foreach ($house_views_list as $value) {
             if (strpos($house_views_lower, $value) === false) {

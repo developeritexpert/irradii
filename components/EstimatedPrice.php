@@ -97,8 +97,6 @@ class EstimatedPrice
             $result['bedrooms_weighted'] = 0;
             $result['garages_weighted'] = 0;
             $result['pool_weighted'] = 0;
-            $result['result_query'] = 0;
-            $result['result_queryAllRows'] = 0;
             return;
         }
 
@@ -107,25 +105,30 @@ class EstimatedPrice
             $compare_property_zipcode = "AND property_info.property_zipcode = {$property_zipcode}";
         }
 
+        $distance = (float)($select_estimated_price_result->distance ?? 0);
+
         $compare_property_lat = '';
-        if (($property_lat != '0.000000') && ($property_lat != '')) {
-            $compare_property_lat = $this->actionComparePropertyLat($property_lat, $select_estimated_price_result->distance);
+        if (($property_lat != '0.000000') && ($property_lat != '') && $distance > 0) {
+            $compare_property_lat = $this->actionComparePropertyLat($property_lat, $distance);
         }
         $compare_property_lon = '';
-        if (($property_lon != '0.000000') && ($property_lon != '')) {
-            $compare_property_lon = $this->actionComparePropertyLon($property_lon, $select_estimated_price_result->distance);
+        if (($property_lon != '0.000000') && ($property_lon != '') && $distance > 0) {
+            $compare_property_lon = $this->actionComparePropertyLon($property_lon, $distance);
         }
         $compare_property_year_build = '';
-        if ($year_biult_id != '') {
-            $compare_property_year_build = $this->actionComparePropertyYearBuild($year_biult_id, $select_estimated_price_result->year_estimated);
+        $year_compare = $select_estimated_price_result->year_estimated ?? null;
+        if ($year_biult_id != '' && $year_compare !== null && (float)$year_compare > 0) {
+            $compare_property_year_build = $this->actionComparePropertyYearBuild($year_biult_id, $year_compare);
         }
         $compare_lot_sq_footage = '';
-        if ($lot_sq_footage != '') {
-            $compare_lot_sq_footage = $this->actionCompareLotSqFootage($lot_sq_footage, $select_estimated_price_result->lot_estimated);
+        $lot_compare = $select_estimated_price_result->lot_estimated ?? null;
+        if ($lot_sq_footage != '' && $lot_compare !== null && (float)$lot_compare > 0) {
+            $compare_lot_sq_footage = $this->actionCompareLotSqFootage($lot_sq_footage, $lot_compare);
         }
         $compare_house_sq_footage = '';
-        if ($house_sq_footage != '') {
-            $compare_house_sq_footage = $this->actionCompareHouseSqFootage($house_sq_footage, $select_estimated_price_result->house_estimated);
+        $house_compare = $select_estimated_price_result->house_estimated ?? null;
+        if ($house_sq_footage != '' && $house_compare !== null && (float)$house_compare > 0) {
+            $compare_house_sq_footage = $this->actionCompareHouseSqFootage($house_sq_footage, $house_compare);
         }
         $compare_bathrooms = '';
         if (!empty($select_estimated_price_result->baths_estimated) && !empty($bathrooms)) {
@@ -177,16 +180,115 @@ class EstimatedPrice
                 $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
             );
 
+            // Fallback retries: if the full constraint set yields zero comparable rows,
+            // progressively relax the most specific filters so we can still render comparables.
+            if ((int)$total_count === 0 && (int)$curStage === 1) {
+                // Retry 1: remove subdivision/sub-type/house-views constraints.
+                $compare_subdivision = '';
+                $compare_house_views = '';
+                $compare_sub_type = '';
+                $total_count = $this->countComparePropertyInfo(
+                    $session_id,
+                    $gettoday_date,
+                    $comp_time,
+                    $compare_property_type,
+                    $compare_property_zipcode,
+                    $compare_property_year_build,
+                    $compare_lot_sq_footage,
+                    $compare_house_sq_footage,
+                    $compare_property_lon,
+                    $compare_property_lat,
+                    $property_id,
+                    $compare_bedrooms,
+                    $compare_bathrooms,
+                    $compare_subdivision,
+                    $compare_house_views,
+                    $compare_sub_type
+                );
+
+                // Retry 2: if still zero, remove lot acreage constraint.
+                if ((int)$total_count === 0) {
+                    $compare_lot_sq_footage = '';
+                    $total_count = $this->countComparePropertyInfo(
+                        $session_id,
+                        $gettoday_date,
+                        $comp_time,
+                        $compare_property_type,
+                        $compare_property_zipcode,
+                        $compare_property_year_build,
+                        $compare_lot_sq_footage,
+                        $compare_house_sq_footage,
+                        $compare_property_lon,
+                        $compare_property_lat,
+                        $property_id,
+                        $compare_bedrooms,
+                        $compare_bathrooms,
+                        $compare_subdivision,
+                        $compare_house_views,
+                        $compare_sub_type
+                    );
+                }
+
+                // Retry 3: if still zero, remove bed/bath constraints.
+                if ((int)$total_count === 0) {
+                    $compare_bedrooms = '';
+                    $compare_bathrooms = '';
+                    $total_count = $this->countComparePropertyInfo(
+                        $session_id,
+                        $gettoday_date,
+                        $comp_time,
+                        $compare_property_type,
+                        $compare_property_zipcode,
+                        $compare_property_year_build,
+                        $compare_lot_sq_footage,
+                        $compare_house_sq_footage,
+                        $compare_property_lon,
+                        $compare_property_lat,
+                        $property_id,
+                        $compare_bedrooms,
+                        $compare_bathrooms,
+                        $compare_subdivision,
+                        $compare_house_views,
+                        $compare_sub_type
+                    );
+                }
+
+                // Retry 4: if still zero, remove lat/lon radius constraints.
+                if ((int)$total_count === 0) {
+                    $compare_property_lat = '';
+                    $compare_property_lon = '';
+                    $total_count = $this->countComparePropertyInfo(
+                        $session_id,
+                        $gettoday_date,
+                        $comp_time,
+                        $compare_property_type,
+                        $compare_property_zipcode,
+                        $compare_property_year_build,
+                        $compare_lot_sq_footage,
+                        $compare_house_sq_footage,
+                        $compare_property_lon,
+                        $compare_property_lat,
+                        $property_id,
+                        $compare_bedrooms,
+                        $compare_bathrooms,
+                        $compare_subdivision,
+                        $compare_house_views,
+                        $compare_sub_type
+                    );
+                }
+            }
+
             $result['house_weighted'] = $select_estimated_price_result->house_weighted;
             $result['lot_weighted'] = $select_estimated_price_result->lot_weighted;
             $result['bathrooms_weighted'] = $select_estimated_price_result->bathrooms_weighted;
             $result['bedrooms_weighted'] = $select_estimated_price_result->bedrooms_weighted;
             $result['garages_weighted'] = $select_estimated_price_result->garages_weighted;
             $result['pool_weighted'] = $select_estimated_price_result->pool_weighted;
-            $result['result_query'] = [];
-            $result['result_queryAllRows'] = [];
 
-            if ($total_count >= $select_estimated_price_result->min_comp) {
+            // In legacy Yii1 the comparable table is populated as long as at least one matching row exists.
+            // In Yii2 we were gating on `min_comp`, which can leave `result_queryAllRows` empty and the table blank.
+            // So: only require `> 0` matches here.
+            if ((int)$total_count > 0) {
                 $result_queryAllRows = $this->actionComparePropertyInfoAllRows(
                     $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
                     $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
@@ -294,46 +396,29 @@ class EstimatedPrice
                     || $garages > 0 && $qualifying_value_garages_amenties <= 0
                     || $pool > 0 && $qualifying_value_pool_amenties <= 0
                 ) {
-                    $curStage++;
-                    if ($curStage <= (Yii::$app->params['maxCalcStages'] ?? 10)) {
-                        unset($result_query);
-                        unset($result_queryAllRows);
-                        unset($result['result_query']);
-                        unset($result['result_queryAllRows']);
-                        $this->calculateEstimatedPriceStage(
-                            $curStage,
-                            $result, $gettoday_date, $comp_time, $session_id,
-                            $property_id, $property_type, $property_zipcode,
-                            $property_lat, $property_lon, $year_biult_id,
-                            $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
-                            $percentage_depreciation_value, $estimated_price, $bedrooms,
-                            $subdivision, $fundamentals_factor, $conditional_factor,
-                            $house_views_list, $sub_type, $property_price
-                        );
-                        return;
-                    } else {
-                        $result['house_weighted'] = $select_estimated_price_result->house_weighted;
-                        $result['lot_weighted'] = $select_estimated_price_result->lot_weighted;
-                        $result['bathrooms_weighted'] = $select_estimated_price_result->bathrooms_weighted;
-                        $result['bedrooms_weighted'] = $select_estimated_price_result->bedrooms_weighted;
-                        $result['garages_weighted'] = $select_estimated_price_result->garages_weighted;
-                        $result['pool_weighted'] = $select_estimated_price_result->pool_weighted;
-                        $result['low_sd'] = $low_sd;
-                        $result['high_sd'] = $high_sd;
+                    // Keep the comparable rows even if TMV/confidence math fails for this stage.
+                    // This mirrors the UI expectation: Comparable table should still show.
+                    $result['house_weighted'] = $select_estimated_price_result->house_weighted;
+                    $result['lot_weighted'] = $select_estimated_price_result->lot_weighted;
+                    $result['bathrooms_weighted'] = $select_estimated_price_result->bathrooms_weighted;
+                    $result['bedrooms_weighted'] = $select_estimated_price_result->bedrooms_weighted;
+                    $result['garages_weighted'] = $select_estimated_price_result->garages_weighted;
+                    $result['pool_weighted'] = $select_estimated_price_result->pool_weighted;
+                    $result['low_sd'] = $low_sd;
+                    $result['high_sd'] = $high_sd;
 
-                        $result['result_query'] = $result_query;
-                        $result['result_queryAllRows'] = $result_queryAllRows;
-                        $result['price'] = $property_price;
-                        $result['estimated_price'] = $estimated_price;
-                        $result['estimated_price_dollar'] = 0;
-                        $result['estimated_value_subject_property'] = 0;
-                        $result['low_range'] = $low_range;
-                        $result['high_range'] = $high_range;
-                        $result['percentage_depreciation_value'] = $percentage_depreciation_value;
-                        $result['current_stage'] = $curStage - 1;
-                        $result['comps'] = $total_count;
-                        return;
-                    }
+                    $result['result_query'] = $result_query;
+                    $result['result_queryAllRows'] = $result_queryAllRows;
+                    $result['price'] = $property_price;
+                    $result['estimated_price'] = $estimated_price;
+                    $result['estimated_price_dollar'] = 0;
+                    $result['estimated_value_subject_property'] = 0;
+                    $result['low_range'] = $low_range;
+                    $result['high_range'] = $high_range;
+                    $result['percentage_depreciation_value'] = $percentage_depreciation_value;
+                    $result['current_stage'] = $curStage;
+                    $result['comps'] = $total_count;
+                    return;
                 } else {
                     $estimated_value_square_footage = $qualifying_value_square_footage * $house_sq_footage;
                     $estimated_value_lot_footage = $qualifying_value_lot_footage * $lot_sq_footage;
@@ -522,7 +607,17 @@ class EstimatedPrice
                     LEFT JOIN ( `property_info_details`, `property_info_additional_brokerage_details` )  
                     ON ( `property_info_details`.`property_id` = `property_info`.`property_id` AND `property_info_additional_brokerage_details`.`property_id`=`property_info`.`property_id` )
                     WHERE UPPER(`property_info`.`property_status`)='ACTIVE' 
-                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN ('HISTORY','EXPIRED','AUCTION')
+                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN (
+                              'HISTORY',
+                              'TEMPOFF',
+                              'INCOMPLETE',
+                              'NOT FOR SALE',
+                              'TEMPORARILY OFF THE MARKET',
+                              'EXPIRED',
+                              'WITHDRAWN',
+                              'WITHDRAWN UNCONDITIONAL',
+                              'WITHDRAWN CONDITIONAL'
+                          )
                           AND `property_info`.`property_price` > 0 
                           AND `property_info`.`property_expire_date` >=DATE('" . $gettoday_date . "') 
                           AND `property_info`.`property_updated_date` >=DATE('" . $comp_time . "') 
@@ -552,7 +647,17 @@ class EstimatedPrice
                     LEFT JOIN ( `property_info_details`, `property_info_additional_brokerage_details` )  
                     ON ( `property_info_details`.`property_id` = `property_info`.`property_id` AND `property_info_additional_brokerage_details`.`property_id`=`property_info`.`property_id` )
                     WHERE UPPER(`property_info`.`property_status`)='ACTIVE' 
-                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN ('HISTORY','EXPIRED','AUCTION')
+                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN (
+                              'HISTORY',
+                              'TEMPOFF',
+                              'INCOMPLETE',
+                              'NOT FOR SALE',
+                              'TEMPORARILY OFF THE MARKET',
+                              'EXPIRED',
+                              'WITHDRAWN',
+                              'WITHDRAWN UNCONDITIONAL',
+                              'WITHDRAWN CONDITIONAL'
+                          )
                           AND `property_info`.`property_price` > 0 
                           AND `property_info`.`property_expire_date` >=DATE('" . $gettoday_date . "') 
                           AND `property_info`.`property_updated_date` >=DATE('" . $comp_time . "') 
@@ -592,7 +697,17 @@ class EstimatedPrice
                     LEFT JOIN ( `property_info_details`, `property_info_additional_brokerage_details` )  
                     ON ( `property_info_details`.`property_id` = `property_info`.`property_id` AND `property_info_additional_brokerage_details`.`property_id`=`property_info`.`property_id` )
                     WHERE UPPER(`property_info`.`property_status`)='ACTIVE' 
-                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN ('HISTORY','EXPIRED','AUCTION')
+                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN (
+                              'HISTORY',
+                              'TEMPOFF',
+                              'INCOMPLETE',
+                              'NOT FOR SALE',
+                              'TEMPORARILY OFF THE MARKET',
+                              'EXPIRED',
+                              'WITHDRAWN',
+                              'WITHDRAWN UNCONDITIONAL',
+                              'WITHDRAWN CONDITIONAL'
+                          )
                           AND `property_info`.`property_price` > 0 
                           AND `property_info`.`property_expire_date` >='" . $gettoday_date . "' 
                           AND `property_info`.`property_updated_date` >='" . $comp_time . "' 
