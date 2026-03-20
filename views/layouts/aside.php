@@ -89,10 +89,10 @@ $profile = $user ? $user->profile : null;
 
             <?php if(SiteHelper::isAdmin()): ?>
                 <li>
-                    <a id="admins_menu" href="#"><i class="fa fa-lg fa-fw fa-medkit"></i> <span class="menu-item-parent">Admins</span></a>
+                    <a id="admins_menu" href="javascript:void(0);"><i class="fa fa-lg fa-fw fa-medkit"></i> <span class="menu-item-parent">Admins</span></a>
                     <ul>
                         <li>
-                            <a id="adclient_menu" href="#"> Ad Clients </a>
+                            <a id="adclient_menu" href="javascript:void(0);"> Ad Clients </a>
                             <ul>
                                 <li><a id="adclient_1_menu" href="<?php echo Url::to(['adclient/activity/admin'])?>"> Manage Ad Client Activities </a></li>
                                 <li><a id="adclient_2_menu" href="<?php echo Url::to(['adclient/adclient/admin'])?>"> Manage Ad Clients </a></li>
@@ -104,7 +104,7 @@ $profile = $user ? $user->profile : null;
                         <li><a id="history_admins_menu" href="<?php echo Url::to(['stat-info/history'])?>">Property History</a></li>
                         <li><a id="factors_admins_menu" href="<?php echo Url::to(['stat-info/factor'])?>">Factors</a></li>
                         <li>
-                            <a id="blog_menu" href="#"> Blog </a>
+                            <a id="blog_menu" href="javascript:void(0);"> Blog </a>
                             <ul>
                                 <li><a id="blog_1_menu" href="<?php echo Url::to(['blog/index'])?>"> Posts </a></li>
                                 <li><a id="blog_2_menu" href="<?php echo Url::to(['blog/post/admin'])?>"> Manage Posts </a></li>
@@ -112,14 +112,14 @@ $profile = $user ? $user->profile : null;
                             </ul>
                         </li>
                         <li>
-                            <a id="landing_menu" href="#"> Landing Pages </a>
+                            <a id="landing_menu" href="javascript:void(0);"> Landing Pages </a>
                             <ul>
                                 <li><a id="landing_1_menu" href="<?php echo Url::to(['landing/index'])?>"> Landing Pages </a></li>
                                 <li><a id="landing_2_menu" href="<?php echo Url::to(['landing/create'])?>"> Create Landing Page </a></li>
                             </ul>
                         </li>
-                        <li><a href="<?php echo Url::to(['membership/membership/search-membership'])?>">User Subscriptions</a></li>
-                        <li><a href="<?php echo Url::to(['stat-info/uploadalertsmessages'])?>">Email Alerts Messages</a></li>
+                        <li><a href="<?php echo Url::to(['/membership/membership/search-membership'])?>">User Subscriptions</a></li>
+                        <li><a href="<?php echo Url::to(['/stat-info/uploadalertsmessages'])?>">Email Alerts Messages</a></li>
                     </ul>
                 </li>
             <?php endif; ?>

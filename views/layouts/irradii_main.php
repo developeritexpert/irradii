@@ -8,14 +8,12 @@ use app\models\UserOAuth;
 /* @var $this yii\web\View */
 /* @var $content string */
 
-// Yii1: Yii::import('ext.hoauth.*'); require_once('models/UserOAuth.php'); require_once('HOAuthAction.php');
-// In Yii2, classes are autoloaded via namespaces. Adjust the namespace/path as needed for your project.
-// If UserOAuth and HOAuthAction are in the same module or extension, use the appropriate `use` statement.
-// For now, we assume they are available via autoloading or have been migrated.
-
-$configHOauth = UserOAuth::getConfig();
-
 $guest = Yii::$app->user->isGuest ? 0 : 1;
+$trial = false;
+if(!Yii::$app->user->isGuest){
+    $userId = Yii::$app->user->id;
+    $trial = \app\models\Subscriptions::find()->where(['user_id'=>$userId, 'trans_id'=>'trial'])->exists();
+}
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
@@ -212,43 +210,11 @@ class="">
             </div><!-- /#logo-group -->
 
 <?php if (!Yii::$app->user->isGuest): ?>
-                    <!-- Professionals dropdown -->
-                    <div id="project-context">
-                        <span class="label">Tools:</span>
-                        <span id="project-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">For Professionals <i class="fa fa-angle-down"></i></span>
-                        <ul class="dropdown-menu">
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate investors</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate agents</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate brokers</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Landlords</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Home Buyers</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Lenders and Title</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Insurance and Contractors</a></li>
-                            <li class="divider"></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
-                        </ul>
-                    </div>
-
-                    <!-- Market Info dropdown -->
-                    <div id="project-context">
-                        <span class="label">Local:</span>
-                        <span id="market-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">Market Info <i class="fa fa-angle-down"></i></span>
-                        <ul class="dropdown-menu">
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">How does Irradii.com work?</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">What's this home worth?</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">True Market Value Property Reports</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Foreclosure Data</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Local Market Trends</a></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>">Property and Market Comparisons</a></li>
-                            <li class="divider"></li>
-                            <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
-                        </ul>
-                    </div>
 
                     <!-- history dropdown (Authenticated only) -->
                     <div id="project-context">
                         <span class="label">History:</span>
-                        <span id="history-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown">Recent pages <i class="fa fa-angle-down"></i></span>
+                        <span id="history-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">Recent pages <i class="fa fa-angle-down"></i></span>
                         <ul class="dropdown-menu">
                             <?php $session = Yii::$app->session;
                             if(isset($session['recent_pages']) && count($session['recent_pages'])>0):?>
@@ -283,12 +249,18 @@ class="">
                     </div>
                     <!-- end collapse menu -->
 
-                    <!-- logout button -->
                     <?php if (!Yii::$app->user->isGuest): ?>
                         <div id="logout" class="btn-header transparent pull-right">
                             <span> <a href="<?php echo Url::to(['/login/logout']); ?>" title="Sign Out"><i class="fa fa-sign-out"></i></a> </span>
                         </div>
                     <?php endif; ?>
+                    <?php if(\app\components\SiteHelper::isAdmin() === false && \app\components\SiteHelper::forFullPaidMembersOnly(true) !== true && !$trial){ ?>
+                        <div id="free-trial-block" class="btn-header transparent pull-right">
+                                    <span id="free-trial-link">
+                                        <a href="<?php echo Yii::$app->params['linkToBuyingSubscrFreeTrial30days'] ?? '#'?>" class="btn btn-sm btn-warning">Free 30 day trial</a>
+                                    </span>
+                        </div>
+                    <?php } ?>
 
                     <!-- end logout button -->
 
@@ -437,6 +409,14 @@ class="">
                         </div>								
                         <!-- end create account button -->				
 
+                        <?php if(\app\components\SiteHelper::forFullPaidMembersOnly(true) !== true && !$trial){ ?>
+                            <div id="free-trial-block" class="btn-header transparent pull-right">
+                                    <span id="free-trial-link">
+                                        <a href="<?php echo Yii::$app->params['linkToBuyingSubscrFreeTrial30days'] ?? '#'?>" class="btn btn-sm btn-warning">Free 30 day trial</a>
+                                    </span>
+                            </div>
+                        <?php } ?>
+
                         <!-- search mobile button (this is hidden till mobile view port) -->
                         <div id="search-mobile" class="btn-header transparent pull-right">
                             <span> <a href="javascript:void(0)" title="Search"><i class="fa fa-search"></i></a> </span>
@@ -523,87 +503,50 @@ $this->registerJs("
         <!-- JS TOUCH : include this plugin for mobile drag / drop touch events
         <script src="js/plugin/jquery-touch/jquery.ui.touch-punch.min.js"></script> -->
 
-        <!-- BOOTSTRAP JS -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/bootstrap/bootstrap.min.js', ['position' => $this::POS_END]); ?>
+        <!-- JQUERY MIGRATE (Legacy Compatibility) -->
+        <?php $this->registerJsFile('https://code.jquery.com/jquery-migrate-1.4.1.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
+        <!-- BOOTSTRAP JS -->
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/bootstrap/bootstrap.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- CUSTOM NOTIFICATION -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/notification/SmartNotification.min.js', ['position' => $this::POS_END]); ?>
-
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/notification/SmartNotification.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- JARVIS WIDGETS -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/smartwidgets/jarvis.widget.min.js', ['position' => $this::POS_END]); ?>
-
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/smartwidgets/jarvis.widget.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- EASY PIE CHARTS -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/easy-pie-chart/jquery.easy-pie-chart.min.js', ['position' => $this::POS_END]); ?>
-
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/easy-pie-chart/jquery.easy-pie-chart.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- SPARKLINES -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/sparkline/jquery.sparkline.min.js', ['position' => $this::POS_END]); ?>
-
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/sparkline/jquery.sparkline.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- JQUERY VALIDATE -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/jquery-validate/jquery.validate.min.js', ['position' => $this::POS_END]); ?>
-
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/jquery-validate/jquery.validate.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- JQUERY MASKED INPUT -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/masked-input/jquery.maskedinput.min.js', ['position' => $this::POS_END]); ?>
-
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/masked-input/jquery.maskedinput.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- JQUERY SELECT2 INPUT -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/select2/400/select2_custom.js', ['position' => $this::POS_END]); ?>
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/select2/select2.min.js', ['position' => $this::POS_END]); ?>
-
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/select2/select2.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- JQUERY UI + Bootstrap Slider -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/bootstrap-slider/bootstrap-slider.min.js', ['position' => $this::POS_END]); ?>
-
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/bootstrap-slider/bootstrap-slider.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- browser msie issue fix -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/msie-fix/jquery.mb.browser.min.js', ['position' => $this::POS_END]); ?>
-
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/msie-fix/jquery.mb.browser.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- SmartClick: For mobile devices -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/smartclick/smartclick.js', ['position' => $this::POS_END]); ?>
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/smartclick/smartclick.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- JQuery Form: For form managing -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/jquery-form/jquery-form.min.js', ['position' => $this::POS_END]); ?>
-
-        <!--[if IE 7]>
-
-                <h1>Your browser is out of date, please update your browser by going to www.microsoft.com/download</h1>
-
-        <![endif]-->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/demo.js', ['position' => $this::POS_END]); ?>
-
-        <!-- MAIN APP JS FILE -->
-        <?php // $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/app.js', ['position' => $this::POS_END]); ?>
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/jquery-form/jquery-form.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- PAGE RELATED PLUGIN(S) -->
-
-        <!-- Flot Chart Plugin: Flot Engine, Flot Resizer, Flot Tooltip -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/flot/jquery.flot.cust.js', ['position' => $this::POS_END]); ?>
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/flot/jquery.flot.resize.js', ['position' => $this::POS_END]); ?>
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/flot/jquery.flot.tooltip.js', ['position' => $this::POS_END]); ?>
-
-        <!-- Vector Maps Plugin: Vectormap engine, Vectormap language -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/vectormap/jquery-jvectormap-1.2.2.min.js', ['position' => $this::POS_END]); ?>
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/vectormap/jquery-jvectormap-world-mill-en.js', ['position' => $this::POS_END]); ?>
-
-        <!-- Full Calendar -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/fullcalendar/jquery.fullcalendar.min.js', ['position' => $this::POS_END]); ?>
-        <!-- PACE LOADER - turn this on if you want ajax loading to show (caution: uses lots of memory on iDevices)-->
-
-
-        <!-- JS TOUCH : include this plugin for mobile drag / drop touch events
-        <script src="js/plugin/jquery-touch/jquery.ui.touch-punch.min.js"></script> -->
-
-        <!-- PAGE RELATED PLUGIN(S) -->
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/bootstrap-progressbar/bootstrap-progressbar.js", ['position' => $this::POS_END]); ?>
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/datatables/jquery.dataTables-cust.min.js", ['position' => $this::POS_END]); ?>
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/bootstrap-tags/bootstrap-tagsinput.min.js", ['position' => $this::POS_END]); ?>
-        <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/datatables/ColReorder.min.js", ['position' => $this::POS_END]); ?>
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/bootstrap-progressbar/bootstrap-progressbar.js", ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/datatables/jquery.dataTables-cust.min.js", ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/bootstrap-tags/bootstrap-tagsinput.min.js", ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
+        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/datatables/ColReorder.min.js", ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <?php // $this->registerJsFile(Yii::$app->view->theme->getBaseUrl() . '/js/concat-build.min.js', ['position' => $this::POS_END]); // load file from project folder ?>
 <!--        --><?php //$this->registerJsFile(CPathCDN::gzipPublish(Yii::$app->view->theme->basePath . '/js/concat-build.min.js', 'text/javascript'), ['position' => $this::POS_END]); //included .js files are listed in Gruntfile.js ?>
@@ -615,8 +558,14 @@ $this->registerJs("
             'depends' => [\yii\web\JqueryAsset::class, \yii\web\YiiAsset::class]
         ]);
 
-        // 2. Google Maps - Updated for Yii2 and API Key requirement
-        $this->registerJsFile('https://maps.googleapis.com/maps/api/js?key=' . Yii::$app->params['googleMapsKey'] . '&libraries=drawing,places', [
+        // 2. TinyMCE
+        $this->registerJsFile('@web/js/tinymce/tinymce.min.js', [
+            'position' => $this::POS_END,
+            'depends' => [\yii\web\JqueryAsset::class]
+        ]);
+
+        // 3. Google Maps - Updated for Yii2 and API Key requirement
+        $this->registerJsFile('https://maps.googleapis.com/maps/api/js?key=' . (Yii::$app->params['googleMapsKey'] ?? '') . '&libraries=drawing,places', [
             'position' => $this::POS_END,
             'async' => true,
             'defer' => true
@@ -693,10 +642,15 @@ $this->registerJs("
             });
                  ", $this::POS_READY);
         $this->registerJs(" 
-            $('#logo').click(function(e){
-                e.preventDefault();
-                window.location.href = '" . Yii::$app->request->baseUrl . "';
-            });
+                // SmartAdmin Page Setup
+                if (typeof pageSetUp === 'function') {
+                    pageSetUp();
+                }
+
+                $('#logo').click(function(e){
+                    e.preventDefault();
+                    window.location.href = '" . Yii::$app->request->baseUrl . "';
+                });
                  ", $this::POS_READY);
 
 $this->registerJs("
