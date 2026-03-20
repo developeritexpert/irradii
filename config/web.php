@@ -66,13 +66,16 @@ $config = [
             ],
         ],
         'db' => $db,
-        'urlManager' => [
-            'enablePrettyUrl' => true,
-            'showScriptName' => false,
-            'rules' => [
-                'user/login' => 'login/login',
-            ],
+    'urlManager' => [
+        'enablePrettyUrl' => true,
+        'showScriptName' => false,
+        'rules' => [
+            'user/login' => 'login/login',
+            'landing/post/<id:\d+>/<title:.*>' => 'post/view',
+            'landing/post/<id:\d+>' => 'post/view',
+            'blog' => 'post/index',
         ],
+    ],
     ],
     'params' => $params,
 ];

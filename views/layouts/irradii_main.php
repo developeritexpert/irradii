@@ -36,8 +36,8 @@ $guest = Yii::$app->user->isGuest ? 0 : 1;
 <meta property="og:site_name" content="Irradii Real Estate">
 <meta property="og:title" content="Irradii Real Estate">
 <meta property="og:type" content="article">
-<meta property="og:url" content="http://irradii.com/user/login">
-<meta property="og:image" content="http://css.irradii.com/assets/img/demo/color_logo.png">
+<meta property="og:url" content="<?= Url::current([], true) ?>">
+<meta property="og:image" content="<?= Yii::$app->request->hostInfo . Yii::$app->request->baseUrl ?>/assets/img/demo/color_logo.png">
 <meta property="og:locale" content="en_US">
 <meta property="og:description" content="Real estate search just got a whole lot smarter! Irradii is your eye into a market full of valuable real estate opportunities all around you.">
 
@@ -212,44 +212,57 @@ class="">
             </div><!-- /#logo-group -->
 
 <?php if (!Yii::$app->user->isGuest): ?>
-                <!-- projects dropdown -->
-                <div id="project-context">
+                    <!-- Professionals dropdown -->
+                    <div id="project-context">
+                        <span class="label">Tools:</span>
+                        <span id="project-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">For Professionals <i class="fa fa-angle-down"></i></span>
+                        <ul class="dropdown-menu">
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate investors</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate agents</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate brokers</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Landlords</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Home Buyers</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Lenders and Title</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Insurance and Contractors</a></li>
+                            <li class="divider"></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
+                        </ul>
+                    </div>
 
-                    <span class="label">History:</span>
-                    <span id="project-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown">Recent pages <i class="fa fa-angle-down"></i></span>
+                    <!-- Market Info dropdown -->
+                    <div id="project-context">
+                        <span class="label">Local:</span>
+                        <span id="market-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">Market Info <i class="fa fa-angle-down"></i></span>
+                        <ul class="dropdown-menu">
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">How does Irradii.com work?</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">What's this home worth?</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">True Market Value Property Reports</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Foreclosure Data</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Local Market Trends</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Property and Market Comparisons</a></li>
+                            <li class="divider"></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
+                        </ul>
+                    </div>
 
-                    <!-- Suggestion: populate this list with fetch and push technique -->
-                    <ul class="dropdown-menu">
-                        <?php $session = Yii::$app->session;
-                        //$session['recent_pages'] = array();
-                        
-                        if(isset($session['recent_pages']) && count($session['recent_pages'])>0):?>
-                        <?php $sess_arr = array_unique($session['recent_pages']); ?>
-                        <?php 
-                        while (count($sess_arr)>10) {
-                            array_shift($sess_arr);
-//                            unset($sess_arr[0]);
-//                            ksort($sess_arr);
-                        }
-                        $session['recent_pages'] = $sess_arr;
-                        ?>
-                        <?php  
-                            foreach ($sess_arr as $page_value):?>
-                               <?php  $sub_recent_page_arr = explode('@', $page_value);?>
-                               <li>
-                                    <a href="<?php echo $sub_recent_page_arr[1] ?>"><?php echo $sub_recent_page_arr[0]; ?></a>
-                               </li>
-                            <?php endforeach;?>
-                        <?php endif; ?>
-                        
-                        <li class="divider"></li>
-                        <li>
-                            <a href="javascript:void(0);"><i class="fa fa-power-off"></i> Clear</a>
-                        </li>
-                    </ul>
-                    <!-- end dropdown-menu-->
-
-                </div>
+                    <!-- history dropdown (Authenticated only) -->
+                    <div id="project-context">
+                        <span class="label">History:</span>
+                        <span id="history-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown">Recent pages <i class="fa fa-angle-down"></i></span>
+                        <ul class="dropdown-menu">
+                            <?php $session = Yii::$app->session;
+                            if(isset($session['recent_pages']) && count($session['recent_pages'])>0):?>
+                                <?php $sess_arr = array_unique($session['recent_pages']); ?>
+                                <?php while (count($sess_arr)>10) { array_shift($sess_arr); } $session['recent_pages'] = $sess_arr; ?>
+                                <?php foreach ($sess_arr as $page_value):?>
+                                    <?php $sub_recent_page_arr = explode('@', $page_value);?>
+                                    <li><a href="<?php echo $sub_recent_page_arr[1] ?>"><?php echo $sub_recent_page_arr[0]; ?></a></li>
+                                <?php endforeach;?>
+                            <?php endif; ?>
+                            <li class="divider"></li>
+                            <li><a href="javascript:void(0);"><i class="fa fa-power-off"></i> Clear</a></li>
+                        </ul>
+                    </div>
 
             <?php if(\app\components\SiteHelper::forFullPaidMembersOnly(true) !== true){ ?>
             <div class="unlock_header_btn">
@@ -330,76 +343,35 @@ class="">
 <?php else: ?><!--if (!Yii::$app->user->isGuest)-->
                 <!-- professionals dropdown -->
                 <div id="project-context">
-
                     <span class="label">Tools:</span>
-                    <span id="project-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown">For Professionals <i class="fa fa-angle-down"></i></span>
-
-                    <!-- Suggestion: populate this list with fetch and push technique -->
+                    <span id="project-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">For Professionals <i class="fa fa-angle-down"></i></span>
                     <ul class="dropdown-menu">
-                        <li>
-                            <a href="http://irradii.com/post/28/Irradii.com+for+real+estate+investors">Real estate investors</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/29/Irradii.com+for+real+estate+agents">Real estate agents</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/30/Irradii.com+for+real+estate+brokers">Real estate brokers</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/31/how+landlords+use+irradii.com">Landlords</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/32/how+home+buyers+use+irradii.com">Home Buyers</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/33/Lenders+and+Title+Companies+connect+on+irradii.com">Lenders and Title</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/34/Insurance+Companies%2C+Contractors+and+Vendors+earn+business+on+irradii.com+">Insurance and Contractors</a>
-                        </li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate investors</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate agents</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate brokers</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Landlords</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Home Buyers</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Lenders and Title</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Insurance and Contractors</a></li>
                         <li class="divider"></li>
-                        <li>
-                            <a href="http://irradii.com/blog"><i class="fa fa-plus"></i> MORE...</a>
-                        </li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
                     </ul>
-                    <!-- end dropdown-menu-->
-
                 </div>
-                <!-- end professionals dropdown -->
 
-                <!-- history dropdown -->
+                <!-- Market Info dropdown -->
                 <div id="project-context">
-
                     <span class="label">Local:</span>
-                    <span id="project-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown">Market Info <i class="fa fa-angle-down"></i></span>
-
-                    <!-- Suggestion: populate this list with fetch and push technique -->
+                    <span id="market-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">Market Info <i class="fa fa-angle-down"></i></span>
                     <ul class="dropdown-menu">
-                        <li>
-                            <a href="http://irradii.com/post/35/How+does+Irradii.com+work%3F">How does Irradii.com work?</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/36/What+is+this+home+worth%3F">What's this home worth?</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/37/True+Market+Value+Property+Reports">True Market Value Property Reports</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/38/Foreclosure+and+Short+Sale+Listing+and+Sales+Data">Foreclosure Data</a>
-                        </li>					
-                        <li>
-                            <a href="http://irradii.com/post/39/Local+Real+Estate+Market+Trends+and+Opportunities">Local Market Trends</a>
-                        </li>
-                        <li>
-                            <a href="http://irradii.com/post/40/Detailed+Property+Reports+and+Local+Market+Comparison+Statistics">Property and Market Comparisons</a>
-                        </li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">How does Irradii.com work?</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">What's this home worth?</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">True Market Value Property Reports</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Foreclosure Data</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Local Market Trends</a></li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>">Property and Market Comparisons</a></li>
                         <li class="divider"></li>
-                        <li>
-                            <a href="http://irradii.com/blog"><i class="fa fa-plus"></i> MORE...</a>
-                        </li>
+                        <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
                     </ul>
-                    <!-- end dropdown-menu-->
-
                 </div>
                 <!-- end history dropdown -->
     <?php if (isset($this->params['signin'])): ?>
@@ -765,6 +737,7 @@ $this->registerJs("
 </div><!-- /.modal -->
 
         <?php $this->endBody() ?>
-    </body>
+</body>
 </html>
 <?php $this->endPage() ?>
+```
