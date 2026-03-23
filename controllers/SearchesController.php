@@ -4,10 +4,10 @@ namespace app\controllers;
 
 use Yii;
 use yii\web\Controller;
-use yii\web\HttpException;
 use yii\filters\AccessControl;
-use yii\web\Response;
-use yii\web\Request;
+use yii\filters\VerbFilter;
+use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use app\models\User;
 use app\models\SavedSearch;
 use app\models\SavedSearchEmail;
@@ -15,8 +15,7 @@ use app\models\PropertyInfo;
 
 class SearchesController extends Controller
 {
-    public $layout = '//layouts/irradii';
-
+    public $layout = 'irradii';
     public $defaultAction = 'alerts';
 
     public function behaviors()
@@ -24,25 +23,26 @@ class SearchesController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::class,
+                'only' => ['alerts', 'delete', 'editable', 'unsubscribe'],
                 'rules' => [
                     [
+                        'actions' => ['alerts', 'delete', 'editable'],
                         'allow' => true,
-                        'actions' => ['alerts','delete','editable'],
                         'roles' => ['@'],
                     ],
                     [
-                        'allow' => true,
                         'actions' => ['unsubscribe'],
-                        'roles' => ['?','@'],
+                        'allow' => true,
                     ],
                 ],
             ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    // 'delete' => ['POST'], // Yii1 didn't strict enforce POST here but good practice
+                ],
+            ],
         ];
-    }
-
-    public function actions()
-    {
-        return [];
     }
 
     public function actionAlerts()
@@ -52,15 +52,13 @@ class SearchesController extends Controller
         }
 
         $model = User::find()
-            ->with(['profile','profession'])
-            ->where(['id'=>Yii::$app->user->id])
-            ->cache(1000)
+            ->with(['profile', 'profession'])
+            ->where(['id' => Yii::$app->user->id])
             ->one();
 
-        if (!is_object($model)) {
+        if (!$model) {
             return $this->redirect(['/user/login']);
         }
-
         $profile = $model->profile;
 
         $pageConfig = [
@@ -69,190 +67,185 @@ class SearchesController extends Controller
         ];
 
         $savedSearches = SavedSearch::find()
-            ->where(['user_id'=>Yii::$app->user->id])
-            ->with(['savedSearchCriteria','alertEmails'])
-            ->orderBy(['id'=>SORT_DESC])
+            ->where(['user_id' => Yii::$app->user->id])
+            ->orderBy(['id' => SORT_DESC])
+            ->with(['savedSearchCriteria', 'alertEmails'])
             ->all();
 
         $count = 0;
         $partials = [];
-
+        
         foreach ($savedSearches as $savedSearch) {
-
             if ($count >= $pageConfig['totalSearchResultTables']) {
                 break;
             }
 
             $searchResults = $savedSearch->makeSearch([
-                'limit'=>$pageConfig['rowsInSearchResultTable']
+                'limit' => $pageConfig['rowsInSearchResultTable']
             ]);
 
-            $property_models = PropertyInfo::find()
-                ->with([
-                    'city','county','state','zipcode',
-                    'propertyInfoAdditionalBrokerageDetails',
-                    'brokerage_join','slug'
-                ])
-                ->where(['property_id'=>$searchResults])
-                ->orderBy(['property_id'=>SORT_DESC])
-                ->all();
+            // Stubs out missing relations from Phase 3: 'city', 'county', 'state', 'zipcode', 'propertyInfoAdditionalBrokerageDetails', 'brokerage_join', 'slug'
+            $property_models = [];
+            if (class_exists(PropertyInfo::class) && !empty($searchResults)) {
+                $property_models = PropertyInfo::find()
+                    ->where(['property_id' => $searchResults])
+                    ->with(['slug', 'city', 'state', 'zipcode', 'propertyInfoAdditionalBrokerageDetails', 'brokerageJoin'])
+                    ->orderBy(['property_id' => SORT_DESC])
+                    ->all();
+            }
 
             $partialViewData = [
-                'table_header'=>$savedSearch->name,
-                'property_models'=>$property_models
+                'table_header' => $savedSearch->name,
+                'property_models' => $property_models,
             ];
 
-            $partials[] = $this->renderPartial(
-                '_recentSearchResultTable',
-                $partialViewData
-            );
+            // In Yii2, renderPartial returns string. We can use renderAjax or renderPartial.
+            $partials[] = $this->renderPartial('_recentSearchResultTable', $partialViewData);
 
             $count++;
         }
 
-        return $this->render('alerts',[
-            'profile'=>$profile,
-            'savedSearches'=>$savedSearches,
-            'partials'=>$partials,
-        ]);
+        $viewData = [
+            'profile' => $profile,
+            'savedSearches' => $savedSearches,
+            'partials' => $partials,
+        ];
+
+        return $this->render('alerts', $viewData);
     }
 
     public function actionDelete()
     {
         if (!YII_DEBUG && !Yii::$app->request->isAjax) {
-            throw new HttpException(403,'Forbidden access.');
+            throw new ForbiddenHttpException('Forbidden access.');
         }
 
-        $id = Yii::$app->request->get('id');
-
+        $id = Yii::$app->request->post('id') ?? Yii::$app->request->get('id');
         if (!$id) {
-            throw new HttpException(404,'Missing "id" parameter.');
+            throw new NotFoundHttpException('Missing "id" parameter.');
         }
 
         $model = SavedSearch::findOne($id);
-
         if ($model === null) {
-            throw new HttpException(404,'The requested page does not exist.');
+            throw new NotFoundHttpException('The requested page does not exist.');
         }
 
         if ($model->user_id != Yii::$app->user->id) {
-            throw new HttpException(403,'Forbidden access.');
+            throw new ForbiddenHttpException('Forbidden access.');
         }
 
         $model->delete();
 
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
-        return [
-            'success'=>true
-        ];
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        return ['success' => true];
     }
 
     public function actionEditable()
     {
         if (!YII_DEBUG && !Yii::$app->request->isAjax) {
-            throw new HttpException(403,'Forbidden access.');
+            throw new ForbiddenHttpException('Forbidden access.');
         }
 
-        $name = Yii::$app->request->get('name');
-
+        $name = Yii::$app->request->post('name') ?? Yii::$app->request->get('name');
         if (!$name) {
-            throw new HttpException(404,'Missing "name" parameter.');
+            throw new NotFoundHttpException('Missing "name" parameter.');
         }
 
+        $additionalResponse = [];
         switch ($name) {
-
             case 'name':
-                $additionalResponse = $this->editableName(Yii::$app->request);
+                $additionalResponse = $this->editableName();
                 break;
-
             case 'email':
-                $additionalResponse = $this->editableEmail(Yii::$app->request);
+                $additionalResponse = $this->editableEmail();
                 break;
-
             case 'email_alert_freq':
-                $additionalResponse = $this->editableEmailAlertFreq(Yii::$app->request);
+                $additionalResponse = $this->editableEmailAlertFreq();
                 break;
-
             case 'expiry_date':
-                $additionalResponse = $this->editableExpiryDate(Yii::$app->request);
+                $additionalResponse = $this->editableExpiryDate();
                 break;
-
             default:
-                throw new HttpException(404,'Unknown "name" parameter.');
+                throw new NotFoundHttpException('Unknown "name" parameter.');
         }
 
-        Yii::$app->response->format = Response::FORMAT_JSON;
-
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return $additionalResponse;
     }
 
-    public function editableName(Request $request)
+    protected function editableName()
     {
-        $pk = intval($request->get('pk'));
-        $value = trim($request->get('value'));
+        $request = Yii::$app->request;
+        $pk = intval($request->post('pk') ?? $request->get('pk'));
+        $value = trim($request->post('value') ?? $request->get('value'));
 
         $model = SavedSearch::findOne($pk);
-        $model->name = $value;
-
-        if(!$model->validate()){
-            return [
-                'success'=>false,
-                'errors'=>$model->getErrors()
-            ];
+        if($model) {
+            $model->name = $value;
+            if (!$model->validate()) {
+                return [
+                    'success' => false,
+                    'errors' => $model->getErrors(),
+                ];
+            }
+            $model->save(false);
         }
-
-        $model->save(false);
 
         return [];
     }
 
-    public function editableExpiryDate(Request $request)
+    protected function editableExpiryDate()
     {
-        $pk = intval($request->get('pk'));
-        $value = trim($request->get('value'));
+        $request = Yii::$app->request;
+        $pk = intval($request->post('pk') ?? $request->get('pk'));
+        $value = trim($request->post('value') ?? $request->get('value'));
 
-        $expiriDateTime = \DateTime::createFromFormat('Y-m-d',$value);
+        $expiriDateTime = \DateTime::createFromFormat('Y-m-d', $value);
 
         $model = SavedSearch::findOne($pk);
-        $model->expiry_date = $expiriDateTime->format('Y-m-d H:i:s');
-        $model->save(false);
+        if($model) {
+            $model->expiry_date = $expiriDateTime->format('Y-m-d H:i:s');
+            $model->save(false);
+        }
 
         return [];
     }
 
-    public function editableEmailAlertFreq(Request $request)
+    protected function editableEmailAlertFreq()
     {
-        $pk = intval($request->get('pk'));
-        $value = trim($request->get('value'));
+        $request = Yii::$app->request;
+        $pk = intval($request->post('pk') ?? $request->get('pk'));
+        $value = trim($request->post('value') ?? $request->get('value'));
 
         $model = SavedSearch::findOne($pk);
-        $model->email_alert_freq = $value;
-        $model->save(false);
+        if($model) {
+            $model->email_alert_freq = $value;
+            $model->save(false);
+        }
 
         return [];
     }
 
-    public function editableEmail(Request $request)
+    protected function editableEmail()
     {
-        $pk = intval($request->get('pk'));
-        $value = trim($request->get('value'));
+        $request = Yii::$app->request;
+        $pk = intval($request->post('pk') ?? $request->get('pk'));
+        $value = trim($request->post('value') ?? $request->get('value'));
 
-        if ($pk == 0) {
-            return $this->editableAddEmail($request);
-        }
-        elseif ($value == '') {
-            return $this->editableDeleteEmail($request);
-        }
-        else {
-            return $this->editableUpdateEmail($request);
+        if ($pk == 0) { // add new record
+            return $this->editableAddEmail();
+        } elseif ($value == '') { // delete record
+            return $this->editableDeleteEmail();
+        } else { // update record
+            return $this->editableUpdateEmail();
         }
     }
 
-    protected function editableAddEmail(Request $request)
+    protected function editableAddEmail()
     {
-        $saved_search_id = intval($request->get('saved_search_id'));
-        $value = trim($request->get('value'));
+        $request = Yii::$app->request;
+        $saved_search_id = intval($request->post('saved_search_id') ?? $request->get('saved_search_id'));
+        $value = trim($request->post('value') ?? $request->get('value'));
 
         $model = new SavedSearchEmail();
         $model->saved_search_id = $saved_search_id;
@@ -260,44 +253,48 @@ class SearchesController extends Controller
 
         if ($model->save()) {
             return [
-                'success'=>true,
-                'new_id'=>$model->id
+                'success' => true,
+                'new_id' => $model->id,
+            ];
+        } else {
+            return [
+                'success' => false,
+                'errors' => $model->getErrors(),
             ];
         }
-
-        return [
-            'success'=>false,
-            'errors'=>$model->getErrors()
-        ];
     }
 
-    protected function editableUpdateEmail(Request $request)
+    protected function editableUpdateEmail()
     {
-        $pk = intval($request->get('pk'));
-        $value = trim($request->get('value'));
+        $request = Yii::$app->request;
+        $pk = intval($request->post('pk') ?? $request->get('pk'));
+        $value = trim($request->post('value') ?? $request->get('value'));
 
         $model = SavedSearchEmail::findOne($pk);
-        $model->email = $value;
-
-        if ($model->save()) {
-            return ['success'=>true];
+        if($model) {
+            $model->email = $value;
+            if ($model->save()) {
+                return ['success' => true];
+            } else {
+                return [
+                    'success' => false,
+                    'errors' => $model->getErrors(),
+                ];
+            }
         }
-
-        return [
-            'success'=>false,
-            'errors'=>$model->getErrors()
-        ];
+        return ['success' => false];
     }
 
-    protected function editableDeleteEmail(Request $request)
+    protected function editableDeleteEmail()
     {
-        $pk = intval($request->get('pk'));
+        $request = Yii::$app->request;
+        $pk = intval($request->post('pk') ?? $request->get('pk'));
 
-        SavedSearchEmail::deleteAll(['id'=>$pk]);
+        SavedSearchEmail::deleteAll(['id' => $pk]);
 
         return [
-            'success'=>true,
-            'deleted_id'=>$pk
+            'success' => true,
+            'deleted_id' => $pk,
         ];
     }
 
@@ -305,25 +302,19 @@ class SearchesController extends Controller
     {
         $email = trim($email);
 
-        if(!$email){
+        if (!$email) {
             return $this->redirect(['/searches/alerts']);
         }
 
-        $user = User::find()
-            ->where(['username'=>$email])
-            ->one();
+        $user = User::findOne(['username' => $email]);
 
-        if($user){
-
-            SavedSearch::updateAll(
-                ['email_alert_freq'=>SavedSearch::EMAIL_FREQ_NEVER],
-                ['user_id'=>$user->id]
-            );
-
+        if ($user) {
+            // find saved searches by this user and set their frequency to never
+            SavedSearch::updateAll(['email_alert_freq' => SavedSearch::EMAIL_FREQ_NEVER], ['user_id' => $user->id]);
             return $this->redirect(['/searches/alerts']);
         }
 
-        SavedSearchEmail::deleteAll(['email'=>$email]);
+        SavedSearchEmail::deleteAll(['email' => $email]);
 
         return $this->redirect(['/searches/alerts']);
     }

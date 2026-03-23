@@ -81,57 +81,50 @@ class CPathCDN {
             $width = ' width="'.$width.'" ';
         }
 
+        $photo1 = $param_photo->photo1;
+        // Global normalization
+        if (strpos($photo1, 'irradii') !== false) {
+            $photo1 = str_replace('irradii', 'ippraisall', $photo1);
+        }
+
         $param_alt = (!empty($param_photo->fullAddress)) ? $param_photo->fullAddress : '';
 
-        if (strtolower(substr($param_photo->photo1, 0, 4)) === 'http') {
+        if (strtolower(substr($photo1, 0, 4)) === 'http') {
 
             $cdnPhotos = Yii::$app->params['cdnPhotos'];
 
             if (!empty($cdnPhotos)) {
-                $param_photo->photo1 = str_replace(
+                $photo1 = str_replace(
                     'http://www.propertyhookup.com/admin/photos/',
                     CPathCDN::baseurl('photo') . '/photo/',
-                    $param_photo->photo1
+                    $photo1
                 );
             }
 
             if (!$check) {
-
-                return '<img '.$width.' class="'.$class.'" src="'.$param_photo->photo1.'" alt="'.$param_alt.'">';
-
+                return '<img '.$width.' class="'.$class.'" src="'.$photo1.'" alt="'.$param_alt.'">';
             } else {
-
-                $file_headers = Yii::$app->cache->get($param_photo->photo1);
+                $file_headers = Yii::$app->cache->get($photo1);
 
                 if ($file_headers === false) {
-
-                    $file_headers = CPathCDN::checkS3Photo($param_photo->photo1);
-
-                    Yii::$app->cache->set($param_photo->photo1, $file_headers, 1000);
+                    $file_headers = CPathCDN::checkS3Photo($photo1);
+                    Yii::$app->cache->set($photo1, $file_headers, 1000);
                 }
 
                 if ($file_headers[0] != 'HTTP/1.1 404 Not Found') {
-
-                    return '<img '.$width.' class="'.$class.'" src="'.$param_photo->photo1.'" alt="'.$param_alt.'">';
-
+                    return '<img '.$width.' class="'.$class.'" src="'.$photo1.'" alt="'.$param_alt.'">';
                 } else {
-
                     return '<img class="'.$class.'" src="'.CPathCDN::baseurl('images').'/image_absent.jpg" alt="'.$param_alt.'">';
                 }
             }
 
         } else {
-
-            $photo1 = CPathCDN::baseurl('images') . '/images/property_image/' . $param_photo->photo1;
-
-            $photo1_file = Yii::$app->basePath . "/../images/property_image/" . $param_photo->photo1;
+            $fullUrl = CPathCDN::baseurl('images') . '/images/property_image/' . $photo1;
+            $photo1_file = Yii::$app->basePath . "/../images/property_image/" . $photo1;
 
             if (is_readable($photo1_file)) {
-
-                return '<img class="'.$class.'" src="'.$photo1.'" alt="'.$param_alt.'" width="180">';
-
+                return '<img '.$width.' class="'.$class.'" src="'.$fullUrl.'" alt="'.$param_alt.'">';
             } else {
-
                 return '<img class="'.$class.'" src="'.CPathCDN::baseurl('images').'/image_absent.jpg" alt="'.$param_alt.'">';
             }
         }
