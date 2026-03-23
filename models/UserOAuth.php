@@ -47,7 +47,7 @@ class UserOAuth extends ActiveRecord
     public static function tableName()
     {
         if(!empty(Yii::$app->db->tablePrefix))
-            return '{{%user_oauth}}';
+            return 'user_oauth';
         else
             return 'user_oauth';
     }

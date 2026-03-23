@@ -209,10 +209,45 @@ class="">
                 <!-- END AJAX-DROPDOWN -->
             </div><!-- /#logo-group -->
 
+                <?php if (Yii::$app->user->isGuest): ?>
+                    <!-- professionals dropdown -->
+                    <div id="project-context" class="dropdown">
+                        <span class="label">Tools:</span>
+                        <span id="project-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">For Professionals <i class="fa fa-angle-down"></i></span>
+                        <ul class="dropdown-menu">
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate investors</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate agents</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate brokers</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Landlords</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Home Buyers</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Lenders and Title</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Insurance and Contractors</a></li>
+                            <li class="divider"></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Market Info dropdown -->
+                    <div id="project-context" class="dropdown">
+                        <span class="label">Local:</span>
+                        <span id="market-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">Market Info <i class="fa fa-angle-down"></i></span>
+                        <ul class="dropdown-menu">
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">How does Irradii.com work?</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">What's this home worth?</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">True Market Value Property Reports</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Foreclosure Data</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Local Market Trends</a></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>">Property and Market Comparisons</a></li>
+                            <li class="divider"></li>
+                            <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
 <?php if (!Yii::$app->user->isGuest): ?>
 
                     <!-- history dropdown (Authenticated only) -->
-                    <div id="project-context">
+                    <div id="project-context" class="dropdown">
                         <span class="label">History:</span>
                         <span id="history-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">Recent pages <i class="fa fa-angle-down"></i></span>
                         <ul class="dropdown-menu">
@@ -313,38 +348,6 @@ class="">
                 </div>
                 <!-- end pulled right: nav area -->
 <?php else: ?><!--if (!Yii::$app->user->isGuest)-->
-                <!-- professionals dropdown -->
-                <div id="project-context">
-                    <span class="label">Tools:</span>
-                    <span id="project-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">For Professionals <i class="fa fa-angle-down"></i></span>
-                    <ul class="dropdown-menu">
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate investors</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate agents</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate brokers</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Landlords</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Home Buyers</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Lenders and Title</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Insurance and Contractors</a></li>
-                        <li class="divider"></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
-                    </ul>
-                </div>
-
-                <!-- Market Info dropdown -->
-                <div id="project-context">
-                    <span class="label">Local:</span>
-                    <span id="market-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">Market Info <i class="fa fa-angle-down"></i></span>
-                    <ul class="dropdown-menu">
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">How does Irradii.com work?</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">What's this home worth?</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">True Market Value Property Reports</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Foreclosure Data</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Local Market Trends</a></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>">Property and Market Comparisons</a></li>
-                        <li class="divider"></li>
-                        <li><a href="<?= Url::to(['/landing/post']) ?>"><i class="fa fa-plus"></i> MORE...</a></li>
-                    </ul>
-                </div>
                 <!-- end history dropdown -->
     <?php if (isset($this->params['signin'])): ?>
                 <div class="header-right-container">
@@ -507,7 +510,7 @@ $this->registerJs("
         <?php $this->registerJsFile('https://code.jquery.com/jquery-migrate-1.4.1.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- BOOTSTRAP JS -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/bootstrap/bootstrap.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
+        <?php // $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/bootstrap/bootstrap.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- CUSTOM NOTIFICATION -->
         <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/notification/SmartNotification.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
@@ -567,8 +570,17 @@ $this->registerJs("
         // 3. Google Maps - Updated for Yii2 and API Key requirement
         $this->registerJsFile('https://maps.googleapis.com/maps/api/js?key=' . (Yii::$app->params['googleMapsKey'] ?? '') . '&libraries=drawing,places', [
             'position' => $this::POS_END,
-            'async' => true,
-            'defer' => true
+            'depends' => [\yii\web\JqueryAsset::class]
+        ]);
+
+        $this->registerJsFile('@web/js/jquery-ui.min.js', [
+            'position' => $this::POS_END,
+            'depends' => [\yii\web\JqueryAsset::class]
+        ]);
+
+        $this->registerJsFile('@web/js/alerts.js', [
+            'position' => $this::POS_END,
+            'depends' => [\yii\web\JqueryAsset::class]
         ]);
 
         // 3. DataTables Sorting Plugins (Must load after jQuery)
@@ -661,6 +673,11 @@ $this->registerJs("
 
   ga('create', 'UA-66028133-1', 'auto');
   ga('send', 'pageview');
+
+  // Initialize SmartAdmin Widgets
+  if (typeof pageSetUp === 'function') {
+      pageSetUp();
+  }
 
 ", $this::POS_END);
         ?>

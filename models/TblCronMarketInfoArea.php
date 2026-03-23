@@ -1,1 +1,47 @@
-<?php namespace app\models; use yii\db\ActiveRecord; class TblCronMarketInfoArea extends ActiveRecord { public static function tableName() { return 'tbl_cron_market_info_area'; } }
+<?php
+
+namespace app\models;
+
+use Yii;
+use yii\db\ActiveRecord;
+
+/**
+ * This is the model class for table "cron_market_info_area".
+ *
+ * @property integer $id
+ * @property string $area
+ * @property string $date
+ * @property integer $total
+ * @property integer $sale
+ * @property integer $sold
+ * @property integer $foreclosure
+ * @property integer $short_sales
+ * @property double $avg_price
+ * @property double $high_ppsf
+ * @property double $low_ppsf
+ * @property double $avg_ppsf
+ */
+class TblCronMarketInfoArea extends ActiveRecord
+{
+    /**
+     * {@inheritdoc}
+     */
+    public static function tableName()
+    {
+        return 'cron_market_info_area';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function rules()
+    {
+        return [
+            [['area', 'date', 'total', 'sale', 'sold', 'foreclosure', 'short_sales', 'avg_price', 'high_ppsf', 'low_ppsf', 'avg_ppsf'], 'required'],
+            [['total', 'sale', 'sold', 'foreclosure', 'short_sales'], 'integer'],
+            [['avg_price', 'high_ppsf', 'low_ppsf', 'avg_ppsf'], 'number'],
+            [['area'], 'string', 'max' => 255],
+            [['date'], 'safe'],
+        ];
+    }
+}

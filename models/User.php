@@ -27,7 +27,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
      */
     public static function tableName()
     {
-        return 'tbl_users';
+        return '{{%users}}';
     }
 
     public static function model($className = __CLASS__)
@@ -138,5 +138,13 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function getProfile()
     {
         return $this->hasOne(UserProfiles::class, ['mid' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProfession()
+    {
+        return $this->hasMany(TblAuthAssignment::class, ['userid' => 'id']);
     }
 }
