@@ -26,6 +26,17 @@ $property_type_array = [
     '8' => 'Time Share', '9' => 'Rental', '16' => 'High Rise',
 ];
 $pool_array = ['0' => 'No', '1' => 'Yes'];
+$amenities_stove_id_array = ['0' => 'No', '1' => 'Stove/Oven', '2' => 'Stove Top Only'];
+$amenities_washer_id_array = ['0' => 'No', '1' => 'Washer/Dryer', '2' => 'Dryer Only', '3' => 'Shared Washer/Dryer'];
+$amenities_fireplace_id_array = ['0' => 'No', '1' => 'Wood Burning', '2' => 'Natural Gas'];
+$amenities_parking_id_array = [
+    '0' => 'Not Listed', '1' => 'Street Parking', '2' => 'Driveway Parking', 
+    '3' => 'Reserved Parking', '4' => 'Carport', '5' => '1 Car Garage', 
+    '6' => '2 Car Garage', '7' => '3 Car Garage', '8' => '4 Car Garage', 
+    '9' => '5+ Car Garage', '10' => 'Permit Parking Only'
+];
+$over_all_property_array = ['1' => 'Is ready to move in', '2' => 'Needs a little TLC', '3' => 'Is a moderate fixer upper', '4' => 'Needs major repair'];
+$pool_array = ['0' => 'No', '1' => 'Yes'];
 
 $discont = method_exists($details, 'getDiscontValue') ? $details->getDiscontValue() : 0;
 
@@ -70,6 +81,12 @@ if ($discont >= $underValueDeals && method_exists($details, 'getEstimatedEquity'
 
 $status_str2 .= '<span class="views-for-equity"> Page Views <span><i class="fa fa-eye"></i>&nbsp;<span id="jarviswidget-ctrls">' . ($details->views ?? 0) . '</span></span></span>';
 
+// Sparkline placeholders for structure parity
+$sparks_true_marker_value = '<div class="sparkline ' . ($text_color_if_discont ?? '') . ' hidden-mobile hidden-md hidden-sm">1000, 1200, 931, 1071, 930, 1031</div>';
+$sparks_mo_mo_chg = '<div class="sparkline ' . ($text_color_if_discont ?? '') . ' hidden-mobile hidden-md hidden-sm">1000, 1200, 931, 1071, 930, 1031</div>';
+$sparks_true_marker = '<div class="sparkline ' . ($text_color_if_discont ?? '') . ' hidden-mobile hidden-md hidden-sm">1000, 1200, 931, 1071, 930, 1031</div>';
+$sparks_page_views = '<div class="sparkline ' . ($text_color_if_discont ?? '') . ' hidden-mobile hidden-md hidden-sm">1000, 1200, 931, 1071, 930, 1031</div>';
+
 // Photo slider
 $slider_arr = [];
 $photoArr   = $this->context->getPhotoArr($details);
@@ -84,8 +101,10 @@ foreach ($photoArr as $i => $propertyInfoPhoto) {
 $session    = Yii::$app->session;
 $uri_page   = '@' . Yii::$app->request->url;
 $recent_pg  = $details->getFullAddress() . $p_type . $uri_page;
-$sess_pages = $session->get('recent_pages', []);
+$sess_pages = (array)$session->get('recent_pages', []);
 $sess_pages[] = $recent_pg;
+$sess_pages = array_unique($sess_pages);
+while (count($sess_pages) > 10) { array_shift($sess_pages); }
 $session->set('recent_pages', $sess_pages);
 
 // Property slug for in-page links
@@ -105,13 +124,23 @@ $isGuest = Yii::$app->user->isGuest;
     .dt-toolbar { padding: 10px; background: #eee; border-bottom: 1px solid #ccc; display: flex; align-items: center; justify-content: space-between; }
     .datatable_col_reorder_wrapper .dt-toolbar:first-child { display: none; } /* Hide DT internal toolbar if we use custom one */
     .label_status { font-size: 85%; padding: .2em .6em .3em; display: inline-block; border-radius: .25em; font-weight: 700; }
-    #myCarousel { border: 1px solid #ccc; background: #000; overflow: hidden; margin-bottom: 20px; min-height: 350px; }
-    #myCarousel .item { transition: opacity 0.6s ease-in-out; }
-    #myCarousel .item img { margin: 0 auto; width: 100%; max-height: 500px; object-fit: cover; }
-    .carousel-indicators { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 2px 10px; bottom: 10px; }
+    #myCarousel { border: 1px solid #ccc; background: #000; margin-bottom: 20px; min-height: 350px; height: auto; }
+    #myCarousel .item { transition: opacity 0.6s ease-in-out; height: auto; }
+    #myCarousel .item img { margin: 0 auto; width: 100%; height: auto; display: block; }
+    .carousel-indicators { bottom: 10px; left: 50%; z-index: 15; width: 60%; padding-left: 0; margin-left: -30%; text-align: center; list-style: none; }
+    .carousel-indicators li { display: inline-block; width: 10px; height: 10px; margin: 1px; text-indent: -999px; cursor: pointer; background-color: #000 \9; background-color: rgba(255,255,255,0.5); border: 1px solid #fff; border-radius: 10px; }
+    .carousel-indicators .active { width: 12px; height: 12px; margin: 0; background-color: #fff; }
+    #wid-id-2dt-c > div { height: auto !important; }
+    .carousel-inner { height: auto !important; }
+    #shortcut { display: none !important; } /* Hide shortcut area causing shadow/icons overhead */
 </style>
 
-<div id="main" role="main" class="<?= Yii::$app->user->isGuest ? 'guest-variant' : '' ?>">
+<?php 
+if (!$isGuest) {
+    echo $this->render('/layouts/aside', ['profile' => $profile]);
+}
+?>
+<div id="main" role="main" class="<?= $isGuest ? 'guest-variant' : '' ?>">
 
     <!-- RIBBON -->
     <div id="ribbon" class="<?= $isGuest ? 'ribbon-guest-variant' : '' ?>">
@@ -175,7 +204,6 @@ $isGuest = Yii::$app->user->isGuest;
                 <ul id="sparks" class="header-prices">
                     <li class="sparks-info <?= $text_color_if_discont ?>">
                         <h5><?= $status_str ?></h5>
-                        <h6><?= $listOrSold ?></h6>
                     </li>
                     <li class="sparks-info">
                         <?php if (isset($comparebles_properties->current_stage)): ?>
@@ -186,7 +214,7 @@ $isGuest = Yii::$app->user->isGuest;
                             <?php
                             if (isset($comparebles_properties->estimated_price_dollar)) {
                                 if ($comparebles_properties->estimated_price_dollar != 0) {
-                                    $discont = 100 - ($details->property_price * 100 / $comparebles_properties->estimated_price_dollar);
+                                    $new_discont = 100 - ($details->property_price * 100 / $comparebles_properties->estimated_price_dollar);
                                     echo '<span class="">$' . number_format(round($comparebles_properties->estimated_price_dollar)) . '</span>';
                                 } else {
                                     echo '<span title="Not Enough Data" class="">-</span>';
@@ -197,6 +225,7 @@ $isGuest = Yii::$app->user->isGuest;
                             ?>
                             <a id="goToComparables" href="javascript:void(0);">View Comparables</a>
                         </h5>
+                        <?= $sparks_true_marker_value; ?>
                     </li>
 
                     <?php if (isset($comparebles_properties->low_range) && isset($comparebles_properties->high_range)): ?>
@@ -210,18 +239,18 @@ $isGuest = Yii::$app->user->isGuest;
                                     </span>
                                 </span>
                             </h5>
+                            <?= $sparks_mo_mo_chg; ?>
                         </li>
                     <?php endif; ?>
 
-                    <?php if ($discont >= $underValueDeals): ?>
+                    <?php if (isset($new_discont) && $new_discont >= $underValueDeals): ?>
                         <li class="sparks-info">
                             <h5>
                                 <?= $details->property_type == 9 ? 'Estimated Spread' : 'Estimated Equity' ?>
                                 <span class="<?= $text_color_if_discont ?>">
                                     $<?php
                                     if (isset($comparebles_properties->estimated_price_dollar)
-                                        && $comparebles_properties->estimated_price_dollar != 0
-                                        && $discont >= $underValueDeals) {
+                                        && $comparebles_properties->estimated_price_dollar != 0) {
                                         if (method_exists($details, 'getEstimatedEquity')) {
                                             $eq = $details->getEstimatedEquity($comparebles_properties->estimated_price_dollar, $details->property_price);
                                             echo number_format($eq, 0, '.', ',');
@@ -236,7 +265,8 @@ $isGuest = Yii::$app->user->isGuest;
                             </h5>
                         </li>
                         <li class="sparks-info">
-                            <h5> Below <?= $details->property_type == 9 ? 'TMR' : 'TMV' ?> <span class="<?= $text_color_if_discont ?>"><?= round($discont) ?>%</span></h5>
+                            <h5> Below <?= $details->property_type == 9 ? 'TMR' : 'TMV' ?> <span class="<?= $text_color_if_discont ?>"><?= round($new_discont) ?>%</span></h5>
+                            <?= $sparks_page_views; ?>
                         </li>
                     <?php endif; ?>
 
@@ -297,15 +327,40 @@ $isGuest = Yii::$app->user->isGuest;
                             <!-- photo slide fade widget content -->
                             <div class="col-sm-9 col-md-9 col-lg-9" id="parentCarouselBlock">
                                 <?php if (!empty($details->photo1) || count($slider_arr) > 0): ?>
-                                    <div id="myCarousel" class="carousel fade">
-                                        <ol class="carousel-indicators">
-                                            <?php foreach ($slider_arr as $i => $slide): ?>
-                                                <li data-target="#myCarousel" data-slide-to="<?= $i ?>" class="<?= $i == 0 ? 'active' : '' ?>"></li>
-                                            <?php endforeach; ?>
-                                        </ol>
-                                        <div class="carousel-inner">
-                                            <?php foreach ($slider_arr as $slide_html) { echo $slide_html; } ?>
-                                        </div>
+<?php
+    $final_slides = [];
+    $main_photo_url = $details->photo1;
+    $main_caption = !empty($details->caption1) ? "<p>{$details->caption1}</p>" : "";
+    
+    // Always start with the primary photo
+    if (!empty($main_photo_url)) {
+        $final_slides[] = '<div class="item active">' . CPathCDN::checkPhoto($details, 'img-responsive', 0) . $main_caption . '</div>';
+    }
+
+    // Add others from photoArr
+    if (!empty($photoArr)) {
+        foreach ($photoArr as $photoObj) {
+            $url = $photoObj->photo1 ?? '';
+            if (!empty($url) && $url != $main_photo_url) {
+                $caption = !empty($photoObj->caption) ? "<p>{$photoObj->caption}</p>" : '';
+                $final_slides[] = '<div class="item">' . CPathCDN::checkPhoto($photoObj, 'img-responsive', 0) . $caption . '</div>';
+                // Limit to prevent overflow if database has duplicates
+                if (count($final_slides) >= 41) break; 
+            }
+        }
+    }
+?>
+                                        <div id="myCarousel" class="carousel fade">
+                                            <?php if (count($final_slides) > 0): ?>
+                                                <ol class="carousel-indicators">
+                                                    <?php foreach ($final_slides as $i => $s): ?>
+                                                        <li data-target="#myCarousel" data-slide-to="<?= $i ?>" class="<?= $i == 0 ? 'active' : '' ?>"></li>
+                                                    <?php endforeach; ?>
+                                                </ol>
+                                                <div class="carousel-inner">
+                                                    <?php foreach ($final_slides as $slide_html) { echo $slide_html; } ?>
+                                                </div>
+                                            <?php endif; ?>
                                         <a class="left carousel-control" href="#myCarousel" data-slide="prev">
                                             <span class="glyphicon glyphicon-chevron-left"></span>
                                         </a>
@@ -420,15 +475,25 @@ $isGuest = Yii::$app->user->isGuest;
                                         </tr>
                                         <tr>
                                             <th>Pool:</th>
-                                            <?php echo $details->pool != 0 ? '<td>' . $details->pool . '</td>' : '<td class="text-muted">N/A</td>'; ?>
+                                            <?php 
+                                            // Some properties might have 'pool' on main table, others in details. checking both.
+                                            $poolVal = !empty($details->propertyInfoDetails->amenities_pool_id) ? $details->propertyInfoDetails->amenities_pool_id : ($details->pool ?? 0);
+                                            echo $poolVal != 0 ? '<td>' . $poolVal . '</td>' : '<td class="text-muted">N/A</td>'; 
+                                            ?>
                                         </tr>
                                         <tr>
                                             <th>Spa:</th>
-                                            <?php echo !empty($details->propertyInfoDetails->spa)? '<td>' . $details->propertyInfoDetails->spa . '</td>' : '<td class="text-muted">N/A</td>'; ?>
+                                            <?php 
+                                            $spaVal = !empty($details->propertyInfoDetails->spa) ? $details->propertyInfoDetails->spa : ($details->spa ?? 0);
+                                            echo $spaVal != 0 ? '<td>' . $spaVal . '</td>' : '<td class="text-muted">N/A</td>'; 
+                                            ?>
                                         </tr>
                                         <tr>
                                             <th>Gated:</th>
-                                            <?php echo !empty($details->propertyInfoDetails->amenities_gated_community) ? '<td>' . $details->propertyInfoDetails->amenities_gated_community . '</td>' : '<td class="text-muted">N/A</td>'; ?>
+                                            <?php 
+                                            $gatedVal = !empty($details->propertyInfoDetails->amenities_gated_community) ? $details->propertyInfoDetails->amenities_gated_community : ($details->amenities_gated_community ?? 0);
+                                            echo $gatedVal != 0 ? '<td>' . $gatedVal . '</td>' : '<td class="text-muted">N/A</td>'; 
+                                            ?>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -1760,6 +1825,14 @@ $this->registerJs("
             return false;
         }
     });
+
+    // parentCarouselBlockSetting parity
+    function setImgageToParent(){
+        var widthParent = $('#parentCarouselBlock').width();
+        $('#parentCarouselBlock img').css('width', widthParent + 'px');
+    }
+    setImgageToParent();
+    $(window).resize(function(){ setImgageToParent(); });
 
     // Carousel autoplay
     $('.carousel').carousel({interval: 5000});

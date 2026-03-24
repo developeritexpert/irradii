@@ -17,7 +17,10 @@ class AppAsset extends AssetBundle
     ];
     
     public $js = [
-        // You can add your custom scripts here now
+        // Add the Migrate plugin and shim here
+        'https://code.jquery.com/jquery-migrate-3.4.1.min.js',
+        'js/jquery-shim.js',
+        // Your other custom scripts
         // 'js/plugin/datatables/sorting/num-html.js',
     ];
     

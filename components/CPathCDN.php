@@ -89,7 +89,7 @@ class CPathCDN {
 
         $param_alt = (!empty($param_photo->fullAddress)) ? $param_photo->fullAddress : '';
 
-        if (strtolower(substr($photo1, 0, 4)) === 'http') {
+        if (strtolower(substr($photo1, 0, 4)) === 'http' || strpos($photo1, '//') === 0 || strpos($photo1, '/') === 0) {
 
             $cdnPhotos = Yii::$app->params['cdnPhotos'];
 
@@ -160,7 +160,7 @@ class CPathCDN {
 
             $resp = $s3->headObject([
                 'Bucket' => $aws['bucket'],
-                'Key' => str_replace('http://img1.irradii.com/', '', $photo)
+                'Key' => str_replace(['http://img1.irradii.com/', 'https://img1.irradii.com/', 'http://img1.ippraisall.com/', 'https://img1.ippraisall.com/'], '', $photo)
             ]);
 
         } catch (S3Exception $exception) {

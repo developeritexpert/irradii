@@ -367,9 +367,9 @@ class SiteHelper
             $slug = isset($search_result->slug->slug) ? $search_result->slug->slug : '';
             $detailsUrl = Url::to(['property/details', 'slug' => $slug]);
             
-            $col1 = '<h6 class=""><a href="' . $detailsUrl . '"> ' . ($search_result->fullAddress ?? '') . '</a><span class="status-label pull-right">' . $user_status_label . $status_label . '</span></h6>';
-            $col1 .= '<div style="position: relative;">';
-            $col1 .= "<a class='property_info_row_map exclude-reinclude' data-lat='"
+            /* Column 1: Value (Photo) */
+            $col_photo = '<div style="position: relative;">';
+            $col_photo .= "<a class='property_info_row property_info_row_map exclude-reinclude' data-lat='"
                 . $search_result->getlatitude . "' data-lon='"
                 . $search_result->getlongitude . "' data-status='"
                 . $dat_status . "' data-discont='"
@@ -377,69 +377,78 @@ class SiteHelper
                 . $search_result->property_street . "' data-property_id='"
                 . $search_result->property_id . "' href=\"" . $detailsUrl . "\" > "
                 . \app\components\CPathCDN::checkPhoto($search_result, "img-responsive") . "</a>";
-
             if ($is_discont) {
-                $col1 .= '<span class="air air-top-left label bg-color-greenDark">' . round($discont) . '% Below TMV</span>';
+                $col_photo .= '<span class="label bg-color-greenDark" style="position:absolute; bottom:2px; left:2px; padding:2px 4px; font-size:9px; color:#fff;">' . round($discont) . '% Below TMV</span>';
             }
+            $col_photo .= '</div>';
 
-            $photoCount = method_exists($search_result, 'countPhoto') ? $search_result->countPhoto() : 0;
-            $col1 .= '<span class="air air-bottom-left badge bg-color-blue"> ' . $photoCount . ' photos </span>';
-            $col1 .= '</div>';
-
-            $col2 = '<br/><div class="row row-eq-height row-wrapper"><div class="col-xs-4"><strong>';
-            $col2 .= $search_result->property_price ? 'List Price: <br> <span class="price">$' . number_format($search_result->property_price, 0, '.', ',') : '';
-            $col2 .= '</span></strong></div>';
-
-            $estimated_equity = '';
+            /* Column 2: Address */
+            $city_st_zip = ($search_result->city->city_name ?? '') . ', ' . ($search_result->state->state_code ?? '') . ' ' . ($search_result->zipcode->zip_code ?? '');
+            $col_address = '<div><a href="' . $detailsUrl . '" style="font-weight:bold; color:#005580;">' . ($search_result->property_street ?? '') . '</a></div>';
+            $col_address .= '<div style="font-size:11px; color:#666;">' . $city_st_zip . '</div>';
+            if (!empty($search_result->subdivision)) {
+                $col_address .= '<div style="font-size:10px; color:#999;">' . $search_result->subdivision . '</div>';
+            }
+            
+            /* Column 3: Status */
+            $col_status = $status_label;
+            if (isset($search_result->property_uploaded_date) && (time() - strtotime($search_result->property_uploaded_date)) < 86400 * 7) {
+                $col_status .= '<br><span class="label label-primary" style="font-size:9px; padding:2px 4px; display:inline-block; margin-top:2px;">New</span>';
+            }
+            if ($user_status_label) {
+                $col_status .= $user_status_label;
+            }
+            
+            /* Column 4: List Price */
+            $col_price = '<div style="font-weight:bold; color:#333;">$' . number_format($search_result->property_price, 0, '.', ',') . '</div>';
             if ($search_result->estimated_price > 0) {
-                $col2 .= '<div class="col-xs-4 "><strong>True Market Value:<br>$ ' . number_format($search_result->estimated_price, 0, '.', ',') . '</strong></div>';
-                if ($search_result->estimated_price > $search_result->property_price) {
-                    $estimatedEquity = $search_result->estimated_price - $search_result->property_price;
-                    $estimated_equity = number_format($estimatedEquity, 0, '.', ',');
-                    $col2 .= '<div class="col-xs-4"><strong>Estimated Equity:<br>$ ' . $estimated_equity . '</strong></div>';
+                $col_price .= '<div style="font-size:11px; color:#666;">TMV <span style="color:#000;">$' . number_format($search_result->estimated_price, 0, '.', ',') . '</span></div>';
+                $equity = $search_result->getEstimatedEquity($search_result->estimated_price, $search_result->property_price);
+                if ($equity > 0) {
+                    $col_price .= '<div style="font-size:10px; color:#008000;">Estimated Equity $' . number_format($equity, 0, '.', ',') . '</div>';
                 }
             }
-            $col2 .= '</div><div class="row"><div class="col-xs-12"><p style="padding:10px 0">';
-            $col2 .= $search_result->house_square_footage ? $search_result->house_square_footage . ' Square Feet, ' : '';
-            
-            $propType = class_exists('\app\models\PropertyInfo') && method_exists('\app\models\PropertyInfo', 'getPropertyType') 
-                        ? \app\models\PropertyInfo::getPropertyType($search_result->property_type) 
-                        : $search_result->property_type;
-            $col2 .= $propType ? $propType . ', ' : '';
-            
-            $col2a = $search_result->bedrooms ? $search_result->bedrooms . ' Beds' : '';
-            $col2a .= ($search_result->bedrooms && $search_result->bathrooms) ? '/ ' : '';
-            $col2a .= $search_result->bathrooms ? $search_result->bathrooms . ' Baths ' : '';
-            $col2 .= !empty($col2a) ? $col2a . ', ' : '';
 
-            $col2b = $search_result->garages ? $search_result->garages . ' Car Gar, ' : '';
-            $col2b .= ($search_result->garages && !empty($search_result->pool)) ? '/ ' : '';
-            $col2b .= !empty($search_result->pool) ? ' Pool, ' : '';
-            $col2 .= !empty($col2b) ? $col2b : '';
-
-            $col2 .= $search_result->lot_acreage ? $search_result->lot_acreage . ' Lot Acreage <br>' : '';
-            $col2 .= 'Updated Date: ' . $search_result->property_updated_date . '</p>';
+            /* Column 5: Sq. Ft. */
+            $col_sqft = '<div style="font-weight:bold;">' . number_format($search_result->house_square_footage, 0, '.', ',') . ' Sq Ft</div>';
+            $col_sqft .= '<div style="font-size:11px; color:#666;">' . number_format($search_result->lot_acreage, 3, '.', ',') . ' Acre</div>';
+            $col_sqft .= '<div style="font-size:11px; color:#666;">' . $search_result->getPropertyTypeStr() . '</div>';
             
-            if (!empty($search_result->public_remarks)) {
-                $col2 .= '<p>' . $search_result->public_remarks . '</p>';
+            /* Column 6: Beds/Baths */
+            $col_beds_baths = '<div style="font-weight:bold;">' . $search_result->bedrooms . ' Beds / ' . number_format($search_result->bathrooms, 2, '.', ',') . ' Baths</div>';
+            if ($search_result->garages) {
+                $col_beds_baths .= '<div style="font-size:11px; color:#666;">' . $search_result->garages . ' Car Gar</div>';
             }
-            $col2 .= '</div></div>';
-            $col1 .= $col2;
 
-            $updatedDate = method_exists($search_result, 'getUpdatedDateViaStatus') ? $search_result->getUpdatedDateViaStatus() : $search_result->property_updated_date;
-            $updatedDate = str_replace("-", "/", (string)$updatedDate);
+            /* Column 7: Public Remarks */
+            $col_remarks = !empty($search_result->public_remarks) ? '<div class="remarks-trunc" style="font-size:11px; color:#444;">' . mb_strimwidth($search_result->public_remarks, 0, 160, "...") . ' <a href="'.$detailsUrl.'" style="color:#005580;">(Read more)</a></div>' : '';
+
+            /* Column 8: List Date + Action Buttons */
+            $updatedDateRaw = method_exists($search_result, 'getUpdatedDateViaStatus') ? $search_result->getUpdatedDateViaStatus() : $search_result->property_updated_date;
+            $updatedDate = date("Y/m/d", strtotime($updatedDateRaw));
             
+            $dom = '';
+            $list_date = $search_result->propertyInfoAdditionalBrokerageDetails->list_date ?? null;
+            if ($list_date) {
+                $days = floor((time() - strtotime($list_date)) / 86400);
+                $dom = '<div style="font-size:11px; color:#666;">' . ($days > 0 ? $days : 0) . ' DOM</div>';
+            }
+
+            $buttons = '<div style="margin-top:5px;">';
+            $buttons .= '<a href="'.$detailsUrl.'" class="btn btn-xs btn-primary" title="Details" style="margin-right:2px; padding:2px 5px;"><i class="fa fa-search"></i></a>';
+            $buttons .= '<a href="javascript:void(0);" onclick="showinmap(this)" property_id="'.$search_result->property_id.'" class="btn btn-xs btn-success" title="Map" style="padding:2px 5px;"><i class="fa fa-map-marker"></i></a>';
+            $buttons .= '</div>';
+
             $result[] = [
-                $col0, 
-                $col1, 
-                $updatedDate, 
-                $search_result->property_price, 
-                $search_result->estimated_price > 0 ? $search_result->estimated_price : '', 
-                $discont ? $discont : '', 
-                $estimated_equity, 
-                ($search_result->fullAddress ?? ''), 
-                $search_result->property_updated_date, 
-                $user_status
+                $col0,             // 0: Hidden sort key
+                $col_photo,        // 1: Value (Photo)
+                $col_address,      // 2: Address
+                $col_status,       // 3: Status
+                $col_price,        // 4: List Price
+                $col_sqft,         // 5: Sq. Ft.
+                $col_beds_baths,   // 6: Beds/Baths
+                $col_remarks,      // 7: Public Remarks
+                '<div style="min-width:70px;">' . $updatedDate . $dom . $buttons . '</div>' // 8: List Date + Buttons
             ];
         }
         return $result;
