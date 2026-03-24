@@ -19,7 +19,7 @@ class EstimatedPrice
         $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
         $percentage_depreciation_value, $estimated_price, $bedrooms,
         $subdivision, $fundamentals_factor, $conditional_factor,
-        $house_views, $sub_type, $property_price
+        $house_views, $sub_type
     ) {
         $result = [];
         $curStage = 1;
@@ -46,7 +46,7 @@ class EstimatedPrice
             $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
             $percentage_depreciation_value, $estimated_price, $bedrooms,
             $subdivision, $fundamentals_factor, $conditional_factor,
-            $house_views_list, $sub_type, $property_price
+            $house_views_list, $sub_type
         );
 
         $result['estimated_value_subject_property_stage'] = $result['estimated_value_subject_property'] ?? 0;
@@ -77,13 +77,12 @@ class EstimatedPrice
         $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
         $percentage_depreciation_value, $estimated_price, $bedrooms,
         $subdivision, $fundamentals_factor, $conditional_factor,
-        $house_views_list, $sub_type, $property_price
+        $house_views_list, $sub_type
     ) {
         $compare_property_type = "AND property_info.property_type = {$property_type}";
         $select_estimated_price_result = $this->actionCompareEstimatedPriceTable($curStage, $property_type);
 
         if (empty($select_estimated_price_result)) {
-            $result['price'] = $property_price;
             $result['estimated_price'] = $estimated_price;
             $result['estimated_price_dollar'] = 0;
             $result['estimated_value_subject_property'] = 0;
@@ -409,7 +408,6 @@ class EstimatedPrice
 
                     $result['result_query'] = $result_query;
                     $result['result_queryAllRows'] = $result_queryAllRows;
-                    $result['price'] = $property_price;
                     $result['estimated_price'] = $estimated_price;
                     $result['estimated_price_dollar'] = 0;
                     $result['estimated_value_subject_property'] = 0;
@@ -437,12 +435,6 @@ class EstimatedPrice
                     $estimated_value_subject_property = $weighted_value_square_footage + $weighted_value_lot_footage + $weighted_value_bathrooms_amenties + $weighted_value_bedrooms_amenties + $weighted_value_garages_amenties + $weighted_value_pool_amenties;
                     $estimated_price_dollar = $estimated_value_subject_property;
 
-                    $extract_price = $estimated_value_subject_property - $property_price;
-                    if (($estimated_value_subject_property > 0)) {
-                        $percentage_depreciation_value = ($extract_price / $estimated_value_subject_property) * 100;
-                    }
-
-                    $result['price'] = $property_price;
                     $result['estimated_price'] = $estimated_price;
                     $result['estimated_price_dollar'] = $estimated_price_dollar;
                     $result['estimated_value_subject_property'] = $estimated_value_subject_property;
@@ -466,11 +458,10 @@ class EstimatedPrice
                         $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
                         $percentage_depreciation_value, $estimated_price, $bedrooms,
                         $subdivision, $fundamentals_factor, $conditional_factor,
-                        $house_views_list, $sub_type, $property_price
+                        $house_views_list, $sub_type
                     );
                     return;
                 } else {
-                    $result['price'] = $property_price;
                     $result['estimated_price'] = $estimated_price;
                     $result['estimated_price_dollar'] = 0;
                     $result['estimated_value_subject_property'] = 0;

@@ -63,7 +63,7 @@ class PropertyController extends Controller
                 'rules' => [
                     [
                         // Public actions — accessible by guests and logged-in users
-                        'actions' => ['details', 'get-comp-property-details', 'history', 'online', 'getmoreconfidenceinfo', 'get-more-confidence-info'],
+                        'actions' => ['details', 'get-comp-property-details', 'history', 'online', 'getmoreconfidenceinfo', 'get-more-confidence-info', 'search'],
                         'allow' => true,
                         'roles' => ['?', '@'],
                     ],
@@ -126,16 +126,15 @@ class PropertyController extends Controller
         $details = PropertyInfo::find()
             ->joinWith(['slug' => function ($query) use ($slug) {
                 $query->andWhere(['tbl_property_info_slug.slug' => $slug]);
-            }], true, 'LEFT JOIN')
+            }], true, 'INNER JOIN')
             ->with([
                 'city', 'county', 'state', 'zipcode',
                 'propertyInfoAdditionalBrokerageDetails',
                 'propertyInfoDetails',
                 'propertyInfoPhoto',
                 'propertyInfoAdditionalDetails',
-                'user',
+                'user.profile',
             ])
-            ->where(['tbl_property_info_slug.slug' => $slug])
             ->one();
 
         // Fall back to ID-based lookup for legacy URLs
@@ -148,7 +147,7 @@ class PropertyController extends Controller
                     'propertyInfoDetails',
                     'propertyInfoPhoto',
                     'propertyInfoAdditionalDetails',
-                    'user',
+                    'user.profile',
                     'slug',
                 ])
                 ->one();
@@ -246,7 +245,7 @@ class PropertyController extends Controller
                 $details->getlatitude, $details->getlongitude, $details->year_biult_id,
                 $details->lot_acreage, $details->house_square_footage, $details->bathrooms,
                 $details->garages, $details->pool, $details->percentage_depreciation_value,
-                $details->estimated_price, $details->property_price, $details->bedrooms, $details->subdivision,
+                $details->estimated_price, $details->bedrooms, $details->subdivision,
                 $details->fundamentals_factor, $details->conditional_factor,
                 $house_views, $details->sub_type
             );
@@ -300,6 +299,70 @@ class PropertyController extends Controller
             'shape'                  => $shape,
             'excluded_by_shape'      => $excluded_by_shape,
         ]);
+    }
+
+    /**
+     * Get property details for comparables modal (AJAX).
+     */
+    public function actionGetCompPropertyDetails()
+    {
+        if (!Yii::$app->request->isAjax) {
+            throw new NotFoundHttpException();
+        }
+
+        $id     = Yii::$app->request->post('property_id', 0);
+        $result = [];
+        $property_type_array = PropertyInfo::getPropertyType();
+
+        if ($id) {
+            $details = PropertyInfo::find()->with([
+                'propertyInfoAdditionalBrokerageDetails',
+                'propertyInfoAdditionalDetails',
+                'propertyInfoDetails',
+                'propertyInfoPhoto',
+                'user',
+                'city',
+                'slug',
+                'county',
+                'state',
+                'zipcode'
+            ])->where(['property_id' => $id])->one();
+
+            if ($details) {
+                $sqFt = $details->house_square_footage;
+                $acreage = $details->lot_acreage;
+                $bedrooms = $details->bedrooms;
+                $bathrooms = $details->bathrooms;
+
+                $discont = $details->getDiscontValue();
+                $tmv = $details->estimated_price;
+                $result['discont'] = '';
+                if ($discont >= (Yii::$app->params['underValueDeals'] ?? 10)) {
+                    $result['discont'] = '<span class="label bg-color-greenDark">' . round($discont) . '% Below TMV</span>';
+                }
+
+                // photos
+                $slider_arr = [];
+                $photoArr = $this->getPhotoArr($details);
+
+                foreach ($photoArr as $propertyInfoPhoto) {
+                    $photocaption = (!empty($propertyInfoPhoto->caption)) ? "<p>{$propertyInfoPhoto->caption}</p>" : '';
+                    $slider_arr[] = '<div class="item">' . CPathCDN::checkPhoto($propertyInfoPhoto, "", 0) . $photocaption . '</div>';
+                }
+
+                $result['carousel'] = implode('', $slider_arr);
+                $result['property_id'] = $details->property_id;
+                $result['property_street'] = $details->property_street;
+                $result['url'] = Yii::$app->urlManager->createUrl(['property/details', 'slug' => $details->slug->slug ?? $details->property_id]);
+                $result['city'] = ($details->city->city_name ?? '') . ', ' . ($details->state->state_code ?? '') . ' ' . ($details->zipcode->zip_code ?? '');
+                $result['subdivision'] = $details->subdivision;
+                $result['type'] = $property_type_array[$details->property_type] ?? '';
+                $result['metrics'] = '<p>' . $sqFt . ' Sq Ft / ' . $acreage . ' Acre<br>' . $bedrooms . ' Beds / ' . $bathrooms . ' Baths';
+                $result['tmv'] = $tmv ? '$' . number_format($tmv) : '';
+            }
+        }
+
+        return $this->asJson($result);
     }
 
     /**
@@ -443,7 +506,7 @@ class PropertyController extends Controller
                 $details->getlatitude, $details->getlongitude, $details->year_biult_id,
                 $details->lot_acreage, $details->house_square_footage, $details->bathrooms,
                 $details->garages, $details->pool, $details->percentage_depreciation_value,
-                $details->estimated_price, $details->property_price, $details->bedrooms, $details->subdivision,
+                $details->estimated_price, $details->bedrooms, $details->subdivision,
                 $details->fundamentals_factor, $details->conditional_factor,
                 $house_views, $details->sub_type
             );
@@ -953,7 +1016,7 @@ class PropertyController extends Controller
         $del_id, $property_id, $property_type, $property_zipcode,
         $property_lat, $property_lon, $year_biult_id,
         $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
-        $percentage_depreciation_value, $estimated_price, $property_price, $bedrooms,
+        $percentage_depreciation_value, $estimated_price, $bedrooms,
         $subdivision, $fundamentals_factor, $conditional_factor,
         $house_views, $sub_type
     ) {
@@ -990,7 +1053,7 @@ class PropertyController extends Controller
             $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
             $percentage_depreciation_value, $estimated_price, $bedrooms,
             $subdivision, $fundamentals_factor, $conditional_factor,
-            $house_views_list, $sub_type, $property_price
+            $house_views_list, $sub_type
         );
 
         $result['estimated_value_subject_property_stage'] = $result['estimated_value_subject_property'] ?? 0;
@@ -1169,6 +1232,234 @@ class PropertyController extends Controller
         $dist  = rad2deg($dist);
         $miles = $dist * 60 * 1.1515;
         return ($miles * 1.609344);
+    }
+
+    /**
+     * Property search action
+     */
+    public function actionSearch()
+    {
+        $request = Yii::$app->request;
+        
+        // Initial defaults for search page
+        $search_results = [];
+        $params = $request->isPost ? $request->post() : $request->get();
+        
+        // If we have search parameters, perform the search
+        if (!empty($params)) {
+            $query = PropertyInfo::find()->with([
+                'city', 'state', 'zipcode', 'slug', 'propertyInfoPhoto',
+                'propertyInfoAdditionalBrokerageDetails', 'propertyInfoDetails'
+            ]);
+
+            // Filter by Sale Type
+            if (!empty($params['sale_type'])) {
+                $this->applySaleTypeFilter($query, $params['sale_type']);
+            }
+
+            // Filter by Property Type (with mapping)
+            if (!empty($params['property_type']) && is_array($params['property_type'])) {
+                $mapped_types = [];
+                $sub_types = [];
+                foreach ($params['property_type'] as $type_code) {
+                    if ($type_code == 'AK') {
+                        $mapped_types[] = 1; $sub_types[] = 'Attached';
+                    } elseif ($type_code == 'HI') {
+                        $mapped_types[] = 1; $sub_types[] = 'Detached';
+                    } else {
+                        // Dummy SavedSearch to get mapping
+                        $ssDummy = new \app\models\SavedSearch();
+                        // Accessing private mapPropertyTypeCode is tricky, let's hardcode it for now based on SavedSearch.php:905
+                        $hard_mapping = [
+                            'NV' => 1, 'OR' => 16, 'CA1' => 2, 'TH' => 3, 
+                            'DP' => 4, 'TP' => 4, 'FP' => 4, 'AZ' => 6, 
+                            'CO' => 7, 'AL' => 5, 'Rental' => 9,
+                        ];
+                        if (isset($hard_mapping[$type_code])) {
+                            $mapped_types[] = $hard_mapping[$type_code];
+                        } elseif (is_numeric($type_code)) {
+                            $mapped_types[] = (int)$type_code;
+                        }
+                    }
+                }
+                $mapped_types = array_unique($mapped_types);
+                if (!empty($mapped_types)) {
+                    $query->andWhere(['property_info.property_type' => $mapped_types]);
+                }
+                if (!empty($sub_types)) {
+                    $query->andWhere(['property_info.sub_type' => $sub_types]);
+                }
+            }
+
+            // Price Filters
+            if (!empty($params['min_price'])) {
+                $query->andWhere(['>=', 'property_info.property_price', (int)preg_replace('/[^0-9]/', '', $params['min_price'])]);
+            }
+            if (!empty($params['max_price'])) {
+                $query->andWhere(['<=', 'property_info.property_price', (int)preg_replace('/[^0-9]/', '', $params['max_price'])]);
+            }
+
+            // Price per Sq Ft
+            if (!empty($params['min_price_sqft'])) {
+                $query->andWhere(['>=', 'property_info.price_sqft', (float)preg_replace('/[^0-9.]/', '', $params['min_price_sqft'])]);
+            }
+            if (!empty($params['max_price_sqft'])) {
+                $query->andWhere(['<=', 'property_info.price_sqft', (float)preg_replace('/[^0-9.]/', '', $params['max_price_sqft'])]);
+            }
+
+            // Sq Ft Filters
+            if (!empty($params['min_sqft'])) {
+                $query->andWhere(['>=', 'property_info.house_square_footage', (int)preg_replace('/[^0-9]/', '', $params['min_sqft'])]);
+            }
+            if (!empty($params['max_sqft'])) {
+                $query->andWhere(['<=', 'property_info.house_square_footage', (int)preg_replace('/[^0-9]/', '', $params['max_sqft'])]);
+            }
+
+            // Year Built Filters (e.g., "Yr 1990")
+            if (!empty($params['min_year_built']) && $params['min_year_built'] != 'undefined') {
+                $val = (int)preg_replace('/[^0-9]/', '', $params['min_year_built']);
+                if ($val > 0) $query->andWhere(['>=', 'property_info.year_biult_id', $val]);
+            }
+            if (!empty($params['max_year_built']) && $params['max_year_built'] != 'undefined') {
+                $val = (int)preg_replace('/[^0-9]/', '', $params['max_year_built']);
+                if ($val > 0) $query->andWhere(['<=', 'property_info.year_biult_id', $val]);
+            }
+
+            // Lot Size (Acreage)
+            if (!empty($params['min_lot_size'])) {
+                $query->andWhere(['>=', 'property_info.lot_acreage', (float)preg_replace('/[^0-9.]/', '', $params['min_lot_size'])]);
+            }
+            if (!empty($params['max_lot_size'])) {
+                $query->andWhere(['<=', 'property_info.lot_acreage', (float)preg_replace('/[^0-9.]/', '', $params['max_lot_size'])]);
+            }
+
+            // Keywords / Remarks
+            if (!empty($params['keywords'])) {
+                $query->andWhere(['or',
+                    ['like', 'property_info.property_street', $params['keywords']],
+                    ['like', 'property_info.public_remarks', $params['keywords']]
+                ]);
+            }
+
+            // Location Filters (City, State, Zipcode)
+            if (!empty($params['city'])) {
+                $query->joinWith('city')->andWhere(['city.city_name' => $params['city']]);
+            }
+            if (!empty($params['state'])) {
+                $query->joinWith('state')->andWhere(['state.state_code' => $params['state']]);
+            }
+            if (!empty($params['zipcode'])) {
+                $query->andWhere(['property_info.property_zipcode' => $params['zipcode']]);
+            }
+
+            // Bed/Bath
+            if (!empty($params['bed']) && $params['bed'] > 0) {
+                $query->andWhere(['>=', 'property_info.bedrooms', (int)$params['bed']]);
+            }
+            if (!empty($params['bath']) && $params['bath'] > 0) {
+                $query->andWhere(['>=', 'property_info.bathrooms', (float)$params['bath']]);
+            }
+            
+            // Coordinate/Map Boundary Filters
+            if (!empty($params['geodistance_rectangle'])) {
+                $lat1 = $params['latitude1'] ?? 0;
+                $lat2 = $params['latitude2'] ?? 0;
+                $lon1 = $params['longitude1'] ?? 0;
+                $lon2 = $params['longitude2'] ?? 0;
+                if ($lat1 && $lat2 && $lon1 && $lon2) {
+                    $min_lat = min($lat1, $lat2);
+                    $max_lat = max($lat1, $lat2);
+                    $min_lon = min($lon1, $lon2);
+                    $max_lon = max($lon1, $lon2);
+                    $query->andWhere(['between', 'property_info.getlatitude', $min_lat, $max_lat])
+                          ->andWhere(['between', 'property_info.getlongitude', $min_lon, $max_lon]);
+                }
+            } elseif (!empty($params['geodistance_circle'])) {
+                $lat = $params['latitude'] ?? 0;
+                $lon = $params['longitude'] ?? 0;
+                $radius = $params['radius'] ?? 0; // In meters usually from JS
+                if ($lat && $lon && $radius) {
+                    // Approximate distance filter: 1 degree latitude ~= 111km (111000m)
+                    // This is a rough estimation for database fallback
+                    $r_deg = $radius / 111000;
+                    $query->andWhere(['between', 'property_info.getlatitude', $lat - $r_deg, $lat + $r_deg])
+                          ->andWhere(['between', 'property_info.getlongitude', $lon - $r_deg, $lon + $r_deg]);
+                }
+            } elseif (!empty($params['geodistance_polygon'])) {
+                $lats = $params['latitude'] ?? [];
+                $lons = $params['longitude'] ?? [];
+                if (!empty($lats) && !empty($lons)) {
+                    $query->andWhere(['between', 'property_info.getlatitude', min($lats), max($lats)])
+                          ->andWhere(['between', 'property_info.getlongitude', min($lons), max($lons)]);
+                }
+            }
+
+            // Address/Search Field
+            if (!empty($params['address'])) {
+                $query->andWhere(['like', 'property_info.property_street', $params['address']]);
+            } elseif (!empty($params['searchfld'])) {
+                $query->andWhere(['like', 'property_info.property_street', $params['searchfld']]);
+            }
+
+            // Result handling
+            $count = (int)$query->count();
+            $search_results = $query->limit(200)->all();
+            
+            $latlon = SiteHelper::getLatLonResult($search_results);
+            $formattedResults = SiteHelper::getSearchMapResult($search_results);
+
+            if ($request->isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                return [
+                    'status' => ($count > 0) ? 'success' : 'nothing',
+                    'count_result' => $count,
+                    'latlon' => $latlon,
+                    'result' => $formattedResults,
+                    'res_map_layout' => $formattedResults,
+                ];
+            }
+        }
+
+        return $this->render('search', [
+            'search_results' => $search_results,
+            'general_search_fields' => $params,
+            'top_search' => $params,
+            'profile' => SiteHelper::getUserProfile(),
+        ]);
+    }
+
+    /**
+     * Helper to apply sale type filters (mirrors SavedSearch logic)
+     */
+    private function applySaleTypeFilter($query, $sale_type)
+    {
+        $activeStatuses = ['Active', 'Active Exclusive Right', 'Active-Exclusive Right', 'Auction', 'Exclusive Agency', 'For Sale'];
+
+        switch ($sale_type) {
+            case 'For Sale':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['property_info_additional_brokerage_details.status' => $activeStatuses])
+                      ->andWhere(['not', ['property_info.property_type' => 9]]);
+                break;
+            case 'Under Value':
+                $query->andWhere(['>=', 'percentage_depreciation_value', 5])
+                      ->andWhere(['<', 'percentage_depreciation_value', 15]);
+                break;
+            case 'Equity Deals':
+                $query->andWhere(['>=', 'percentage_depreciation_value', 15]);
+                break;
+            case 'Foreclosures':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['property_info_additional_brokerage_details.foreclosure' => 'yes']);
+                break;
+            case 'Shortsales':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['property_info_additional_brokerage_details.short_sale' => 'yes']);
+                break;
+            case 'For Rent':
+                $query->andWhere(['property_info.property_type' => 9]);
+                break;
+        }
     }
 
     /**
