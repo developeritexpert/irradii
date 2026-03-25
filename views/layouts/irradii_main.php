@@ -654,15 +654,24 @@ $this->registerJs("
             });
                  ", $this::POS_READY);
         $this->registerJs(" 
-                // SmartAdmin Page Setup
-                if (typeof pageSetUp === 'function') {
-                    pageSetUp();
-                }
-
                 $('#logo').click(function(e){
                     e.preventDefault();
                     window.location.href = '" . Yii::$app->request->baseUrl . "';
                 });
+
+                if (typeof tinymce !== 'undefined') {
+                    tinymce.init({
+                        selector: 'textarea.landingText',
+                        height: 300,
+                        plugins: [
+                            'advlist autolink lists link image charmap print preview anchor',
+                            'searchreplace visualblocks code fullscreen',
+                            'insertdatetime media table paste code help wordcount'
+                        ],
+                        toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                    });
+                }
                  ", $this::POS_READY);
 
 $this->registerJs("
