@@ -62,11 +62,14 @@ var PageSearchesAlertsHelper = {
 
     editableInitEmails: function (el) {
         // Use FontAwesome icons for X-editable buttons
-        $.fn.editableform.buttons =
-            '<button type="submit" class="btn btn-primary btn-sm editable-submit"><i class="fa fa-check"></i></button>' +
-            '<button type="button" class="btn btn-default btn-sm editable-cancel"><i class="fa fa-times"></i></button>';
+        if ($.fn.editableform) {
+            $.fn.editableform.buttons =
+                '<button type="submit" class="btn btn-primary btn-sm editable-submit"><i class="fa fa-check"></i></button>' +
+                '<button type="button" class="btn btn-default btn-sm editable-cancel"><i class="fa fa-times"></i></button>';
+        }
 
-        $(el).editable({
+        if ($.fn.editable) {
+            $(el).editable({
             success: function (response, newValue) {
 
                 if (response && response.new_id) {
@@ -107,9 +110,10 @@ var PageSearchesAlertsHelper = {
             }
         });
 
-        $(el).editable('option', 'params', {
-            'saved_search_id': parseInt($(el).data('saved_search_id'))
-        });
+            $(el).editable('option', 'params', {
+                'saved_search_id': parseInt($(el).data('saved_search_id'))
+            });
+        }
     }
 };
 

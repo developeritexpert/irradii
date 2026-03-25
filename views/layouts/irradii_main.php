@@ -508,6 +508,8 @@ $this->registerJs("
 
         <!-- JQUERY MIGRATE (Legacy Compatibility) -->
         <?php $this->registerJsFile('https://code.jquery.com/jquery-migrate-1.4.1.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
+        <?php $this->registerJsFile('@web/js/jquery-shim.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
+        <?php $this->registerJsFile('https://code.jquery.com/ui/1.11.4/jquery-ui.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <!-- BOOTSTRAP JS -->
         <?php // $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/bootstrap/bootstrap.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
@@ -569,11 +571,6 @@ $this->registerJs("
 
         // 3. Google Maps - Updated for Yii2 and API Key requirement
         $this->registerJsFile('https://maps.googleapis.com/maps/api/js?key=' . (Yii::$app->params['googleMapsKey'] ?? '') . '&libraries=drawing,places', [
-            'position' => $this::POS_END,
-            'depends' => [\yii\web\JqueryAsset::class]
-        ]);
-
-        $this->registerJsFile('@web/js/jquery-ui.min.js', [
             'position' => $this::POS_END,
             'depends' => [\yii\web\JqueryAsset::class]
         ]);
@@ -654,15 +651,24 @@ $this->registerJs("
             });
                  ", $this::POS_READY);
         $this->registerJs(" 
-                // SmartAdmin Page Setup
-                if (typeof pageSetUp === 'function') {
-                    pageSetUp();
-                }
-
                 $('#logo').click(function(e){
                     e.preventDefault();
                     window.location.href = '" . Yii::$app->request->baseUrl . "';
                 });
+
+                if (typeof tinymce !== 'undefined') {
+                    tinymce.init({
+                        selector: 'textarea.landingText',
+                        height: 300,
+                        plugins: [
+                            'advlist autolink lists link image charmap print preview anchor',
+                            'searchreplace visualblocks code fullscreen',
+                            'insertdatetime media table paste code help wordcount'
+                        ],
+                        toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                    });
+                }
                  ", $this::POS_READY);
 
 $this->registerJs("

@@ -151,7 +151,7 @@ $this->title = 'Searches/Alerts';
                             <table id="user" class="table table-bordered table-striped" style="clear: both">
                                 <thead>
                                 <tr>
-                                    <th>Search ID</th>
+                                                                        <th>Search ID</th>
                                     <th>Search Now</th>
                                     <th>Search Name</th>
                                     <th>Orig. Date</th>
@@ -223,7 +223,7 @@ $this->title = 'Searches/Alerts';
                                             </a>
                                         </td>
                                         <td>
-                                            <?php 
+                                            <?php
                                             $propertyTypeArr = array(
                                                 "AK"=> 'Attached SFH',
                                                 "HI"=>'Detached SFH',
@@ -247,7 +247,7 @@ $this->title = 'Searches/Alerts';
                                                 }
 
                                                 $label = SavedSearchCriteria::getLabel($criteria->attr_name);
-                                                     
+
                                                 if($label == '' || strpos($label, 'Map Boundary' ) !== false) {
                                                     continue;
                                                 }
@@ -269,9 +269,9 @@ $this->title = 'Searches/Alerts';
                                                      } else {
                                                          $col1 = $col;
                                                      }
-                                             endforeach; 
+                                             endforeach;
                                              if ( $col2 ) { ?>
-        <div class=""> <?php echo $col1; ?> 
+        <div class=""> <?php echo $col1; ?>
                 <a data-toggle="collapse" href="#collapseOne<?php echo $keySavedSearch;?>">
                     <b class="collapse-sign"><em class="fa fa-expand-o"></em></b>
                 </a>
@@ -279,12 +279,12 @@ $this->title = 'Searches/Alerts';
         <div id="collapseOne<?php echo $keySavedSearch;?>" class="collapse">
                 <?php echo $col2; ?>
         </div>
-                                        <?php 
+                                        <?php
                                              } else {
                                                  echo $col1;
                                              }
                                         ?>
-                                            
+
                                         </td>
 
                                         <td>
