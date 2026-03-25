@@ -88,7 +88,6 @@ class SavedSearch extends ActiveRecord
         'radius',
 
         'geodistance_polygon',
-        'sort_order',
     ];
 
     public static function tableName()

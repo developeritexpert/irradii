@@ -151,9 +151,7 @@ $this->title = 'Searches/Alerts';
                             <table id="user" class="table table-bordered table-striped" style="clear: both">
                                 <thead>
                                 <tr>
-                                                                        <th style="width: 30px;"><i class="fa fa-reorder" style="visibility: hidden;"></i></th>
-
-                                    <th>Search ID</th>
+                                                                        <th>Search ID</th>
                                     <th>Search Now</th>
                                     <th>Search Name</th>
                                     <th>Orig. Date</th>
@@ -171,8 +169,7 @@ $this->title = 'Searches/Alerts';
                                         $created_at = DateTime::createFromFormat('Y-m-d H:i:s', $savedSearch->created_at);
                                         $expiry_date = DateTime::createFromFormat('Y-m-d H:i:s', $savedSearch->expiry_date);
                                     ?>
-                                    <tr data-id="<?php echo $savedSearch->id?>">
-                                        <td><span class="sort-handle" style="cursor: move;"><i class="fa fa-reorder"></i></span></td>
+                                    <tr>
                                         <td><?php echo $savedSearch->id?></td>
                                         <td>
                                             <form method="POST" action="<?php echo Url::to(['property/search'])?>">
