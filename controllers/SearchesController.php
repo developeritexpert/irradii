@@ -23,10 +23,10 @@ class SearchesController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::class,
-                'only' => ['alerts', 'delete', 'editable', 'unsubscribe'],
+                'only' => ['alerts', 'delete', 'editable', 'unsubscribe', 'sort'],
                 'rules' => [
                     [
-                        'actions' => ['alerts', 'delete', 'editable'],
+                        'actions' => ['alerts', 'delete', 'editable', 'sort'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -68,7 +68,7 @@ class SearchesController extends Controller
 
         $savedSearches = SavedSearch::find()
             ->where(['user_id' => Yii::$app->user->id])
-            ->orderBy(['id' => SORT_DESC])
+            ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_DESC])
             ->with(['savedSearchCriteria', 'alertEmails'])
             ->all();
 
@@ -112,6 +112,22 @@ class SearchesController extends Controller
         ];
 
         return $this->render('alerts', $viewData);
+    }
+
+    public function actionSort()
+    {
+        $order = Yii::$app->request->post('order');
+        if (is_array($order)) {
+            foreach ($order as $position => $id) {
+                $model = SavedSearch::findOne(['id' => $id, 'user_id' => Yii::$app->user->id]);
+                if ($model) {
+                    $model->sort_order = $position;
+                    $model->save(false);
+                }
+            }
+            return $this->asJson(['success' => true]);
+        }
+        return $this->asJson(['success' => false]);
     }
 
     public function actionDelete()

@@ -151,6 +151,8 @@ $this->title = 'Searches/Alerts';
                             <table id="user" class="table table-bordered table-striped" style="clear: both">
                                 <thead>
                                 <tr>
+                                                                        <th style="width: 30px;"><i class="fa fa-reorder" style="visibility: hidden;"></i></th>
+
                                     <th>Search ID</th>
                                     <th>Search Now</th>
                                     <th>Search Name</th>
@@ -169,7 +171,8 @@ $this->title = 'Searches/Alerts';
                                         $created_at = DateTime::createFromFormat('Y-m-d H:i:s', $savedSearch->created_at);
                                         $expiry_date = DateTime::createFromFormat('Y-m-d H:i:s', $savedSearch->expiry_date);
                                     ?>
-                                    <tr>
+                                    <tr data-id="<?php echo $savedSearch->id?>">
+                                        <td><span class="sort-handle" style="cursor: move;"><i class="fa fa-reorder"></i></span></td>
                                         <td><?php echo $savedSearch->id?></td>
                                         <td>
                                             <form method="POST" action="<?php echo Url::to(['property/search'])?>">
@@ -223,7 +226,7 @@ $this->title = 'Searches/Alerts';
                                             </a>
                                         </td>
                                         <td>
-                                            <?php 
+                                            <?php
                                             $propertyTypeArr = array(
                                                 "AK"=> 'Attached SFH',
                                                 "HI"=>'Detached SFH',
@@ -247,7 +250,7 @@ $this->title = 'Searches/Alerts';
                                                 }
 
                                                 $label = SavedSearchCriteria::getLabel($criteria->attr_name);
-                                                     
+
                                                 if($label == '' || strpos($label, 'Map Boundary' ) !== false) {
                                                     continue;
                                                 }
@@ -269,9 +272,9 @@ $this->title = 'Searches/Alerts';
                                                      } else {
                                                          $col1 = $col;
                                                      }
-                                             endforeach; 
+                                             endforeach;
                                              if ( $col2 ) { ?>
-        <div class=""> <?php echo $col1; ?> 
+        <div class=""> <?php echo $col1; ?>
                 <a data-toggle="collapse" href="#collapseOne<?php echo $keySavedSearch;?>">
                     <b class="collapse-sign"><em class="fa fa-expand-o"></em></b>
                 </a>
@@ -279,12 +282,12 @@ $this->title = 'Searches/Alerts';
         <div id="collapseOne<?php echo $keySavedSearch;?>" class="collapse">
                 <?php echo $col2; ?>
         </div>
-                                        <?php 
+                                        <?php
                                              } else {
                                                  echo $col1;
                                              }
                                         ?>
-                                            
+
                                         </td>
 
                                         <td>

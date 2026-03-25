@@ -62,11 +62,14 @@ var PageSearchesAlertsHelper = {
 
     editableInitEmails: function (el) {
         // Use FontAwesome icons for X-editable buttons
-        $.fn.editableform.buttons =
-            '<button type="submit" class="btn btn-primary btn-sm editable-submit"><i class="fa fa-check"></i></button>' +
-            '<button type="button" class="btn btn-default btn-sm editable-cancel"><i class="fa fa-times"></i></button>';
+        if ($.fn.editableform) {
+            $.fn.editableform.buttons =
+                '<button type="submit" class="btn btn-primary btn-sm editable-submit"><i class="fa fa-check"></i></button>' +
+                '<button type="button" class="btn btn-default btn-sm editable-cancel"><i class="fa fa-times"></i></button>';
+        }
 
-        $(el).editable({
+        if ($.fn.editable) {
+            $(el).editable({
             success: function (response, newValue) {
 
                 if (response && response.new_id) {
@@ -107,9 +110,10 @@ var PageSearchesAlertsHelper = {
             }
         });
 
-        $(el).editable('option', 'params', {
-            'saved_search_id': parseInt($(el).data('saved_search_id'))
-        });
+            $(el).editable('option', 'params', {
+                'saved_search_id': parseInt($(el).data('saved_search_id'))
+            });
+        }
     }
 };
 
@@ -181,5 +185,58 @@ $(document).ready(function () {
      "sDom": '<\'dt-top-row\'lf>r<\'dt-wrapper\'t><\'dt-row dt-bottom-row\'<\'row\'<\'col-sm-6\'i><\'col-sm-6 text-right\'p>>',
      "aaSorting": []
      });*/
+
+    // Helper to maintain width of cells while dragging
+    var fixHelper = function (e, ui) {
+        ui.children().each(function () {
+            $(this).width($(this).width());
+        });
+        return ui;
+    };
+
+    // Initialize Sortable for Saved Searches
+    if ($("#user").length) {
+        $("#user").sortable({
+            handle: '.sort-handle',
+            items: 'tbody > tr',
+            helper: fixHelper,
+            axis: 'y',
+            update: function (event, ui) {
+                var order = [];
+                $("#user tbody tr").each(function () {
+                    var id = $(this).data('id');
+                    if (id) {
+                        order.push(id);
+                    }
+                });
+
+                $.ajax({
+                    url: '/searches/sort',
+                    type: 'POST',
+                    data: {
+                        order: order,
+                        _csrf: $('meta[name="csrf-token"]').attr("content")
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            console.log('Order updated successfully');
+                        } else {
+                            console.error('Failed to update order');
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // Initialize Visual Sortable for Recent Search Results
+    if ($(".table-recent-search-results").length) {
+        $(".table-recent-search-results").sortable({
+            handle: '.sort-handle',
+            items: 'tbody > tr',
+            helper: fixHelper,
+            axis: 'y'
+        });
+    }
 
 });

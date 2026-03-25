@@ -10,6 +10,7 @@
     <table data-id="1" class="table table-striped table-bordered table-hover table-recent-search-results">
         <thead>
         <tr>
+            <th style="width: 30px;"><i class="fa fa-reorder" style="visibility: hidden;"></i></th>
             <th>Value</th>
             <th>Address</th>
             <th>Status</th>
@@ -24,6 +25,7 @@
         <?php foreach($property_models as $property_model): ?>
 
             <tr>
+                <td><span class="sort-handle" style="cursor: move;"><i class="fa fa-reorder"></i></span></td>
                 <td><?= $this->render('@app/views/property/_property_image_block', ['property_model' => $property_model])?></td>
                 <td><?= $this->render('@app/views/property/_property_address_block', ['property_model' => $property_model])?></td>
                 <td><?= $this->render('@app/views/property/_property_status_mark', ['property_model' => $property_model])?></td>
