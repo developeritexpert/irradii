@@ -11,8 +11,7 @@ use yii\helpers\Url;
 
 $this->title = 'History Search';
 
-$themePath = Yii::$app->view->theme->baseUrl;
-$this->layout = '//layouts/irradii';
+$this->context->layout = 'irradii';
 
 ?>
 

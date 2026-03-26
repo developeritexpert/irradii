@@ -88,6 +88,7 @@ $config = [
                 'searches/delete' => 'searches/delete',
                 'searches/editable' => 'searches/editable',
                 'searches/unsubscribe/<email>' => 'searches/unsubscribe',
+                'stat-info/uploadalertsmessages' => 'stat-info/upload-alerts-messages',
             ],
         ],
     ],

@@ -119,7 +119,7 @@ $profile = $user ? $user->profile : null;
                             </ul>
                         </li>
                         <li><a href="<?php echo Url::to(['/membership/membership/search-membership'])?>">User Subscriptions</a></li>
-                        <li><a href="<?php echo Url::to(['/stat-info/uploadalertsmessages'])?>">Email Alerts Messages</a></li>
+                        <li><a href="<?php echo Url::to(['/stat-info/upload-alerts-messages'])?>">Email Alerts Messages</a></li>
                     </ul>
                 </li>
             <?php endif; ?>
