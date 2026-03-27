@@ -89,6 +89,7 @@ $config = [
                 'searches/editable' => 'searches/editable',
                 'searches/unsubscribe/<email>' => 'searches/unsubscribe',
                 'stat-info/uploadalertsmessages' => 'stat-info/upload-alerts-messages',
+                '<slug:[a-zA-Z0-9\-]+>' => 'landing/landing',
             ],
         ],
     ],

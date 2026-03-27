@@ -1,5 +1,6 @@
+<?php use yii\helpers\Html; ?>
 <div class="search-results1">
-    <h4><?php echo CHtml::link(CHtml::encode($data->title), $data->url); ?></h4>
+    <h4><?php echo Html::a(Html::encode($data->title), $data->url); ?></h4>
     <div>
         <p class="description">
 		<?php
