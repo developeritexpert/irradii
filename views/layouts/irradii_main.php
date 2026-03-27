@@ -213,7 +213,7 @@ class="">
                     <!-- professionals dropdown -->
                     <div id="project-context" class="dropdown">
                         <span class="label">Tools:</span>
-                        <span id="project-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">For Professionals <i class="fa fa-angle-down"></i></span>
+                        <a href="#" id="project-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" style="white-space: nowrap !important; text-decoration: none; color: inherit;">For Professionals <i class="fa fa-angle-down"></i></a>
                         <ul class="dropdown-menu">
                             <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate investors</a></li>
                             <li><a href="<?= Url::to(['/landing/post']) ?>">Real estate agents</a></li>
@@ -230,7 +230,7 @@ class="">
                     <!-- Market Info dropdown -->
                     <div id="project-context" class="dropdown">
                         <span class="label">Local:</span>
-                        <span id="market-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">Market Info <i class="fa fa-angle-down"></i></span>
+                        <a href="#" id="market-selector-guest" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" style="white-space: nowrap !important; text-decoration: none; color: inherit;">Market Info <i class="fa fa-angle-down"></i></a>
                         <ul class="dropdown-menu">
                             <li><a href="<?= Url::to(['/landing/post']) ?>">How does Irradii.com work?</a></li>
                             <li><a href="<?= Url::to(['/landing/post']) ?>">What's this home worth?</a></li>
@@ -249,7 +249,7 @@ class="">
                     <!-- history dropdown (Authenticated only) -->
                     <div id="project-context" class="dropdown">
                         <span class="label">History:</span>
-                        <span id="history-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" style="white-space: nowrap !important;">Recent pages <i class="fa fa-angle-down"></i></span>
+                        <a href="#" id="history-selector" class="popover-trigger-element dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" style="white-space: nowrap !important; text-decoration: none; color: inherit;">Recent pages <i class="fa fa-angle-down"></i></a>
                         <ul class="dropdown-menu">
                             <?php $session = Yii::$app->session;
                             if(isset($session['recent_pages']) && count($session['recent_pages'])>0):?>
@@ -325,8 +325,8 @@ class="">
 
                     <!-- multiple lang dropdown : find all flags in the image folder -->
                     <ul class="header-dropdown-list hidden-xs">
-                        <li>
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"> <i class="fa fa-lg fa-fw fa-home"></i> <span> Homes for Sale </span> <i class="fa fa-angle-down"></i> </a>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown"> <i class="fa fa-lg fa-fw fa-home"></i> <span> Homes for Sale </span> <i class="fa fa-angle-down"></i> </a>
                             <ul class="dropdown-menu pull-right">
                                 <li class="active">
                                     <a href="javascript:void(0);"><i class="fa fa-lg fa-fw fa-home"></i> Homes for Sale</a>
@@ -445,8 +445,8 @@ class="">
 
                         <!-- multiple lang dropdown : find all flags in the image folder -->
                         <ul class="header-dropdown-list hidden-xs">
-                            <li>
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown"> <i class="fa fa-lg fa-fw fa-home"></i> <span> Homes for Sale </span> <i class="fa fa-angle-down"></i> </a>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown"> <i class="fa fa-lg fa-fw fa-home"></i> <span> Homes for Sale </span> <i class="fa fa-angle-down"></i> </a>
                                 <ul class="dropdown-menu pull-right">
                                     <li class="active">
                                         <a href="javascript:void(0);"><i class="fa fa-lg fa-fw fa-home"></i> Homes for Sale</a>
@@ -507,51 +507,15 @@ $this->registerJs("
         <script src="js/plugin/jquery-touch/jquery.ui.touch-punch.min.js"></script> -->
 
         <!-- JQUERY MIGRATE (Legacy Compatibility) -->
-        <?php $this->registerJsFile('https://code.jquery.com/jquery-migrate-1.4.1.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
+        <?php $this->registerJsFile('https://code.jquery.com/jquery-migrate-3.4.1.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
         <?php $this->registerJsFile('@web/js/jquery-shim.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
+        <!-- JQUERY UI -->
         <?php $this->registerJsFile('https://code.jquery.com/ui/1.11.4/jquery-ui.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
-        <!-- BOOTSTRAP JS -->
-        <?php // $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/bootstrap/bootstrap.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
+        <!-- Note: Individual plugins (SmartNotification, JarvisWidget, Select2, etc.) 
+             are bundled in concat-build.min.js and thus individual registrations 
+             pointing to missing files are removed to avoid 404 errors. -->
 
-        <!-- CUSTOM NOTIFICATION -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/notification/SmartNotification.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- JARVIS WIDGETS -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/smartwidgets/jarvis.widget.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- EASY PIE CHARTS -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/easy-pie-chart/jquery.easy-pie-chart.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- SPARKLINES -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/sparkline/jquery.sparkline.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- JQUERY VALIDATE -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/jquery-validate/jquery.validate.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- JQUERY MASKED INPUT -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/masked-input/jquery.maskedinput.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- JQUERY SELECT2 INPUT -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/select2/select2.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- JQUERY UI + Bootstrap Slider -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/bootstrap-slider/bootstrap-slider.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- browser msie issue fix -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/msie-fix/jquery.mb.browser.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- SmartClick: For mobile devices -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/smartclick/smartclick.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- JQuery Form: For form managing -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . '/js/plugin/jquery-form/jquery-form.min.js', ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-
-        <!-- PAGE RELATED PLUGIN(S) -->
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/bootstrap-progressbar/bootstrap-progressbar.js", ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/datatables/jquery.dataTables-cust.min.js", ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/bootstrap-tags/bootstrap-tagsinput.min.js", ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
-        <?php $this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/datatables/ColReorder.min.js", ['position' => $this::POS_END, 'depends' => [\yii\web\JqueryAsset::class]]); ?>
 
         <?php // $this->registerJsFile(Yii::$app->view->theme->getBaseUrl() . '/js/concat-build.min.js', ['position' => $this::POS_END]); // load file from project folder ?>
 <!--        --><?php //$this->registerJsFile(CPathCDN::gzipPublish(Yii::$app->view->theme->basePath . '/js/concat-build.min.js', 'text/javascript'), ['position' => $this::POS_END]); //included .js files are listed in Gruntfile.js ?>
@@ -679,13 +643,14 @@ $this->registerJs("
 
   ga('create', 'UA-66028133-1', 'auto');
   ga('send', 'pageview');
+", $this::POS_END);
 
+$this->registerJs("
   // Initialize SmartAdmin Widgets
   if (typeof pageSetUp === 'function') {
       pageSetUp();
   }
-
-", $this::POS_END);
+", $this::POS_READY);
         ?>
         <div id="payAndGoModal" role="dialog" tabindex="-1" class="modal fade">
             <div class="modal-dialog">

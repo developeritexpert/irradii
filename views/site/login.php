@@ -7,8 +7,6 @@ use yii\widgets\ActiveForm;
 /* @var $this yii\web\View */
 /* @var $model app\models\LoginForm */
 
-$themePath = Yii::$app->view->theme->baseUrl ?? '';
-
 $this->params['signin'] = Html::a('Create account', ['/user/registration'], ['class'=>'btn btn-danger']);
 $this->params['body_ID'] = 'login';
 

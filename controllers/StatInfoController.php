@@ -8,10 +8,11 @@ use yii\web\HttpException;
 use yii\data\ArrayDataProvider;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
+use yii\web\UploadedFile;
 
 class StatInfoController extends Controller
 {
-    public $layout = '//layouts/column1';
+    public $layout = 'column1';
     public $dollar_value = [];
 
     public function behaviors()
@@ -32,7 +33,9 @@ class StatInfoController extends Controller
                             'history',
                             'upload-alerts-messages'
                         ],
-                        'roles' => ['admin']
+                        'matchCallback' => function ($rule, $action) {
+                            return \app\components\SiteHelper::isAdmin();
+                        }
                     ],
                 ],
             ],
@@ -297,20 +300,20 @@ class StatInfoController extends Controller
 
         $model = new \app\models\AlertsMessages();
 
-        if($model->load(Yii::$app->request->post())
-            && $model->save()){
-
-            Yii::$app->session->setFlash(
-                'success',
-                'File successfully uploaded.'
-            );
-
-            return $this->refresh();
+        if ($model->load(Yii::$app->request->post())) {
+            $model->document = UploadedFile::getInstance($model, 'document');
+            if ($model->save()) {
+                Yii::$app->session->setFlash('success', '<i class="fa fa-upload"></i> File was successfully uploaded and saved to DB.');
+                return $this->refresh();
+            } else {
+                Yii::$app->session->setFlash('error', '<i class="fa fa-meh-o"></i> Error occured. May be you havn\'t chosen a file at last time. Try Again.');
+                return $this->refresh();
+            }
         }
 
-        return $this->render('uploadAlertsMessView',[
-            'model'=>$model,
-            'profile'=>$profile
+        return $this->render('uploadAlertsMessView', [
+            'model' => $model,
+            'profile' => $profile
         ]);
     }
 
