@@ -21,6 +21,20 @@ if (!isset($session['recent_pages']) || count($session['recent_pages']) == 0) {
 $baseUrl = Yii::$app->request->baseUrl;
 $themePath = $baseUrl . '/themes/smartadmin'; // Typical conversion for this project
 
+// Yii1 compatibility shim for clientScript
+$clientScript = new class($this) {
+    private $_view;
+    public function __construct($view) { $this->_view = $view; }
+    public function registerScript($id, $js, $pos = \yii\web\View::POS_READY) {
+        // Yii2 registerJs arguments are ($js, $pos, $id) while Yii1 were ($id, $js, $pos)
+        $this->_view->registerJs($js, $pos, $id);
+    }
+    public function registerScriptFile($url, $pos = \yii\web\View::POS_END) {
+        $this->_view->registerJsFile($url, ['position' => $pos]);
+    }
+};
+$cs = $clientScript;
+
 $this->title = 'Search'; // Moved this line up as per original context
 
 // The original code had $property_type_array here. Keeping it as is.
@@ -123,7 +137,7 @@ if (Yii::$app->user->isGuest) {
     <div id="content">
         <section id="widget-grid" class="">
             <div class="row">
-                <?php echo $postTop->content; ?>
+                <?php echo str_replace('../../upload/', Yii::$app->request->baseUrl . '/upload/', $postTop->content); ?>
             </div>
 
             <div class="row" id="search_list_block">
@@ -299,7 +313,7 @@ if (Yii::$app->user->isGuest) {
             </div>
         </section>
         <div class="row">
-            <?php echo $postBottom->content; ?>
+            <?php echo str_replace('../../upload/', Yii::$app->request->baseUrl . '/upload/', $postBottom->content); ?>
         </div>
         <div class="flex-grid">
             <div class="member-box-front first">
@@ -318,8 +332,8 @@ if (Yii::$app->user->isGuest) {
                     ?>
                 </div>
                 <div class="register-area">
-                    <?php echo CHtml::link('REGISTER',
-                        CController::createUrl('user/registration'),
+                    <?php echo Html::a('REGISTER',
+                        Url::to('user/registration'),
                         array('mo'=>'first',
                               'class'=>'register-members btn btn-primary btn-default',
                         )
@@ -342,8 +356,8 @@ if (Yii::$app->user->isGuest) {
                     ?>
                 </div>
                 <div class="register-area">
-                    <?php echo CHtml::link('REGISTER',
-                        CController::createUrl('user/registration'),
+                    <?php echo Html::a('REGISTER',
+                        Url::to('user/registration'),
                         array('mo'=>'first',
                               'class'=>'register-members btn btn-primary btn-default',
                         )
@@ -366,8 +380,8 @@ if (Yii::$app->user->isGuest) {
                     ?>
                 </div>
                 <div class="register-area">
-                    <?php echo CHtml::link('REGISTER',
-                        CController::createUrl('user/registration'),
+                    <?php echo Html::a('REGISTER',
+                        Url::to('user/registration'),
                         array('mo'=>'first',
                               'class'=>'register-members btn btn-primary btn-default',
                         )
@@ -383,9 +397,9 @@ if (Yii::$app->user->isGuest) {
 
 <?php
 
-Yii::app()->clientScript->registerScript("MapBoundaryVar", "
+$clientScript->registerScript("MapBoundaryVar", "
 var mapBoundaries = [];
-        ", CClientScript::POS_END);
+        ", \yii\web\View::POS_END);
 
 if(isset($general_search_fields['map_boundary'])){
     $mapBoundaryObject = $general_search_fields['map_boundary'];
@@ -394,7 +408,7 @@ if(isset($general_search_fields['map_boundary'])){
     switch($mapBoundaryClass){
 
         case 'MapBoundaryCircle': // https://developers.google.com/maps/documentation/javascript/examples/circle-simple
-            Yii::app()->clientScript->registerScript("MapBoundaryCircle", "
+            $clientScript->registerScript("MapBoundaryCircle", "
                 var circle = new google.maps.Circle({
                     strokeColor: '#000000',
                     strokeOpacity: 0.3,
@@ -406,21 +420,21 @@ if(isset($general_search_fields['map_boundary'])){
                 })
                 mapBoundaries.push(circle);
                 coordinates_filter = getCircleCoordinatesFilter(circle);
-            ", CClientScript::POS_END);
+            ", \yii\web\View::POS_END);
             break;
 
         case 'MapBoundaryPolygon': // https://developers.google.com/maps/documentation/javascript/examples/polygon-arrays
 
             $points = $mapBoundaryObject->getPoints();
 
-            Yii::app()->clientScript->registerScript("MapBoundaryPolygonCoords", "var polygonCoords = [];", CClientScript::POS_END);
+            $clientScript->registerScript("MapBoundaryPolygonCoords", "var polygonCoords = [];", \yii\web\View::POS_END);
 
             foreach($points as $key=>$point){
-                Yii::app()->clientScript->registerScript("MapBoundaryPolygonCoord".$key, "polygonCoords.push(new google.maps.LatLng(".$point->getStringPresentation()."));", CClientScript::POS_END);
+                $clientScript->registerScript("MapBoundaryPolygonCoord".$key, "polygonCoords.push(new google.maps.LatLng(".$point->getStringPresentation()."));", \yii\web\View::POS_END);
             }
 
             foreach($points as $key=>$point){
-                Yii::app()->clientScript->registerScript("MapBoundaryPolygon", "
+                $clientScript->registerScript("MapBoundaryPolygon", "
                     var polygon = new google.maps.Polygon({
                         paths: polygonCoords,
                         strokeColor: '#000000',
@@ -432,19 +446,19 @@ if(isset($general_search_fields['map_boundary'])){
                     
                     mapBoundaries.push(polygon);
                     coordinates_filter = getPolygonCoordinatesFilter(polygon);
-                ", CClientScript::POS_END);
+                ", \yii\web\View::POS_END);
             }
             break;
 
         case 'MapBoundaryRectangle':// https://developers.google.com/maps/documentation/javascript/examples/rectangle-simple
-            Yii::app()->clientScript->registerScript("MapBoundaryRectangleBounds", "
+            $clientScript->registerScript("MapBoundaryRectangleBounds", "
                 var rectangleBounds = new google.maps.LatLngBounds(
                       new google.maps.LatLng(".$mapBoundaryObject->getLeftTopPoint()->getStringPresentation()."),
                       new google.maps.LatLng(".$mapBoundaryObject->getRightBottomPoint()->getStringPresentation().")
                 )
-            ", CClientScript::POS_END);
+            ", \yii\web\View::POS_END);
 
-            Yii::app()->clientScript->registerScript("MapBoundaryRectangle", "
+            $clientScript->registerScript("MapBoundaryRectangle", "
                 var rectangle = new google.maps.Rectangle({
                     strokeColor: '#000000',
                     strokeOpacity: 0.3,
@@ -456,14 +470,14 @@ if(isset($general_search_fields['map_boundary'])){
                 mapBoundaries.push(rectangle);
                 
                 coordinates_filter = getRectangleCoordinatesFilter(rectangle);
-            ", CClientScript::POS_END);
+            ", \yii\web\View::POS_END);
             break;
     }// end switch
 }
 
 $searchResultSmallQuery = $search_results ? json_encode($search_results) : json_encode(array("count_result"=>0,"result"=>array(),"status"=>"failed"));
 
-Yii::app()->clientScript->registerScript("main", "
+$clientScript->registerScript("main", "
             var dataSearchResultSmallQuery = " . $searchResultSmallQuery . ";
 
             var map;
@@ -1456,17 +1470,17 @@ function getPathImages(){
             var searchOnLoad = " . ((isset($general_search_fields['searchOnLoad']) && $general_search_fields['searchOnLoad']=='1')? '1' :'0') . ";
 
 
-", CClientScript::POS_END);
+", \yii\web\View::POS_END);
 
 
 
 
-Yii::app()->clientScript->registerScript("successDestroyer", "if($('.success1').css('display')=='block'){
+$clientScript->registerScript("successDestroyer", "if($('.success1').css('display')=='block'){
             $('.success1').fadeOut(5000);
-        }", CClientScript::POS_END);
+        }", \yii\web\View::POS_END);
 
 
-Yii::app()->clientScript->registerScript("searchScript", "   
+$clientScript->registerScript("searchScript", "   
        
 var guest = " . $guest . ";
                    
@@ -1489,9 +1503,9 @@ var guest = " . $guest . ";
             } 
         });
 
-    ", CClientScript::POS_END);
+    ", \yii\web\View::POS_END);
 
-Yii::app()->clientScript->registerScript(
+$clientScript->registerScript(
     "sendAjaxRequest", " 
             var search_result;
             $('.rectangle').click(function() {                                                          //  RECTANGLE
@@ -1839,11 +1853,11 @@ Yii::app()->clientScript->registerScript(
 // end sendAjaxRequest (POS_READY)
 
 
-", CClientScript::POS_READY);
+", \yii\web\View::POS_READY);
 
-$cs->registerScriptFile(Yii::app()->theme->baseUrl . '/js/search.js', CClientScript::POS_END);
+$cs->registerScriptFile($themePath . '/js/search.js', \yii\web\View::POS_END);
 
-Yii::app()->clientScript->registerScript("Script", "
+$clientScript->registerScript("Script", "
     
         var placeSearch, autocomplete;
         var componentForm = {
@@ -1915,5 +1929,5 @@ Yii::app()->clientScript->registerScript("Script", "
         
         
     
-    ", CClientScript::POS_END);
+    ", \yii\web\View::POS_END);
 

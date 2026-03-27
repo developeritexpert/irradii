@@ -32,7 +32,13 @@ class LandingController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'roles' => ['@'], // Authenticated users only
+                        'actions' => ['landing'],
+                        'roles' => ['?', '@'], // Allow guests and authenticated users
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['index', 'admin', 'create', 'show', 'update', 'delete', 'upload'],
+                        'roles' => ['@'], // Authenticated users for administrative actions
                     ],
                 ],
             ],
@@ -69,22 +75,99 @@ class LandingController extends Controller
     /**
      * Public Landing Page view.
      */
-    public function actionLanding($id)
+    public function actionLanding($slug = null)
     {
-        $model = $this->findModel($id);
+        if ($slug === null) {
+            $slug = Yii::$app->request->pathInfo;
+        }
+
+        $modelLanding = null;
+        $allLandings = LandingPage::find()->all();
+        foreach ($allLandings as $model) {
+            if ($this->slugify($model->title) === $this->slugify($slug)) {
+                $modelLanding = $model;
+                break;
+            }
+        }
+
+        if (!$modelLanding) {
+            // Check if it's an ID
+            if (is_numeric($slug)) {
+                $modelLanding = LandingPage::findOne($slug);
+            }
+        }
+
+        if (!$modelLanding) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
         $user = $this->loadUserData();
         $profile = $user ? $user->profile : null;
+        $user_id = $user ? $user->id : null;
 
-        $membershipOptions = $model->membershipOptions;
+        $membershipOptions = $modelLanding->membershipOptions;
         
-        // This likely needs more logic for the public-facing view
+        // Load search results logic from legacy
+        $search_results = [
+            'count_result' => 0,
+            'result' => [],
+            'status' => 'failed'
+        ];
+
+        if ($modelLanding->search_id) {
+            $search_criteria = [];
+            $criteria_raw = SavedSearchCriteria::find()->where(['saved_search_id' => $modelLanding->search_id])->all();
+            foreach ($criteria_raw as $item) {
+                $search_criteria[$item->attr_name] = @unserialize($item->attr_value);
+            }
+
+            $query = PropertyInfo::find()->with([
+                'city', 'state', 'zipcode', 'slug', 'propertyInfoPhoto',
+                'propertyInfoAdditionalBrokerageDetails', 'propertyInfoDetails'
+            ]);
+
+            // Apply criteria (simplified mapping from property/search)
+            if (!empty($search_criteria['address'])) {
+                $query->andWhere(['like', 'property_info.property_street', $search_criteria['address']]);
+            }
+            if (!empty($search_criteria['city'])) {
+                $query->joinWith('city')->andWhere(['city.city_name' => $search_criteria['city']]);
+            }
+            if (!empty($search_criteria['state'])) {
+                $query->joinWith('state')->andWhere(['state.state_code' => $search_criteria['state']]);
+            }
+            if (!empty($search_criteria['zipcode'])) {
+                $query->andWhere(['property_info.property_zipcode' => $search_criteria['zipcode']]);
+            }
+            if (!empty($search_criteria['min_price'])) {
+                $query->andWhere(['>=', 'property_info.property_price', (int)$search_criteria['min_price']]);
+            }
+            if (!empty($search_criteria['max_price'])) {
+                $query->andWhere(['<=', 'property_info.property_price', (int)$search_criteria['max_price']]);
+            }
+
+            $count = (int)$query->count();
+            $results = $query->limit(200)->all();
+            
+            $search_results = [
+                'status' => ($count > 0) ? 'success' : 'nothing',
+                'count_result' => $count,
+                'latlon' => SiteHelper::getLatLonResult($results),
+                'result' => SiteHelper::getSearchMapResult($results),
+            ];
+        }
+
+        $postTop = $modelLanding->postTop ?: new Post();
+        $postBottom = $modelLanding->postBottom ?: new Post();
+
         return $this->render('page', [
-            'model' => $model,
+            'model' => $modelLanding,
             'user' => $user,
             'profile' => $profile,
             'membershipOptions' => $membershipOptions,
-            'postTop' => $model->postTop,
-            'postBottom' => $model->postBottom,
+            'postTop' => $postTop,
+            'postBottom' => $postBottom,
+            'search_results' => $search_results,
         ]);
     }
 
@@ -240,5 +323,32 @@ class LandingController extends Controller
             return $model;
         }
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function slugify($text)
+    {
+        // replace non letter or digits by -
+        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+
+        // transliterate
+        $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+
+        // remove unwanted characters
+        $text = preg_replace('~[^-\w]+~', '', $text);
+
+        // trim
+        $text = trim($text, '-');
+
+        // remove duplicate -
+        $text = preg_replace('~-+~', '-', $text);
+
+        // lowercase
+        $text = strtolower($text);
+
+        if (empty($text)) {
+            return 'n-a';
+        }
+
+        return $text;
     }
 }
