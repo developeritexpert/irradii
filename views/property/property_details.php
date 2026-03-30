@@ -944,7 +944,6 @@ if (!$isGuest) {
             </article>
             <?php endif; ?>
 
-        </div><!-- end row: Map + Property Comparison -->
 
         <!-- row: Comparable Properties Table (Full Width) -->
         <?php
@@ -959,7 +958,6 @@ if (!$isGuest) {
         $displayCount = max(0, (int)$countProp - (int)$countExcludeProperties);
         ?>
         <?php if ($countProp > 0): ?>
-        <div class="row">
             <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                 <!-- Comparable Properties Table -->
                     <div class="jarviswidget jarviswidget-sortable jarviswidget-color-blue" id="wid-id-2proptbl" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-colorbutton="false">
@@ -1061,10 +1059,7 @@ if (!$isGuest) {
                     </div>
                 <!-- end Comparable Properties Table -->
             </article>
-        </div><!-- end row: Comparable Properties Table -->
         <?php endif; // countProp > 0 ?>
-
-        </div><!-- end widget-grid section -->
 
         <!-- Market Info Row -->
         <?php if (false): ?>
@@ -1166,13 +1161,11 @@ if (!$isGuest) {
                     </div>
                 </div>
             </div>
-        </div><!-- /.row market info -->
         <?php endif; ?>
 
         <!-- Similar Homes For Sale -->
         <?php if (count($similar_homes ?? []) > 0): ?>
-        <div class="row">
-            <article class="col-sm-12 col-md-12 col-lg-6">
+            <article class="col-sm-12 col-md-12 col-lg-6 pull-right">
                 <div class="jarviswidget jarviswidget-sortable jarviswidget-color-green" id="wid-id-shfs" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-deletebutton="false">
                     <header>
                         <span class="widget-icon"> <i class="fa fa-table"></i> </span>
@@ -1200,7 +1193,6 @@ if (!$isGuest) {
                     </div>
                 </div>
             </article>
-        </div>
         <?php endif; ?>
 
         <!-- end Comparable Properties -->
