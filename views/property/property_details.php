@@ -132,7 +132,21 @@ $isGuest = Yii::$app->user->isGuest;
     .carousel-indicators .active { width: 12px; height: 12px; margin: 0; background-color: #fff; }
     #wid-id-2dt-c > div { height: auto !important; }
     .carousel-inner { height: auto !important; }
-
+    .thumb-img { width: 180px; position: absolute; display: none; }
+    #total_comp_prop a:hover .thumb-img {
+        display: block;
+        z-index: 99999;
+        left: 20px;
+        top: auto;
+        bottom: 20px;
+        border: none;
+        box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.5);
+    }
+    #total_comp_prop tr:nth-child(1) a:hover .thumb-img,
+    #total_comp_prop tr:nth-child(2) a:hover .thumb-img,
+    #total_comp_prop tr:nth-child(3) a:hover .thumb-img {
+        top: 20px; bottom: auto;
+    }
 </style>
 
 <?php 
@@ -1392,7 +1406,7 @@ $this->registerJs("
             'bAutoWidth': false,
             'stateSave': false,
             'aoColumns': [
-                /* 0  indicator   */ { 'sType': 'num-html', 'bSortable': false, 'bVisible': false },
+                /* 0  indicator   */ { 'sType': 'num-html', 'bSortable': false },
                 /* 1  address     */ null,
                 /* 2  status      */ null,
                 /* 3  list price  */ { 'sType': 'currency' },
@@ -1575,18 +1589,97 @@ $this->registerJs("
             left = (markerCoords['x'] < popupWidth) ? 0 : (markerCoords['x'] - popupWidth);
         popup$.css({ top: top, left: left });
     }
-    function showDetailPopup(marker) { marker_on_popup = marker; $('.detail-pop-up').fadeIn().appendTo('#map-canvas'); }
+    function showDetailPopup(marker) {
+        var prop_id = marker.prop_id,
+            rows$ = $('.datatable_col_reorder').find('tbody tr'),
+            is_main_prop = false,
+            row$, img$, label$, price, street, exclude_btn = '';
+
+        marker_on_popup = marker;
+
+        if (typeof prop_id === 'undefined' || prop_id == details_property_id) {
+            is_main_prop = true;
+            rows$.each(function(index, element) {
+                if ($(element).find('.exclude_reinclude').length === 0) { row$ = $(element); }
+            });
+            prop_id = details_property_id;
+        } else {
+            rows$.each(function(index, element) {
+                if ($(element).find('.exclude_reinclude').data('property_id') == prop_id) { row$ = $(element); }
+            });
+        }
+
+        if (row$) {
+            var img$ = row$.find('img.thumb-img');
+            var imgSrc = img$.length ? img$.attr('src') : '';
+            var firstPhoto$ = imgSrc ? $('<div class=\"item active\"><img src=\"' + imgSrc + '\" style=\"width:100%\"></div>') : '';
+            
+            label$ = row$.find('.label').clone();
+            price = row$.find('td').eq(3).text(); 
+            street = row$.find('.property_info_row').data('address');
+
+            if (is_main_prop !== true) {
+                exclude_btn = row$.find('.exclude_reinclude').clone();
+                exclude_btn.on('click', function() {
+                    hideDetailPopup();
+                    row$.find('.exclude_reinclude').trigger('click');
+                });
+                $('.detail-pop-up').find('.exclude-btn').empty().append('<span>Exclude from Comps&nbsp;</span>').append(exclude_btn);
+            } else {
+                $('.detail-pop-up').find('.exclude-btn').empty();
+            }
+
+            $('.detail-pop-up').find('.carousel-inner').empty().append(firstPhoto$);
+            $('.detail-pop-up').find('.label-container').empty().append(label$);
+            $('.detail-pop-up').find('.price').text(price);
+            $('.detail-pop-up').find('.street').text(street);
+            
+            $('.detail-pop-up').find('.show-in-table').off('click').on('click', function(e){
+                e.preventDefault();
+                $('html, body').animate({ scrollTop: row$.offset().top - 100 }, 500);
+                row$.addClass('highlight-row');
+                setTimeout(function(){ row$.removeClass('highlight-row'); }, 2000);
+            });
+        }
+
+        $('.detail-pop-up').fadeIn().appendTo('#map-canvas');
+
+        $.ajax({
+            url: '/property/getcomppropertydetails',
+            data: {property_id: prop_id},
+            type: 'POST',
+            dataType: 'json',
+            cache: false,
+            success: function(data){
+                $('#detail-pop-up-carousel').carousel('pause');
+                var popup$ = $('.detail-pop-up');
+                popup$.find('.city').text(data.city);
+                popup$.find('.subdivision').text(data.subdivision);
+                popup$.find('.type').text(data.type);
+                popup$.find('.metrics').html(data.metrics);
+                popup$.find('.img-container').attr('href', data.url);
+                popup$.find('.link-container').attr('href', data.url);
+                if (data.carousel) { popup$.find('.carousel-inner').append(data.carousel); }
+                if (data.tmv) {
+                    popup$.find('.popup-tmv').text('TMV');
+                    popup$.find('.popup-tmv-price').text(data.tmv);
+                }
+            }
+        });
+    }
+
     function hideDetailPopup() {
         marker_on_popup = null;
         var popup$ = $('.detail-pop-up');
-        popup$.find('.carousel-inner').text('');
-        popup$.find('.price').text(''); popup$.find('.label-container').text('');
-        popup$.find('.street').text(''); popup$.find('.exclude-btn').text('');
+        popup$.find('.carousel-inner').empty();
+        popup$.find('.price').text(''); popup$.find('.label-container').empty();
+        popup$.find('.street').text(''); popup$.find('.exclude-btn').empty();
         popup$.find('.city').text(''); popup$.find('.subdivision').text('');
         popup$.find('.type').text(''); popup$.find('.popup-tmv-price').text('');
-        popup$.find('.popup-tmv').text(''); popup$.find('.metrics').text('');
-        popup$.css('display', 'none');
+        popup$.find('.popup-tmv').text(''); popup$.find('.metrics').empty();
+        popup$.hide();
     }
+
     $('.detail-pop-up .close').on('click', function() { hideDetailPopup(); });
 
     // Show Comps toggle

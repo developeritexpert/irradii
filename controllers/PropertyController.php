@@ -1200,7 +1200,14 @@ class PropertyController extends Controller
             : ($comparebles_property->slug ?? $comparebles_property->property_id);
         $propUrl  = \yii\helpers\Url::to(['property/details', 'slug' => $slug_val]);
         $col_address = '<a data-property_id="' . $comparebles_property->property_id . '" href="' . $propUrl . '">'
-            . Html::encode($comparebles_property->property_street) . '</a>';
+            . Html::encode($comparebles_property->property_street);
+        if (!empty($comparebles_property->photo1)) {
+            if (!isset($comparebles_property->fullAddress)) {
+                $comparebles_property->fullAddress = $this->getFullAddress($comparebles_property);
+            }
+            $col_address .= \app\components\CPathCDN::checkPhoto($comparebles_property, "thumb-img");
+        }
+        $col_address .= '</a>';
 
         // col 3: Status badge
         $statusVal   = $isSelf
