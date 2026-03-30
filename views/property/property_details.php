@@ -132,7 +132,7 @@ $isGuest = Yii::$app->user->isGuest;
     .carousel-indicators .active { width: 12px; height: 12px; margin: 0; background-color: #fff; }
     #wid-id-2dt-c > div { height: auto !important; }
     .carousel-inner { height: auto !important; }
-    #shortcut { display: none !important; } /* Hide shortcut area causing shadow/icons overhead */
+
 </style>
 
 <?php 
@@ -549,22 +549,12 @@ if (!$isGuest) {
                         </header>
 
                         <div>
-                            <div class="jarviswidget-editbox">
-                                <div>
-                                    <label>Title:</label>
-                                    <input type="text" />
-                                </div>
-                            </div>
-
                             <div class="widget-body widget-hide-overflow no-padding">
                                 <div id="chat-container">
-                                    <span class="chat-list-open-close"><i class="fa fa-user"></i><b id="agent_count_flag">4</b></span>
+                                    <span class="chat-list-open-close"><i class="fa fa-user"></i><b id="agent_count_flag">0</b></span>
                                     <div class="chat-list-body custom-scroll">
                                         <ul id="chat-users">
-                                            <li><a href="javascript:void(0);"><img src="/images/avatars/male.png" alt="">Mark Zeukartech<span class="label label-success pull-right">4.8 Stars</span></a></li>
-                                            <li><a href="javascript:void(0);"><img src="/images/avatars/male.png" alt="">Jan Jones<span class="label label-primary pull-right">Agent</span></a></li>
-                                            <li><a href="javascript:void(0);"><img src="/images/avatars/male.png" alt="">Galvitch Drewbery<span class="label label-info pull-right">Saved</span></a></li>
-                                            <li><a href="javascript:void(0);"><img src="/images/avatars/male.png" alt="">Sunny <span class="state"><i class="last-online pull-right">Online</i></span> </a></li>
+                                            <!-- Populated by JS -->
                                         </ul>
                                     </div>
                                     <div class="chat-list-footer">
@@ -581,24 +571,8 @@ if (!$isGuest) {
                                 </div>
 
                                 <div id="chat-body" class="chat-body custom-scroll">
-                                    <ul class='current-agent-chat-title' id="current-agent-chat" data-current_agent_mid="<?= (int)($details->mid ?? 0) ?>">
-                                        <?php if ($details->user && $details->user->profile): ?>
-                                            <li class="active-agent">
-                                                <a href="javascript:void(0);">
-                                                    <?php 
-                                                        $photoUrl = $details->user->profile->upload_photo 
-                                                            ? '/images/avatars/' . $details->user->profile->upload_photo 
-                                                            : '/images/avatars/male.png';
-                                                    ?>
-                                                    <img src="<?= $photoUrl ?>" alt="" class="air air-top-left" style="width: 40px; margin-right: 10px;">
-                                                    <span class="agent-name"><?= Html::encode($details->user->profile->first_name . ' ' . $details->user->profile->last_name) ?></span>
-                                                    <span class="label label-primary pull-right">Agent</span>
-                                                    <div class="agent-phone" style="margin-left: 50px; font-size: 0.85em; color: #666;">
-                                                        P: <?= Html::encode($details->user->profile->phone) ?>
-                                                    </div>
-                                                </a>
-                                            </li>
-                                        <?php endif; ?>
+                                    <ul class='current-agent-chat-title' id="current-agent-chat" data-current_agent_mid="">
+                                        <!-- Populated by JS -->
                                     </ul>
                                     <ul id="js-chat-messages"></ul>
                                 </div>
@@ -633,9 +607,9 @@ if (!$isGuest) {
                                 <div class="modal-body">
                                     <p>You've got to sign up or log in to use this feature. Joining is free!</p>
                                     <div class="modal-footer">
-                                        <a class="btn btn-primary" href="<?= Url::to(['/user/registration']) ?>">Sign up</a>
+                                        <a class="btn btn-primary" href="<?= \yii\helpers\Url::to(['/user/registration']) ?>">Sign up</a>
                                         &nbsp;
-                                        <a class="btn btn-primary" href="<?= Url::to(['/user/login']) ?>">Log in</a>
+                                        <a class="btn btn-primary" href="<?= \yii\helpers\Url::to(['/user/login']) ?>">Log in</a>
                                         &nbsp;
                                         <button data-dismiss="modal" class="btn btn-default closeModal" type="button">Close</button>
                                     </div>
@@ -1781,6 +1755,528 @@ $this->registerJs("
         $.form('/property/search', { city_searchfld: city, state_searchfld: state, zipcode_searchfld: zipcode, subdivision_searchfld: subdivision, sale_type_searchfld:'For Sale', searchfld: searchfld, 'top-search-submit': 1 }, 'POST').submit();
     });
 
-", \yii\web\View::POS_READY);
-?>
+    // Agent Chat Integration
+    var Chat = {
+        _this : '',
+        delay : '',
+        maxMsgLength : '',
+        property_id :  '',
+        owner_mid : '',
+        property_zipcode : '',
+        current_agent_mid : '',
+        property_status : '',
+        property_street : '',
+        property_agents_info : '',
+        interval : '',
+        intervalNewCustomers : '',
+        current_user_id : '" . (!Yii::$app->user->id ? 0 : Yii::$app->user->id) . "',                       
+        current_agent : '',
+        user_type : '',
+        chat_users : '',
+        room_counter : '',
+        message_created : '',
+        
+        start: function (){
+            Chat._this = $(document).find('.js-chat-widget');
+            Chat.delay = $(Chat._this).data('delay') || 10000;
+            Chat.maxMsgLength = $(Chat._this).data('maxmsglength') || 150;
+            Chat.property_id =  $(Chat._this).data('property_id') || 0;
+            Chat.owner_mid = $(Chat._this).data('owner_mid') || 0;
+            Chat.property_zipcode = $(Chat._this).data('property_zipcode') || 0;
+            Chat.current_agent_mid = $(Chat._this).data('current_agent_mid') || 0;
+            Chat.property_status = $(Chat._this).data('property_status') || 0;
+            Chat.property_street = $(Chat._this).data('property_street') || 0;
+            Chat.property_type = $(Chat._this).data('property_type') || null;
+            Chat.loadMessagesFistTime();
+        },
+        
+        loadMessagesFistTime : function(){
+            $.ajax({
+                url: '/property/chat',
+                data: {action: 'get',
+                       owner_mid: Chat.owner_mid,
+                       property_zipcode: Chat.property_zipcode
+                   },
+                type: 'POST',
+                dataType: 'json',
+                cache: false,
+                success: function(data){Chat.loadSuccessFirstTime(data)},
+                error: Chat.loadError
+            });
+        },
+        
+        loadSuccessFirstTime : function(data){
+            Chat.user_type = data.user_type;
+            Chat.property_agents_info = data; 
+            Chat.chat_users = data.chat_users;
+            Chat.clearChatMessages();
+            Chat.clearTextareaExpand();
+            
+            if(Chat.user_type === 'owner'){                                                             // OWNER
+                Chat.clearChatUsers();
+                if(data.collocutor_list && data.collocutor_list.length > 0){
+                    Chat.loadCollocutorlist(data);
+                    Chat.stopInterval();
+                    var _this_collocutor = $('#chat-users li a.active').data('mid');
+                    Chat.startInterval(Chat.current_user_id, _this_collocutor);
+                    Chat.startIntervalNewCustomers();
+                } else {
+                    Chat.loadListChatRooms(data); 
+                    Chat.startIntervalNewCustomers();
+                }   
+            }
+            
+            if(Chat.user_type === 'user'){                                                              // USER
+                Chat.loadListChatRooms(data);
+                Chat.stopInterval();
+                var _this_chat_owner = $('#chat-users li a.active').data('mid');
+                if(Chat.current_user_id != ''){
+                    Chat.loadMessages(_this_chat_owner, Chat.current_user_id);
+                }
+            }
+            Chat.scrollBottom();
+        },
+        
+        saveAgent : function(agent_id){
+            $.ajax({
+                url: '/property/saveagent',
+                data:{ agent_id: agent_id },
+                type: 'POST',
+                dataType: 'json',
+                cache: false,
+                success: function(data){ 
+                    $('#chat-users').find('a[data-mid=\"'+agent_id+'\"]').attr('data-saved','yes'); 
+                },
+                error: Chat.loadError()
+            });
+        },
+        
+        deleteSavedAgent : function(agent_id){
+            $.ajax({
+                url: '/property/detachagent',
+                data:{agent_id: agent_id},
+                type: 'post',
+                dataType: 'json',
+                cache: false,
+                success: function(data){ 
+                    $('#chat-users').find('a[data-mid=\"'+agent_id+'\"][data-kind=\"saved_agents\"]').parent().detach();
+                    if($('#chat-users li').length > 0){
+                        var li_arr = [];
+                        $('#chat-users li').each(function(){
+                            if($(this).find('a').attr('data-is_online')=='yes'){
+                                li_arr.push($(this).index());
+                            } 
+                        });
+                        if(li_arr.length > 0){
+                            $('#chat-users li:eq('+li_arr[0]+') a').trigger('click'); 
+                        } else {
+                            $('#chat_button_li').css('display','none');
+                        }
+                    } else {
+                        $('#current-agent-chat').empty();
+                        $('#js-chat-messages').empty();
+                    }
+                },
+                error: Chat.loadError()
+            });
+        },
+                
+        clearChatMessages : function(){
+            $('#agent_count_flag').empty();
+        },
+        
+        clearChatUsers : function(){
+            $('#chat-users').empty();
+        },
+        
+        loadCollocutorlist : function(data){
+            var flag_count = 0;
+            if(data.collocutor_list && data.collocutor_list.length > 0){
+                for (var j=0; j < data.collocutor_list.length; j++){
+                    var collocutor_list = data.collocutor_list[j];
+                    var collocutor_listt_photo = collocutor_list.profile.upload_photo ? collocutor_list.profile.upload_photo : 'male.png';
+                    var online = collocutor_list.user == 'yes' ? '<span class=\"label label-info\">On Line</span>' : '<span class=\"label label-info\">Off Line</span>'
+                    $('#chat-users').append('<li>'+
+                            '<a href=\"javascript:void(0);\"'+ 
+                                ' data-mid=\"'+collocutor_list.profile.mid+'\"'+ 
+                                ' data-kind=\"collocutor_list\"'+
+                                ' data-is_online=\"'+collocutor_list.user+'\"'+
+                                ' data-index=\"'+j+'\">'+
+                                '<img src=\"/images/avatars/'+collocutor_listt_photo+'\" alt=\"\">'+
+                                collocutor_list.profile.first_name+'&nbsp;'+collocutor_list.profile.last_name+
+                                online+'</a></li>');
+                    if(j==0){
+                        $('#chat-users li:eq(0) a').addClass('active');
+                        Chat.current_agent = collocutor_list;
+                        Chat.insertCurrentChatTitle(collocutor_list);
+                        Chat.loadMessages(Chat.current_user_id, parseInt(collocutor_list.profile.mid)); 
+                    }
+                }
+                flag_count += j;
+                $('#agent_count_flag').empty().html(flag_count);
+            }
+            if($('#chat-users li').length > 0){
+                var li_arr = [];
+                $('#chat-users li').each(function(){
+                    if($(this).find('a').attr('data-is_online')=='yes'){
+                        li_arr.push($(this).index());
+                    } 
+                });
+                if(li_arr.length > 0){
+                    $('#chat-users li:eq('+li_arr[0]+') a').trigger('click'); 
+                } else {
+                    $('#chat_button_li').css('display','none');
+                }
+            }       
+        },
+        
+        startIntervalNewCustomers : function(){
+            Chat.intervalNewCustomers = setInterval(function(){
+                Chat.getNewCustomers();
+            }, 60000);
+        },
+        
+        stopIntervalNewCustomers : function(){
+            clearInterval(Chat.intervalNewCustomers);
+        },
+        
+        getNewCustomers : function(){                                               
+            $.ajax({
+                url: '/property/chat',
+                data: { user_type: Chat.user_type },
+                type: 'POST',
+                dataType: 'json',
+                cache: false,
+                success: function(data){
+                    for ( var key in data.chat_users ){
+                        if (Chat.chat_users[key]){
+                            var old_row_online = data.chat_users[key].user == 'yes' ? 'On Line' : 'Off Line';
+                            $('#chat-users li a[data-mid='+key+']').find('span.label').empty().html(old_row_online);
+                            if(old_row_online == 'On Line'){
+                                if($('#chat-users li a[data-mid='+key+']').hasClass('active')){
+                                    $('#current-agent-chat li:first img').addClass('online');
+                                }
+                            } else {
+                                if($('#chat-users li a[data-mid='+key+']').hasClass('active')){
+                                    $('#current-agent-chat li:first img').removeClass('online');
+                                }
+                            }
+                            delete data.chat_users[key];
+                        }
+                    }
+                    var flag_count = 0;
+                    if(Object.keys(data.chat_users).length > 0){
+                        for (var z in data.chat_users){
+                            flag_count += 1;
+                            Chat.chat_users[z] = data.chat_users[z];
+                            if (!Chat.property_agents_info.collocutor_list) Chat.property_agents_info.collocutor_list = [];
+                            Chat.property_agents_info.collocutor_list.push(data.chat_users[z]);
+                            var collocutor_list = data.chat_users[z];
+                            var collocutor_list_photo = collocutor_list.profile.upload_photo ? collocutor_list.profile.upload_photo : 'male.png';
+
+                            var online = collocutor_list.user == 'yes' ? 
+                                '<span class=\"label label-info\">On Line</span>' :
+                                '<span class=\"label label-info\">Off Line</span>';
+                            var online_border = collocutor_list.user == 'yes' ? 'online' : '';
+                            $('#chat-users').append('<li>'+
+                                    '<a href=\"javascript:void(0);\"'+ 
+                                    ' data-mid=\"'+collocutor_list.profile.mid+'\"'+
+                                    ' data-is_online=\"'+collocutor_list.user+'\"'+
+                                    ' data-kind=\"collocutor_list\">'+
+                                        '<img class=\"'+online_border+'\" src=\"/images/avatars/'+collocutor_list_photo+'\" alt=\"\">'+
+                                        collocutor_list.profile.first_name+'&nbsp;'+collocutor_list.profile.last_name+
+                                        online+'</a></li>');
+                        }
+                    }                              
+                    var num = $('#agent_count_flag').text() || 0;
+                    $('#agent_count_flag').empty().html(flag_count + parseInt(num));
+                }
+            });
+        },
+                    
+        loadListChatRooms : function(data){
+            Chat.clearChatUsers();
+            var flag_count = 0;
+            
+            if(data.owner && data.owner.length > 0){
+                for(var n = 0; n < data.owner.length; n++){
+                    var owner = data.owner[n];
+                    if(owner.profile.mid == Chat.current_user_id) continue;
+                    var owner_online =  owner.user == 'yes' ? 'online' : '';
+                    var owner_photo = owner.profile.upload_photo ? owner.profile.upload_photo : 'male.png';
+                    $('#chat-users').append('<li><a href=\"javascript:void(0);\"'+
+                                                    ' data-mid=\"'+owner.profile.mid+'\"'+
+                                                    ' data-kind=\"owner\"'+
+                                                    ' data-is_online=\"'+owner.user+'\"'+
+                                                    ' data-index=\"'+n+'\"'+
+                                                    ' data-saved=\"no\">'+
+                                                '<img src=\"/images/avatars/'+owner_photo+'\" class=\"'+owner_online+'\" alt=\"\">'+owner.profile.first_name+'&nbsp;'+
+                                                    owner.profile.last_name+'<span class=\"label label-primary pull-right\">Agent</span></a></li>');
+                    flag_count++;
+                }
+            }
+            if(data.advertising_agents_list && data.advertising_agents_list.length > 0){
+                var limit = Math.min(data.advertising_agents_list.length, 4);
+                for(var i = 0; i < limit; i++){
+                    var agent = data.advertising_agents_list[i];
+                    if(agent.profile.mid == Chat.current_user_id) continue;
+                    var advertising_online =  agent.user == 'yes' ? 'online' : '';
+                    var agent_photo = agent.profile.upload_photo ? agent.profile.upload_photo : 'male.png';
+                    $('#chat-users').append('<li><a href=\"javascript:void(0);\"'+
+                                                    ' data-mid=\"'+agent.profile.mid+'\"'+
+                                                    ' data-kind=\"advertising_agents_list\"'+
+                                                    ' data-is_online=\"'+agent.user+'\"'+
+                                                    ' data-index=\"'+i+'\"'+
+                                                    ' data-saved=\"no\">'+
+                                                    '<img src=\"/images/avatars/'+agent_photo+'\" class=\"'+advertising_online+'\" alt=\"\">'+agent.profile.first_name+'&nbsp;'+
+                                                        agent.profile.last_name+'<span class=\"label label-success pull-right\">Advertising</span></a></li>');
+                    flag_count++;
+                }
+            }
+            
+            $('#agent_count_flag').empty().html(flag_count);
+            
+            if($('#chat-users li').length > 0){
+                var li_arr = [];
+                $('#chat-users li').each(function(){
+                    if($(this).find('img').hasClass('online')){
+                        li_arr.push($(this).index());
+                    } 
+                });
+                if(li_arr.length > 0){
+                    $('#chat-users li:eq('+li_arr[0]+') a').trigger('click');
+                } else {
+                    $('#chat_button_li').hide();
+                    var current_agent_el = $('#chat-users li:eq(0) a');
+                    if(current_agent_el.length > 0){
+                        var kind_agent = current_agent_el.data('kind');
+                        var agent_mid = current_agent_el.data('mid');
+                        var agent_index = current_agent_el.data('index');
+                        Chat.current_agent = data[kind_agent][agent_index];
+                        Chat.insertCurrentChatTitle(Chat.current_agent);
+                        Chat.loadMessages(agent_mid, Chat.current_user_id );
+                        current_agent_el.addClass('active');
+                    } 
+                }
+            } 
+        },
+
+        checkZipCode : function(city, stateCode, agentZip){
+            var api_key = '" . (Yii::$app->params['zipCodeApiKey'] ?? '') . "';
+            if(api_key && stateCode && agentZip && city){
+                $.ajax({
+                    url: 'https://www.zipcodeapi.com/rest/'+api_key+'/city-zips.json/'+city+'/'+stateCode,
+                    type: 'GET',
+                    success: function(data){
+                        if(data.zip_codes && data.zip_codes.indexOf(agentZip) == -1){
+                            $('citystatezip').html('');
+                        }
+                    }
+                });
+            }
+        },
+
+        insertCurrentChatTitle : function(current_title){
+            var photo = current_title.profile.upload_photo ? current_title.profile.upload_photo : 'male.png';
+            var current_date = new Date();
+            var city = (current_title.city && current_title.city != 0) ? current_title.city+',&nbsp;' : '';
+            var state = (current_title.state && current_title.state != 0) ? current_title.state+'&nbsp;' : '';
+            var zipcode = (current_title.zip && current_title.zip != 0) ? current_title.zip : '';
+            var phone = current_title.profile.phone_office ? '<abbr title=\"Phone\">P:&nbsp;</abbr>'+current_title.profile.phone_office : '';
+
+            this.checkZipCode(current_title.city, current_title.state_code, zipcode);
+
+            var office = current_title.profile.office || '';
+            var website_url = '';
+            if(current_title.profile.website_url){
+                var url = current_title.profile.website_url.toLowerCase().indexOf('http') == 0 ? current_title.profile.website_url : 'http://'+current_title.profile.website_url;
+                website_url = '<a href=\"'+url+'\" target=\"_blank\">'+office+' website</a>';
+            }
+            
+            var hi_name = current_title.profile.first_name ? 'Hi '+current_title.profile.first_name+',' : 'Hi,';
+            var typeText = Chat.property_type == 9 ? 'rent' : 'sale'; 
+            var message = '', placeholder = '';
+
+            switch (Chat.property_status){
+                case 'HISTORY': case 'SOLD': case 'NOT FOR SALE': case 'PENDING':
+                    message = '\"Thank you for checking out '+this.property_street+'. Contact me for information on homes for ' + typeText + ' in the area!\"';
+                    placeholder = hi_name+' I would like more information on homes for ' + typeText + ' in the area that are similar to '+this.property_street+'…';
+                    break;
+                default:
+                    message = '\"Thank you for checking out '+this.property_street+'. Please contact me if you have any questions!\"';
+                    placeholder = hi_name+' I am interested in '+this.property_street+' and would like more information on the listing';
+            }
+
+            var online_class = current_title.user == 'yes' ? 'online' : '';
+            if(online_class == 'online'){
+                $('#chat_button_li').show();
+                $('#chat_button_li a').trigger('click');
+            } else { 
+                $('#message_button_li a').trigger('click'); 
+            }
+
+            $('.current-agent-chat-title').attr('data-current_agent_mid', current_title.profile.mid);
+            $('.current-agent-chat-title').html('<li class=\"message agent\">'+
+                        '<img src=\"/images/avatars/'+photo+'\" class=\"'+online_class+'\" alt=\"\" width=\"50\">'+
+                        '<div class=\"message-text\">'+
+                            '<time>'+current_date.getFullYear()+'-'+(current_date.getMonth()+1)+'-'+current_date.getDate()+'</time>'+
+                            '<a href=\"javascript:void(0);\" class=\"username\">'+current_title.profile.first_name+' '+current_title.profile.last_name+'</a>'+
+                            '<address>'+
+                                '<strong>'+office+'</strong><br>'+(current_title.profile.street_address || '')+
+                                '<br><citystatezip>'+city+state+zipcode+'</citystatezip><br>'+
+                                phone+
+                            '</address>'+
+                        '</div>'+
+                    '</li>'+
+                    '<li class=\"message broker\">'+
+                            message+
+                    '</li>');
+            $('#textarea-expand').attr('placeholder', placeholder);
+        },
+        
+        scrollBottom : function(){
+            var el = $('#chat-body').get(0);
+            if (el) $('#chat-body').scrollTop(el.scrollHeight);
+        },
+
+        sendMessage : function(text_message, owner_room, collocutor, m_type){
+            $.ajax({
+                url: '/property/messages',
+                data: {
+                        message : text_message,
+                        owner_room: owner_room, 
+                        collocutor: collocutor,
+                        m_type: m_type
+                },
+                type: 'POST',
+                dataType: 'json',
+                success: function(data){ Chat.loadSuccess(data); },
+                error: function(){ Chat.loadError(); }
+            });
+        },
+
+        loadMessages : function(room_owner_id, collocutor_id){
+            $.ajax({
+                url: '/property/messages',
+                data: {
+                        owner_room: room_owner_id, 
+                        collocutor: collocutor_id 
+                },
+                type: 'POST',
+                dataType: 'json',
+                success: function(data){ Chat.loadSuccess(data); },
+                error: function(){ Chat.loadError(); }
+            });
+        },
+        
+        loadSuccess : function(data){
+            Chat.renderMessages(data);
+            Chat.scrollBottom();
+        },
+        
+        renderMessages : function(data){
+            if(Chat.current_user_id != 0 && data.messages){
+                var html = '';
+                for(var i = 0; i < data.messages.length; i++){
+                    var msg = data.messages[i];
+                    var author_id = msg.message.author_id;
+                    var user_profile = (author_id == Chat.current_user_id) ? 
+                        Chat.property_agents_info.current_user.profile : 
+                        (Chat.chat_users[author_id] ? Chat.chat_users[author_id].profile : {first_name:'User', last_name:'', upload_photo:'male.png'});
+                    
+                    var avatar = user_profile.upload_photo || 'male.png';
+                    html += '<li class=\"message\">'+
+                                '<img class=\"online\" src=\"/images/avatars/'+avatar+'\" alt=\"\" width=\"50\">'+
+                                '<div class=\"message-text\">'+ 
+                                    '<a>'+user_profile.first_name+' '+user_profile.last_name+'</a>'+
+                                '</div>'+
+                                    '<br>'+msg.message.chat_message+
+                            '</li>';
+                }
+                $('#js-chat-messages').html(html);
+            }
+        },
+        
+        clearTextareaExpand : function(){
+            $('#textarea-expand').val('');
+        },
+        
+        loadError : function (){
+            Chat.proceedError('Server respond with error. Please, try again later.');
+        },
+        
+        proceedError : function(message){
+            var errorEl = $('.js-chat-error'); // Add this element if needed
+            if (errorEl.length) {
+                errorEl.text(message || 'Something went wrong!').slideDown();
+                setTimeout(function(){errorEl.slideUp();}, 2000);
+            } else {
+                console.error(message);
+            }
+        },
+        
+        startInterval : function(room_owner_id, collocutor_id){
+            Chat.interval = setInterval(function(){
+                Chat.loadMessages(room_owner_id, collocutor_id);
+            }, Chat.delay);
+        },
+        
+        stopInterval : function(){
+            if (Chat.interval) clearInterval(Chat.interval);
+        },
+    };
+
+    // Chat widget event handlers
+    $(document).on('click', '.chat-list-body #chat-users li a', function(e) {
+        e.preventDefault(); 
+        var _this = $(this);
+        var kind = _this.data('kind');
+        var current_mid = _this.data('mid');
+        var index = _this.data('index');
+        var saved = _this.attr('data-saved');
+
+        $('#current-agent-chat').attr('data-current_agent_mid', current_mid); 
+        $('#chat-users li a').removeClass('active');
+        _this.addClass('active');
+        _this.parent().prependTo('#chat-users');
+
+        Chat.stopInterval();
+        if(Chat.user_type === 'user'){
+            Chat.insertCurrentChatTitle(Chat.property_agents_info[kind][index]);
+            Chat.loadMessages(current_mid, Chat.current_user_id);
+        } else if(Chat.user_type === 'owner'){
+            Chat.insertCurrentChatTitle(Chat.property_agents_info[kind][index]);
+            Chat.loadMessages(Chat.current_user_id, parseInt(current_mid));
+            Chat.startInterval(Chat.current_user_id, parseInt(current_mid));
+        }
+        return false;
+    });
+
+    $(document).on('click', '.textarea-controls button', function(){
+        var current_agent_mid = $('#current-agent-chat').attr('data-current_agent_mid');    
+        var text_message = $('#textarea-expand').val();
+        var isOnline = $('#chat-users li a.active').attr('data-is_online');
+        
+        if(text_message != ''){
+            Chat.stopInterval();
+            if(Chat.user_type === 'owner'){
+                var kind = $('#chat-users li a.active').attr('data-kind'); 
+                Chat.sendMessage(text_message, (kind == 'collocutor_list' ? Chat.current_user_id : current_agent_mid), (kind == 'collocutor_list' ? current_agent_mid : Chat.current_user_id), isOnline);
+                Chat.startInterval(Chat.current_user_id, current_agent_mid);
+            } else {
+                Chat.sendMessage(text_message, current_agent_mid, Chat.current_user_id, isOnline);
+                Chat.startInterval(current_agent_mid, Chat.current_user_id);
+            }
+            Chat.clearTextareaExpand();
+        }
+    });
+
+    $('.chat-footer .textarea-div').on('click', function(){
+        if($(this).find('textarea').prop('disabled')){
+            $('#unAuthModal').modal('show');
+        }
+    });
+
+    Chat.start();
+"); ?>
 

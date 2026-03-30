@@ -97,11 +97,11 @@ $this->registerCss(<<<CSS
         padding-right: 4px;
     }
     .input-icon-left > i {
-        left: 12px !important;
+        left: 24px !important;
         top: 10px !important;
     }
     .input-icon-left .form-control {
-        padding-left: 28px !important;
+        padding-left: 29px !important;
     }
 CSS
 );
@@ -260,7 +260,7 @@ $property_type_array = array(
                                             <div class="col-xs-12 col-sm-6 col-md-4">
                                                 <div class="input-icon-left">
                                                     <i class="fa fa-globe"></i>
-                                                    <input class="form-control"
+                                                    <input class="form-control address"
                                                            id="autocomplete"
                                                            placeholder="Address or City or State or ZIP..."
                                                            onFocus="geolocate()"
@@ -466,7 +466,7 @@ $property_type_array = array(
                                     </fieldset>
 
                                     <div class="form-actions">
-                                        <div class="row">
+                                        <div id="search-btn-block" class="row" style="display: none;">
 <?php if (!Yii::$app->user->isGuest) : ?>
                                             <div class="col-md-4">
                                                 <div class="row">
