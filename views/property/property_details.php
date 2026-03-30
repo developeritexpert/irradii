@@ -860,7 +860,7 @@ if (!$isGuest) {
                                                 <div id="confidence_chart" class="easy-pie-chart txt-color-green" data-pie-percent="90" data-percent="90" data-pie-size="50" data-size="50">
                                                     <span id="confidence_chart_text" class="percent percent-sign">90</span>
                                                 </div>
-                                                <span class="easy-pie-title"> Confidence </span>
+                                                <span class="easy-pie-title"> CONFIDENCE </span>
                                             </div>
                                             <div class="margin-top-10 col-xs-4 col-sm-5 col-md-5 col-lg-4">
                                                 <div id="confidence_slider">
@@ -885,14 +885,22 @@ if (!$isGuest) {
                                                 $datetime_exp = new DateTime($propertyDate, $dtz);
                                                 $interval = $datetime_now->diff($datetime_exp);
                                                 $quantity = $interval->days;
-                                                $quantity_percent = ($quantity / 100) * 100;
+                                                $quantity_percent = $quantity;
                                                 if($quantity_percent > 100) $quantity_percent = 100;
                                             } else {
                                                 $quantity = 0;
                                                 $quantity_percent = 0;
                                             }
+
+                                            // Gauge color logic from legacy
+                                            $chart_class = 'txt-color-green';
+                                            if ($quantity >= 31 && $quantity <= 90) {
+                                                $chart_class = 'txt-color-orange';
+                                            } elseif ($quantity >= 91) {
+                                                $chart_class = 'txt-color-red';
+                                            }
                                             ?>
-                                            <div id="days_on_market_chart" class="easy-pie-chart txt-color-green" data-pie-percent="<?= $quantity_percent ?>" data-percent="<?= $quantity_percent ?>" data-pie-size="50" data-size="50">
+                                            <div id="days_on_market_chart" class="easy-pie-chart <?= $chart_class ?>" data-pie-percent="<?= $quantity_percent ?>" data-percent="<?= $quantity_percent ?>" data-pie-size="50" data-size="50">
                                                 <span class="percent percent-sign"><?= $quantity ?></span>
                                             </div>
                                             <span class="easy-pie-title"> DAYSONMARKET </span>
