@@ -568,7 +568,22 @@ if (!$isGuest) {
                                     <span class="chat-list-open-close"><i class="fa fa-user"></i><b id="agent_count_flag">0</b></span>
                                     <div class="chat-list-body custom-scroll">
                                         <ul id="chat-users">
-                                            <!-- Populated by JS -->
+                                            <li>
+                                                <a href="javascript:void(0);">
+                                                    <img src="/images/avatars/male.png" alt="">Mark Zeukartech<span class="label label-success pull-right">4.8 Stars</span></a>
+                                            </li>
+                                            <li>
+                                                <a href="javascript:void(0);">
+                                                    <img src="/images/avatars/male.png" alt="">Jan Jones<span class="label label-primary pull-right">Agent</span></a>
+                                            </li>
+                                            <li>
+                                                <a href="javascript:void(0);">
+                                                    <img src="/images/avatars/male.png" alt="">Galvitch Drewbery<span class="label label-info pull-right">Saved</span></a>
+                                            </li>
+                                            <li>
+                                                <a href="javascript:void(0);">
+                                                    <img src="/images/avatars/male.png" alt="">Sunny <span class="state"><i class="last-online pull-right">Online</i></span> </a>
+                                            </li>
                                         </ul>
                                     </div>
                                     <div class="chat-list-footer">
@@ -2004,7 +2019,7 @@ $this->registerJs("
                                 ' data-is_online=\"'+collocutor_list.user+'\"'+
                                 ' data-index=\"'+j+'\">'+
                                 '<img src=\"/images/avatars/'+collocutor_listt_photo+'\" alt=\"\">'+
-                                collocutor_list.profile.first_name+'&nbsp;'+collocutor_list.profile.last_name+
+                                collocutor_list.profile.first_name+'&nbsp;'+(collocutor_list.profile.last_name || '')+
                                 online+'</a></li>');
                     if(j==0){
                         $('#chat-users li:eq(0) a').addClass('active');
@@ -2085,7 +2100,7 @@ $this->registerJs("
                                     ' data-is_online=\"'+collocutor_list.user+'\"'+
                                     ' data-kind=\"collocutor_list\">'+
                                         '<img class=\"'+online_border+'\" src=\"/images/avatars/'+collocutor_list_photo+'\" alt=\"\">'+
-                                        collocutor_list.profile.first_name+'&nbsp;'+collocutor_list.profile.last_name+
+                                        collocutor_list.profile.first_name+'&nbsp;'+(collocutor_list.profile.last_name || '')+
                                         online+'</a></li>');
                         }
                     }                              
@@ -2112,7 +2127,7 @@ $this->registerJs("
                                                     ' data-index=\"'+n+'\"'+
                                                     ' data-saved=\"no\">'+
                                                 '<img src=\"/images/avatars/'+owner_photo+'\" class=\"'+owner_online+'\" alt=\"\">'+owner.profile.first_name+'&nbsp;'+
-                                                    owner.profile.last_name+'<span class=\"label label-primary pull-right\">Agent</span></a></li>');
+                                                    (owner.profile.last_name || '')+'<span class=\"label label-primary pull-right\">Agent</span></a></li>');
                     flag_count++;
                 }
             }
@@ -2130,7 +2145,7 @@ $this->registerJs("
                                                     ' data-index=\"'+i+'\"'+
                                                     ' data-saved=\"no\">'+
                                                     '<img src=\"/images/avatars/'+agent_photo+'\" class=\"'+advertising_online+'\" alt=\"\">'+agent.profile.first_name+'&nbsp;'+
-                                                        agent.profile.last_name+'<span class=\"label label-success pull-right\">Advertising</span></a></li>');
+                                                        (agent.profile.last_name || '')+'<span class=\"label label-success pull-right\">Advertising</span></a></li>');
                     flag_count++;
                 }
             }
@@ -2221,7 +2236,7 @@ $this->registerJs("
                         '<img src=\"/images/avatars/'+photo+'\" class=\"'+online_class+'\" alt=\"\" width=\"50\">'+
                         '<div class=\"message-text\">'+
                             '<time>'+current_date.getFullYear()+'-'+(current_date.getMonth()+1)+'-'+current_date.getDate()+'</time>'+
-                            '<a href=\"javascript:void(0);\" class=\"username\">'+current_title.profile.first_name+' '+current_title.profile.last_name+'</a>'+
+                            '<a href=\"javascript:void(0);\" class=\"username\">'+current_title.profile.first_name+' '+(current_title.profile.last_name || '')+'</a>'+
                             '<address>'+
                                 '<strong>'+office+'</strong><br>'+(current_title.profile.street_address || '')+
                                 '<br><citystatezip>'+city+state+zipcode+'</citystatezip><br>'+
@@ -2289,7 +2304,7 @@ $this->registerJs("
                     html += '<li class=\"message\">'+
                                 '<img class=\"online\" src=\"/images/avatars/'+avatar+'\" alt=\"\" width=\"50\">'+
                                 '<div class=\"message-text\">'+ 
-                                    '<a>'+user_profile.first_name+' '+user_profile.last_name+'</a>'+
+                                    '<a>'+user_profile.first_name+' '+(user_profile.last_name || '')+'</a>'+
                                 '</div>'+
                                     '<br>'+msg.message.chat_message+
                             '</li>';
