@@ -31,20 +31,6 @@ $this->registerCss(<<<CSS
         #main { margin-left: 0 !important; }
     }
 
-    .jarviswidget > header {
-        height: 32px !important;
-        line-height: normal !important;
-        border: 1px solid #c2c2c2 !important;
-    }
-    .jarviswidget > header h2 {
-        margin-top: 7px !important;
-        font-size: 13px !important;
-        font-weight: bold !important;
-    }
-    .jarviswidget-color-greenDark > header {
-        background: #4e5e4e !important;
-        color: #fff !important;
-    }
     .datatable_tabletools {
         font-family: 'Open Sans', Arial, Helvetica, sans-serif;
         font-size: 12px;
@@ -110,6 +96,13 @@ $this->registerCss(<<<CSS
         padding-left: 4px;
         padding-right: 4px;
     }
+    .input-icon-left > i {
+        left: 12px !important;
+        top: 10px !important;
+    }
+    .input-icon-left .form-control {
+        padding-left: 28px !important;
+    }
 CSS
 );
 $property_type_array = array(
@@ -172,7 +165,7 @@ $property_type_array = array(
                 <!-- NEW WIDGET START -->
                 <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                     <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-sfilter" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-collapsed="false" data-widget-fullscreenbutton="false">
+                    <div class="jarviswidget" id="wid-id-sfilter" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-collapsed="false" data-widget-fullscreenbutton="false">
                         <!-- widget options:
                         usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
 
