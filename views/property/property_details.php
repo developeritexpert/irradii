@@ -941,7 +941,7 @@ if (!$isGuest) {
 
                             <div class="widget-body no-padding mobile-wrapper">
                                 <div class="widget-body-toolbar">
-                                        <form action="#" class="status_filter" style="margin-bottom: 0; float: left; margin-right: 20px;">
+                                        <form action="#" class="status_filter">
                                             <select multiple class="select2" name="status_type">
                                                 <?php
                                                 $all_status_types = [
@@ -971,7 +971,7 @@ if (!$isGuest) {
                                             </select>
                                         </form>
 
-                                        <div id="stage-slider" style="float: left;">
+                                        <div id="stage-slider">
                                             <input type="text" class="slider slider-primary" value=""
                                                    data-slider-max="100"
                                                    data-slider-min="1"
@@ -1415,7 +1415,7 @@ $this->registerJs("
                 /* 28 dom         */ { 'bVisible': false },
                 /* 29 tools       */ { 'sType': 'num-html', 'bSortable': false }
             ],
-            'sDom': \"<'dt-top-row'Clf>r<'dt-wrapper't><'dt-row dt-bottom-row'<'row'<'col-sm-6'i><'col-sm-6 text-right'p>>>\",
+            'sDom': \"<'dt-top-row'Clf>r<'dt-wrapper't><'dt-row dt-bottom-row'<'row'<'col-sm-6'i><'col-sm-6 text-right'p>>\",
             'fnDrawCallback': function () {
                 setAllMap(null);
                 highlightDetailInComparableTable($(this));
