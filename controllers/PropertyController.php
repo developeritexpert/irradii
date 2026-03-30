@@ -21,10 +21,18 @@ use app\models\ExcludeProperty;
 use app\models\CompareEstimatedPriceTable;
 use app\models\TTable2Tail;
 use app\models\MarketTrendTable;
+use app\models\UserProfiles;
+use app\models\SavedAgent;
+use app\models\TblAuthAssignment;
+use app\models\Zipcode;
+use app\models\City;
+use app\models\County;
+use app\models\State;
 use app\components\SiteHelper;
 use app\components\CPathCDN;
 use app\components\EstimatedPrice;
 use yii\helpers\Html;
+use yii\helpers\Json;
 use DateTime;
 use DateTimeZone;
 
@@ -63,7 +71,7 @@ class PropertyController extends Controller
                 'rules' => [
                     [
                         // Public actions — accessible by guests and logged-in users
-                        'actions' => ['details', 'get-comp-property-details', 'history', 'online', 'getmoreconfidenceinfo', 'get-more-confidence-info', 'search'],
+                        'actions' => ['details', 'get-comp-property-details', 'history', 'online', 'getmoreconfidenceinfo', 'get-more-confidence-info', 'search', 'chat', 'messages'],
                         'allow' => true,
                         'roles' => ['?', '@'],
                     ],
@@ -645,15 +653,315 @@ class PropertyController extends Controller
     }
 
     /**
+     * Agent chat functionality (ported from legacy ChatAction)
+     */
+    public function actionChat()
+    {
+        $request = Yii::$app->request;
+        $action = $request->post('action', '');
+        $owner_mid = $request->post('owner_mid', 0);
+        $property_zipcode = $request->post('property_zipcode', 0);
+        $user_type = $request->post('user_type', '');
+
+        $datetime_now = new DateTime();
+        $result = [];
+        $result['chat_users'] = [];
+
+        if ($user_type) {
+            $collocitors_list = $this->getCollocutorList();
+            if ($collocitors_list) {
+                foreach ($collocitors_list as $collocitor) {
+                    $online = 'no';
+                    $lastvisit = $collocitor->user->lastvisit_at ?? null;
+                    if ($lastvisit) {
+                        $datetime_exp = new DateTime($lastvisit);
+                        $interval = $datetime_now->diff($datetime_exp);
+                        if (($interval->days == 0) && ($interval->h == 0) && ($interval->i < 5)) {
+                            $online = 'yes';
+                        }
+                    }
+                    $profile = $collocitor->user->profile ?? null;
+                    if ($profile) {
+                        $this->fixProfilePhotos($profile);
+                        $result['chat_users'][$collocitor->user->id] = [
+                            'profile' => $profile, 
+                            'user' => $online,
+                            'state_code' => $profile->state
+                        ];
+                    }
+                }
+            }
+            return $this->asJson($result);
+        }
+
+        $result['user_type'] = 'user';
+        if ($action == 'post' || $action == 'get' || $action == '') {
+            if ($property_zipcode != 0) {
+                $agent_profiles = UserProfiles::find()
+                    ->where(['zipcode' => $property_zipcode])
+                    ->all();
+
+                $result['advertising_agents_list'] = [];
+                foreach ($agent_profiles as $profile) {
+                    $agent_info = User::find()->where(['id' => $profile->mid])->with(['profile'])->one();
+                    if (!$agent_info) continue;
+
+                    if (!Yii::$app->user->isGuest && $result['user_type'] === 'user') {
+                        $result['user_type'] = $this->checkUserType($profile->mid);
+                    }
+
+                    $online = 'no';
+                    $lastvisit = $agent_info->lastvisit_at ?? null;
+                    if ($lastvisit) {
+                        $datetime_exp = new DateTime($lastvisit);
+                        $interval = $datetime_now->diff($datetime_exp);
+                        if (($interval->days == 0) && ($interval->h == 0) && ($interval->i < 5)) {
+                            $online = 'yes';
+                        }
+                    }
+
+                    $this->fixProfilePhotos($profile);
+                    
+                    $agent_data = [
+                        'profile' => $profile,
+                        'user' => $online,
+                        'state_code' => $profile->state
+                    ];
+                    $result['advertising_agents_list'][] = $agent_data;
+                    $result['chat_users'][$profile->mid] = $agent_data;
+                }
+            }
+
+            // Owner info
+            $owner_info = User::find()->where(['id' => $owner_mid])->with(['profile'])->one();
+            $result['owner'] = [];
+            if ($owner_info && $owner_info->profile) {
+                $online = 'no';
+                $lastvisit = $owner_info->lastvisit_at ?? null;
+                if ($lastvisit) {
+                    $datetime_exp = new DateTime($lastvisit);
+                    $interval = $datetime_now->diff($datetime_exp);
+                    if (($interval->days == 0) && ($interval->h == 0) && ($interval->i < 5)) {
+                        $online = 'yes';
+                    }
+                }
+                $this->fixProfilePhotos($owner_info->profile);
+                $owner_data = [
+                    'profile' => $owner_info->profile, 
+                    'user' => $online,
+                    'state_code' => $owner_info->profile->state
+                ];
+                $result['owner'][] = $owner_data;
+                $result['chat_users'][$owner_info->id] = $owner_data;
+                
+                if (!Yii::$app->user->isGuest && $result['user_type'] === 'user') {
+                    $result['user_type'] = $this->checkUserType($owner_mid);
+                }
+            }
+
+            // Current user
+            $result['current_user'] = [];
+            if (!Yii::$app->user->isGuest) {
+                $current_user = User::find()->where(['id' => Yii::$app->user->id])->with(['profile'])->one();
+                if ($current_user && $current_user->profile) {
+                    $online = 'yes'; // Current user is online
+                    $result['current_user'] = [
+                        'profile' => $current_user->profile, 
+                        'user' => $online,
+                        'state_code' => $current_user->profile->state
+                    ];
+                }
+
+                // Saved agents
+                $result['saved_agents'] = [];
+                $saved_agents = SavedAgent::find()->where(['mid' => Yii::$app->user->id])->all();
+                foreach ($saved_agents as $saved) {
+                    $agent_u = User::find()->where(['id' => $saved->agent_id])->with(['profile'])->one();
+                    if ($agent_u && $agent_u->profile) {
+                        $online = 'no';
+                        $lastvisit = $agent_u->lastvisit_at ?? null;
+                        if ($lastvisit) {
+                            $datetime_exp = new DateTime($lastvisit);
+                            $interval = $datetime_now->diff($datetime_exp);
+                            if (($interval->days == 0) && ($interval->h == 0) && ($interval->i < 5)) {
+                                $online = 'yes';
+                            }
+                        }
+                        $this->fixProfilePhotos($agent_u->profile);
+                        $agent_data = [
+                            'profile' => $agent_u->profile,
+                            'user' => $online,
+                            'state_code' => $agent_u->profile->state
+                        ];
+                        $result['saved_agents'][] = $agent_data;
+                        $result['chat_users'][$agent_u->id] = $agent_data;
+                    }
+                }
+            }
+        }
+
+        return $this->asJson($result);
+    }
+
+    /**
+     * Agent messages functionality (ported from legacy ChatMessages)
+     */
+    public function actionMessages()
+    {
+        $request = Yii::$app->request;
+        $owner_room = $request->post('owner_room', '');
+        $collocutor = $request->post('collocutor', '');
+        $message = $request->post('message', '');
+        $m_type = $request->post('m_type', '');
+
+        if (!empty($message) && $collocutor != 0) {
+            $model = new TblChat();
+            $model->owner_room = (int)$owner_room;
+            $model->collocutor_id = (int)$collocutor;
+            $model->author_id = Yii::$app->user->id;
+            $model->chat_message = $message;
+            $model->chat_created = date("Y-m-d H:i:s");
+            $model->type = ($m_type == 'yes' ? 'chat' : 'message');
+            
+            if ($model->save()) {
+                if ($model->type == 'message') {
+                    $to = User::findOne($owner_room);
+                    $from = User::findOne(Yii::$app->user->id);
+                    if ($to && $from) {
+                        $subject = Yii::$app->params['chatMessage'] ?? 'New Message';
+                        Yii::$app->mailer->compose()
+                            ->setFrom($from->username)
+                            ->setTo($to->username)
+                            ->setSubject($subject)
+                            ->setTextBody($message)
+                            ->send();
+                    }
+                }
+            }
+        }
+
+        $result = [];
+        if ($collocutor != 0) {
+            $result = $this->getMessagesList($collocutor, $owner_room);
+        }
+
+        return $this->asJson($result);
+    }
+
+    private function getMessagesList($collocutor, $owner_room)
+    {
+        $result['messages'] = [];
+        $messages = TblChat::find()
+            ->where(['collocutor_id' => $collocutor, 'owner_room' => $owner_room])
+            ->with(['user.profile'])
+            ->all();
+
+        $datetime_now = new DateTime();
+        foreach ($messages as $msg) {
+            $online = 'no';
+            $lastvisit = $msg->user->lastvisit_at ?? null;
+            if ($lastvisit) {
+                $datetime_exp = new DateTime($lastvisit);
+                $interval = $datetime_now->diff($datetime_exp);
+                if (($interval->days == 0) && ($interval->h == 0) && ($interval->i < 5)) {
+                    $online = 'yes';
+                }
+            }
+            $result['messages'][] = ['message' => $msg, 'user' => $online];
+        }
+        return $result;
+    }
+
+    private function checkUserType($mid)
+    {
+        if ($mid == Yii::$app->user->id) {
+            return 'owner';
+        }
+
+        $user = User::findOne(Yii::$app->user->id);
+        if ($user) {
+            $assignments = TblAuthAssignment::find()->where(['userid' => $user->id])->all();
+            foreach ($assignments as $assignment) {
+                if ($assignment->itemname === 'Agent') {
+                    return 'agent';
+                }
+            }
+        }
+
+        return 'user';
+    }
+
+    private function getCollocutorList()
+    {
+        return TblChat::find()
+            ->where(['owner_room' => Yii::$app->user->id])
+            ->groupBy('collocutor_id')
+            ->with(['user.profile'])
+            ->all();
+    }
+
+    private function fixProfilePhotos($profile)
+    {
+        $ext = ['.png', '.jpg', '.gif', '.jpeg'];
+        
+        // upload_photo
+        $photo = $profile->upload_photo;
+        $ext_f = strrpos($photo, '.');
+        if ($ext_f !== false) {
+            $sud_str_f = substr($photo, $ext_f);
+            if (in_array(strtolower($sud_str_f), $ext)) {
+                $path = Yii::getAlias('@app/web/images/avatars/') . $photo;
+                if (!is_file($path)) $profile->upload_photo = 'male.png';
+            } else {
+                $profile->upload_photo = 'male.png';
+            }
+        } else {
+            $profile->upload_photo = 'male.png';
+        }
+
+        // office_logo
+        $logo = $profile->office_logo;
+        $ext_f = strrpos($logo, '.');
+        if ($ext_f !== false) {
+            $sud_str_f = substr($logo, $ext_f);
+            if (in_array(strtolower($sud_str_f), $ext)) {
+                $path = Yii::getAlias('@app/web/images/office_logo/') . $logo;
+                if (!is_file($path)) $profile->office_logo = 'male.png';
+            } else {
+                $profile->office_logo = 'male.png';
+            }
+        } else {
+            $profile->office_logo = 'male.png';
+        }
+    }
+
+    /**
      * Save agent for a property.
      */
     public function actionSaveAgent()
     {
-        if (!Yii::$app->request->isAjax) {
-            throw new NotFoundHttpException();
+        if (Yii::$app->request->isAjax) {
+            if (!Yii::$app->user->isGuest) {
+                $agent_id = Yii::$app->request->post('agent_id', 0);
+                if ($agent_id != 0) {
+                    $model = SavedAgent::find()->where(['agent_id' => $agent_id, 'mid' => Yii::$app->user->id])->one();
+                    if (!$model) {
+                        $model = new SavedAgent();
+                        $model->agent_id = (int)$agent_id;
+                        $model->mid = Yii::$app->user->id;
+                        $model->saved_timestamp = time();
+                        if ($model->save()) {
+                            return $this->asJson(['status' => 'success']);
+                        } else {
+                            return $this->asJson(['status' => 'error', 'errors' => $model->getErrors()]);
+                        }
+                    } else {
+                        return $this->asJson(['status' => 'already_saved']);
+                    }
+                }
+            }
         }
-        // Agent save logic goes here
-        return $this->asJson(['status' => 'ok']);
+        return $this->asJson(['status' => 'error']);
     }
 
     /**
@@ -661,11 +969,18 @@ class PropertyController extends Controller
      */
     public function actionDetachAgent()
     {
-        if (!Yii::$app->request->isAjax) {
-            throw new NotFoundHttpException();
+        if (Yii::$app->request->isAjax) {
+            if (!Yii::$app->user->isGuest) {
+                $agent_id = Yii::$app->request->post('agent_id', 0);
+                if ($agent_id != 0) {
+                    $deleted = SavedAgent::deleteAll(['agent_id' => $agent_id, 'mid' => Yii::$app->user->id]);
+                    if ($deleted) {
+                        return $this->asJson(['status' => 'success']);
+                    }
+                }
+            }
         }
-        // Agent detach logic goes here
-        return $this->asJson(['status' => 'ok']);
+        return $this->asJson(['status' => 'error']);
     }
 
     /**
@@ -885,7 +1200,14 @@ class PropertyController extends Controller
             : ($comparebles_property->slug ?? $comparebles_property->property_id);
         $propUrl  = \yii\helpers\Url::to(['property/details', 'slug' => $slug_val]);
         $col_address = '<a data-property_id="' . $comparebles_property->property_id . '" href="' . $propUrl . '">'
-            . Html::encode($comparebles_property->property_street) . '</a>';
+            . Html::encode($comparebles_property->property_street);
+        if (!empty($comparebles_property->photo1)) {
+            if (!isset($comparebles_property->fullAddress)) {
+                $comparebles_property->fullAddress = $this->getFullAddress($comparebles_property);
+            }
+            $col_address .= \app\components\CPathCDN::checkPhoto($comparebles_property, "thumb-img");
+        }
+        $col_address .= '</a>';
 
         // col 3: Status badge
         $statusVal   = $isSelf

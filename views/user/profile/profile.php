@@ -379,7 +379,7 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <label class="input">
                                                     <i class="icon-prepend fa fa-envelope-o"></i>
 
-                                                    <?php echo $form->field($model, 'username', ['template' => '{input}', 'options' => ['tag' => false]])->input('email')->label(false); ?>
+                                                    <?php echo $form->field($model, 'username', ['template' => '{input}', 'options' => ['tag' => false]])->input('email', ['class' => ''])->label(false); ?>
                                                 </label>
 <!--                                                <span class="input-group-addon"><i class="fa fa-check"></i></span>-->
 
@@ -396,12 +396,16 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                     <div class="form-group<?php echo $profile->hasErrors('first_name') ? ' state-error' : ''; ?>">
                                         <label>First Name</label>
 <!--                                            <input class="form-control" placeholder="Text field" type="text">-->
-                                        <?php echo $form->field($profile, 'first_name')->label(false); ?>
+                                                                                 <?php echo $form->field($profile, 'first_name', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(['class' => 'form-control'])->label(false); ?>
+                                         <?php echo Html::error($profile, 'first_name', ['class' => 'help-block text-danger']); ?>
+
                                     </div>
                                     <div class="form-group<?php echo $profile->hasErrors('last_name') ? ' state-error' : ''; ?>">
                                         <label>Last Name</label>
 <!--                                            <input class="form-control" placeholder="Text field" type="text">-->
-                                        <?php echo $form->field($profile, 'last_name')->label(false); ?>
+                                                                                 <?php echo $form->field($profile, 'last_name', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(['class' => 'form-control'])->label(false); ?>
+                                         <?php echo Html::error($profile, 'last_name', ['class' => 'help-block text-danger']); ?>
+
                                     </div>
 
                                     <div class="form-group<?php echo $profile->hasErrors('phone') ? ' has-error' : ' has-success'; ?>">
@@ -412,7 +416,8 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <label class="input">
                                                     <i class="icon-prepend fa fa-phone"></i>
 
-                                                    <?php echo $form->field($profile, 'phone', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(array('data-mask'=>'(999) 999-9999', 'placeholder'=>'phone'))->label(false); ?>
+                                                                                                         <?php echo $form->field($profile, 'phone', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(array('data-mask'=>'(999) 999-9999', 'placeholder'=>'phone', 'class' => ''))->label(false); ?>
+
                                                 </label>
 <!--                                                <span class="input-group-addon"><i class="fa fa-check"></i></span>-->
                                             </div>
@@ -571,7 +576,8 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <div class="input-group<?php echo $profile->hasErrors('website_url') ? ' state-error' : ''; ?>">
                                                     <span class="input-group-addon"><i class="fa fa-globe"></i></span>
     <!--                                                    <input class="form-control" type="text">-->
-                                                        <?php echo $form->field($profile, 'website_url', ['template' => '{input}', 'options' => ['tag' => false]])->textInput()->label(false); ?>
+                                                                                                                 <?php echo $form->field($profile, 'website_url', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(['class' => 'form-control'])->label(false); ?>
+
                                                     <span class="input-group-addon"><i class="fa fa-check"></i></span>
 
                                                 </div>
@@ -586,7 +592,8 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <div class="input-group<?php echo $profile->hasErrors('phone_office') ? ' state-error' : ''; ?>">
                                                     <span class="input-group-addon"><i class="fa fa-phone"></i></span>
     <!--                                                    <input class="form-control" type="text">-->
-                                                        <?php echo $form->field($profile, 'phone_office', ['template' => '{input}', 'options' => ['tag' => false]])->textInput()->label(false); ?>
+                                                                                                                 <?php echo $form->field($profile, 'phone_office', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(['class' => 'form-control'])->label(false); ?>
+
                                                     <span class="input-group-addon"><i class="fa fa-check"></i></span>
                                                 </div>
                                                 <span class="help-block">(XXX) XXX-XXXX</span>
@@ -600,7 +607,8 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <div class="input-group<?php echo $profile->hasErrors('phone_fax') ? ' state-error' : ''; ?>">
                                                     <span class="input-group-addon"><i class="fa fa-phone"></i></span>
     <!--                                                    <input class="form-control" type="text">-->
-                                                        <?php echo $form->field($profile, 'phone_fax', ['template' => '{input}', 'options' => ['tag' => false]])->textInput()->label(false); ?>
+                                                                                                                 <?php echo $form->field($profile, 'phone_fax', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(['class' => 'form-control'])->label(false); ?>
+
                                                     <span class="input-group-addon"><i class="fa fa-check"></i></span>
                                                 </div>
                                                 <span class="help-block">(XXX) XXX-XXXX</span>
@@ -616,26 +624,34 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                     <div class="form-group<?php echo $model->hasErrors('street_number') ? ' has-error': '';?>">
                                         <label>Street Number</label>
 <!--                                        <input class="form-control" id="street_number" disabled="true">-->
-                                        <?php echo $form->field($model, 'street_number')->textInput(array('id'=>"street_number", 'value'=>!empty($profile->street_number)?$profile->street_number:''))->label(false);?>
+                                                                                 <?php echo $form->field($model, 'street_number', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(array('id'=>"street_number", 'value'=>!empty($profile->street_number)?$profile->street_number:'', 'class' => 'form-control'))->label(false);?>
+                                         <?php echo Html::error($model, 'street_number', ['class' => 'help-block text-danger']); ?>
+
                                     </div>
 
                                     <div class="form-group<?php echo $model->hasErrors('street_address') ? ' has-error': '';?>">
 
                                         <label>Street Address</label>
 <!--                                        <input class="form-control" id="route" disabled="true">-->
-                                        <?php echo $form->field($model, 'street_address')->textInput(array('id'=>"route", 'value'=>!empty($profile->street_address)?$profile->street_address:''))->label(false); ?>
+                                                                                 <?php echo $form->field($model, 'street_address', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(array('id'=>"route", 'value'=>!empty($profile->street_address)?$profile->street_address:'', 'class' => 'form-control'))->label(false); ?>
+                                         <?php echo Html::error($model, 'street_address', ['class' => 'help-block text-danger']); ?>
+
                                     </div>
 
                                     <div class="form-group<?php echo $model->hasErrors('city') ? ' has-error': '';?>">
                                         <label>City</label>
 <!--                                        <input class="form-control" id="locality" disabled="true">-->
-                                        <?php echo $form->field($model, 'city')->textInput(array('id'=>"locality", 'value'=>!empty($profile->city)?$profile->city:''))->label(false) ?>
+                                                                                 <?php echo $form->field($model, 'city', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(array('id'=>"locality", 'value'=>!empty($profile->city)?$profile->city:'', 'class' => 'form-control'))->label(false) ?>
+                                         <?php echo Html::error($model, 'city', ['class' => 'help-block text-danger']); ?>
+
                                     </div> 
 
                                     <div class="form-group<?php echo $model->hasErrors('state') ? ' has-error': '';?>">
                                         <label>State</label>
 <!--                                        <input class="form-control" id="administrative_area_level_1" disabled="true">-->
-                                        <?php echo $form->field($model, 'state')->textInput(array('id'=>"administrative_area_level_1", 'value'=>!empty($profile->state)?$profile->state:''))->label(false); ?>
+                                                                                 <?php echo $form->field($model, 'state', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(array('id'=>"administrative_area_level_1", 'value'=>!empty($profile->state)?$profile->state:'', 'class' => 'form-control'))->label(false); ?>
+                                         <?php echo Html::error($model, 'state', ['class' => 'help-block text-danger']); ?>
+
                                      </div>  
 
                                     <div class="form-group<?php echo $model->hasErrors('zipcode') ? ' has-error': '';?>">
@@ -643,12 +659,16 @@ foreach ($profession_collection as $collection_area_expertise_text) {
 <!--                                        <input class="form-control" id="postal_code" disabled="true">-->
                                         <?php 
                                         $zip_db = (!empty($profile->zipcode) && $profile->zipcode != 0) ? $profile->zipcode : ''; 
-                                        echo $form->field($model, 'zipcode')->textInput(array('id'=>"postal_code", 'value'=>$zip_db))->label(false); ?>
+                                        echo $form->field($model, 'zipcode', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(array('id'=>"postal_code", 'value'=>$zip_db, 'class' => 'form-control'))->label(false); ?>
+                                         <?php echo Html::error($model, 'zipcode', ['class' => 'help-block text-danger']); ?>
+
                                     </div>
                                     <div class="form-group<?php echo $model->hasErrors('country') ? ' has-error': '';?>">
                                         <label>Country</label>
 <!--                                        <input class="form-control" id="country" disabled="true">-->
-                                        <?php echo $form->field($model, 'country')->textInput(array('id'=>"country", 'value'=>!empty($profile->country)?$profile->country:''))->label(false); ?>
+                                                                                 <?php echo $form->field($model, 'country', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(array('id'=>"country", 'value'=>!empty($profile->country)?$profile->country:'', 'class' => 'form-control'))->label(false); ?>
+                                         <?php echo Html::error($model, 'country', ['class' => 'help-block text-danger']); ?>
+
                                    </div>
                                         
                                         
