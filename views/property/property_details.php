@@ -967,50 +967,45 @@ if (!$isGuest) {
 
                             <div class="widget-body no-padding mobile-wrapper">
                                 <div class="widget-body-toolbar">
-                                        <div style="flex: 1; display: flex; align-items: center;">
-                                            <div id="dt_filter_placeholder" style="margin-right: 15px;"></div>
-                                            <div id="stage-slider">
-                                                <input type="text" class="slider slider-primary" value=""
-                                                       data-slider-max="100"
-                                                       data-slider-min="1"
-                                                       data-slider-value="<?= property_exists($comparebles_properties, 'current_stage') ? $comparebles_properties->current_stage : 1 ?>"
-                                                       data-slider-selection="before"
-                                                       data-slider-handle="round">
-                                            </div>
-                                        </div>
-                                        <div style="display: flex; align-items: center;">
-                                            <form action="#" class="status_filter" style="margin-bottom: 0;">
-                                                <select multiple class="select2" name="status_type" style="width:250px">
-                                                    <?php
-                                                    $all_status_types = [
-                                                        'For Sale' => 'For Sale', 'Pending' => 'Pending', 'Sold' => 'Sold',
-                                                        'In Escrow' => 'In Escrow', 'Active' => 'Active', 'Cancelled' => 'Cancelled',
-                                                        'For Rent' => 'For Rent', 'Leased' => 'Leased', 'Archive' => 'Archive'
-                                                    ];
-                                                    $session_data = Yii::$app->session;
-                                                    $excluded_statuses = [];
-                                                    $excluded_statuses_for_prop = ['Archive'];
+                                        <form action="#" class="status_filter" style="margin-bottom: 0; float: left; margin-right: 20px;">
+                                            <select multiple class="select2" name="status_type">
+                                                <?php
+                                                $all_status_types = [
+                                                    'For Sale' => 'For Sale', 'Pending' => 'Pending', 'Sold' => 'Sold',
+                                                    'In Escrow' => 'In Escrow', 'Active' => 'Active', 'Cancelled' => 'Cancelled',
+                                                    'For Rent' => 'For Rent', 'Leased' => 'Leased', 'Archive' => 'Archive'
+                                                ];
+                                                $session_data = Yii::$app->session;
+                                                $excluded_statuses = [];
+                                                $excluded_statuses_for_prop = ['Archive'];
 
-                                                    if ($session_data->has('excluded_statuses')) {
-                                                        $excluded_statuses = $session_data->get('excluded_statuses');
-                                                        if (is_array($excluded_statuses) && array_key_exists($details->property_id, $excluded_statuses)) {
-                                                            $excluded_statuses_for_prop = $excluded_statuses[$details->property_id];
-                                                        }
+                                                if ($session_data->has('excluded_statuses')) {
+                                                    $excluded_statuses = $session_data->get('excluded_statuses');
+                                                    if (is_array($excluded_statuses) && array_key_exists($details->property_id, $excluded_statuses)) {
+                                                        $excluded_statuses_for_prop = $excluded_statuses[$details->property_id];
                                                     }
+                                                }
 
-                                                    foreach ($all_status_types as $key => $name) {
-                                                        if ($details->property_type == 9 && ($key == 'For Sale' || $key == 'Sold')) continue;
-                                                        if ($details->property_type != 9 && ($key == 'For Rent' || $key == 'Leased')) continue;
+                                                foreach ($all_status_types as $key => $name) {
+                                                    if ($details->property_type == 9 && ($key == 'For Sale' || $key == 'Sold')) continue;
+                                                    if ($details->property_type != 9 && ($key == 'For Rent' || $key == 'Leased')) continue;
 
-                                                        $selected = in_array($key, $excluded_statuses_for_prop) ? '' : 'selected';
-                                                        echo '<option value="' . Html::encode($key) . '" ' . $selected . '>' . Html::encode($key) . '</option>';
-                                                    }
-                                                    ?>
-                                                </select>
-                                            </form>
-                                            <div id="dt_colvis_placeholder" style="margin-right: 10px;"></div>
-                                            <div id="dt_length_placeholder"></div>
+                                                    $selected = in_array($key, $excluded_statuses_for_prop) ? '' : 'selected';
+                                                    echo '<option value="' . Html::encode($key) . '" ' . $selected . '>' . Html::encode($key) . '</option>';
+                                                }
+                                                ?>
+                                            </select>
+                                        </form>
+
+                                        <div id="stage-slider" style="float: left;">
+                                            <input type="text" class="slider slider-primary" value=""
+                                                   data-slider-max="100"
+                                                   data-slider-min="1"
+                                                   data-slider-value="<?= property_exists($comparebles_properties, 'current_stage') ? $comparebles_properties->current_stage : 1 ?>"
+                                                   data-slider-selection="before"
+                                                   data-slider-handle="round">
                                         </div>
+                                        <div style="clear:both"></div>
                                     </div>
                                 <table class="table table-striped table-hover datatable_col_reorder">
                                     <thead>
@@ -1496,22 +1491,9 @@ $this->registerJs("
                 /* 26 bank owned  */ { 'bVisible': false },
                 /* 27 orig price  */ { 'bVisible': false, 'sType': 'currency' },
                 /* 28 dom         */ { 'bVisible': false },
-                /* 29 tools       */ { 'sType': 'num-html', 'bSortable': false },
+                /* 29 tools       */ { 'sType': 'num-html', 'bSortable': false }
             ],
-            'sDom': \"<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>l r>\" +
-                    \"t\" +
-                    \"<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>\",
-            'initComplete': function() {
-                // Relocate DT elements to our custom toolbar positions
-                var filter = $('.datatable_col_reorder_wrapper .dataTables_filter');
-                if(filter.length) filter.detach().appendTo('#dt_filter_placeholder');
-                
-                var colvis = $('.datatable_col_reorder_wrapper .ColVis');
-                if(colvis.length) colvis.detach().appendTo('#dt_colvis_placeholder');
-                
-                var length = $('.datatable_col_reorder_wrapper .dataTables_length');
-                if(length.length) length.detach().appendTo('#dt_length_placeholder');
-            },
+            'sDom': \"<'dt-top-row'Clf>r<'dt-wrapper't><'dt-row dt-bottom-row'<'row'<'col-sm-6'i><'col-sm-6 text-right'p>>>\",
             'fnDrawCallback': function () {
                 setAllMap(null);
                 highlightDetailInComparableTable($(this));
