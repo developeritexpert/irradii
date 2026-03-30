@@ -379,7 +379,7 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <label class="input">
                                                     <i class="icon-prepend fa fa-envelope-o"></i>
 
-                                                    <?php echo $form->field($model, 'username')->input('email')->label(false); ?>
+                                                    <?php echo $form->field($model, 'username', ['template' => '{input}', 'options' => ['tag' => false]])->input('email')->label(false); ?>
                                                 </label>
 <!--                                                <span class="input-group-addon"><i class="fa fa-check"></i></span>-->
 
@@ -412,7 +412,7 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <label class="input">
                                                     <i class="icon-prepend fa fa-phone"></i>
 
-                                                    <?php echo $form->field($profile, 'phone')->textInput(array('data-mask'=>'(999) 999-9999', 'placeholder'=>'phone'))->label(false); ?>
+                                                    <?php echo $form->field($profile, 'phone', ['template' => '{input}', 'options' => ['tag' => false]])->textInput(array('data-mask'=>'(999) 999-9999', 'placeholder'=>'phone'))->label(false); ?>
                                                 </label>
 <!--                                                <span class="input-group-addon"><i class="fa fa-check"></i></span>-->
                                             </div>
@@ -571,7 +571,7 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <div class="input-group<?php echo $profile->hasErrors('website_url') ? ' state-error' : ''; ?>">
                                                     <span class="input-group-addon"><i class="fa fa-globe"></i></span>
     <!--                                                    <input class="form-control" type="text">-->
-                                                        <?php echo $form->field($profile, 'website_url')->label(false); ?>
+                                                        <?php echo $form->field($profile, 'website_url', ['template' => '{input}', 'options' => ['tag' => false]])->textInput()->label(false); ?>
                                                     <span class="input-group-addon"><i class="fa fa-check"></i></span>
 
                                                 </div>
@@ -586,7 +586,7 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <div class="input-group<?php echo $profile->hasErrors('phone_office') ? ' state-error' : ''; ?>">
                                                     <span class="input-group-addon"><i class="fa fa-phone"></i></span>
     <!--                                                    <input class="form-control" type="text">-->
-                                                        <?php echo $form->field($profile, 'phone_office')->label(false); ?>
+                                                        <?php echo $form->field($profile, 'phone_office', ['template' => '{input}', 'options' => ['tag' => false]])->textInput()->label(false); ?>
                                                     <span class="input-group-addon"><i class="fa fa-check"></i></span>
                                                 </div>
                                                 <span class="help-block">(XXX) XXX-XXXX</span>
@@ -600,7 +600,7 @@ foreach ($profession_collection as $collection_area_expertise_text) {
                                                 <div class="input-group<?php echo $profile->hasErrors('phone_fax') ? ' state-error' : ''; ?>">
                                                     <span class="input-group-addon"><i class="fa fa-phone"></i></span>
     <!--                                                    <input class="form-control" type="text">-->
-                                                        <?php echo $form->field($profile, 'phone_fax')->input('tel')->label(false); ?>
+                                                        <?php echo $form->field($profile, 'phone_fax', ['template' => '{input}', 'options' => ['tag' => false]])->textInput()->label(false); ?>
                                                     <span class="input-group-addon"><i class="fa fa-check"></i></span>
                                                 </div>
                                                 <span class="help-block">(XXX) XXX-XXXX</span>
@@ -801,32 +801,9 @@ foreach ($profession_collection as $collection_area_expertise_text) {
 </div>
 <!-- END MAIN PANEL -->
 
-<!-- SHORTCUT AREA : With large tiles (activated via clicking user name tag)
-Note: These tiles are completely responsive,
-you can add as many as you like
--->
-<div id="shortcut">
-    <ul>
-        <li>
-            <a href="<?php echo Url::to(['/user/profile']); ?>" class="jarvismetro-tile big-cubes selected bg-color-pinkDark"> <span class="iconbox"> <i class="fa fa-user fa-4x"></i> <span>My Profile </span> </span> </a>
-        </li>
-        <li>
-            <a id="alerts_menu" href="#ajax/inbox.html" class="jarvismetro-tile big-cubes bg-color-red"> <span class="iconbox"> <i class="fa fa-envelope fa-4x"></i> <span>Alerts<span class="label pull-right bg-color-darken">14</span></span> </span> </a>
-        </li>
-        <li>
-            <a id="calendar_menu" href="#ajax/calendar.html" class="jarvismetro-tile big-cubes bg-color-orangeDark"> <span class="iconbox"> <i class="fa fa-calendar fa-4x"></i> <span>Calendar</span> </span> </a>
-        </li>
-        <li>
-            <a id="search_nearby_menu" href="#ajax/gmap-xml.html" class="jarvismetro-tile big-cubes bg-color-purple"> <span class="iconbox"> <i class="fa fa-map-marker fa-4x"></i> <span>Search Nearby</span> </span> </a>
-        </li>
-        <li>
-            <a id="invoice_menu" href="#ajax/invoice.html" class="jarvismetro-tile big-cubes bg-color-blueDark"> <span class="iconbox"> <i class="fa fa-book fa-4x"></i> <span>Invoice <span class="label pull-right bg-color-darken">99</span></span> </span> </a>
-        </li>
-        <li>
-            <a id="gallery_menu" href="#ajax/gallery.html" class="jarvismetro-tile big-cubes bg-color-greenLight"> <span class="iconbox"> <i class="fa fa-picture-o fa-4x"></i> <span>Gallery </span> </span> </a>
-        </li>
-    </ul>
+
 </div>
+<!-- END MAIN PANEL -->
 
 <div id="changePasswordModal" role="dialog" tabindex="-1" class="modal fade">
     <div class="modal-dialog">

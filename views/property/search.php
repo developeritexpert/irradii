@@ -31,20 +31,6 @@ $this->registerCss(<<<CSS
         #main { margin-left: 0 !important; }
     }
 
-    .jarviswidget > header {
-        height: 32px !important;
-        line-height: normal !important;
-        border: 1px solid #c2c2c2 !important;
-    }
-    .jarviswidget > header h2 {
-        margin-top: 7px !important;
-        font-size: 13px !important;
-        font-weight: bold !important;
-    }
-    .jarviswidget-color-greenDark > header {
-        background: #4e5e4e !important;
-        color: #fff !important;
-    }
     .datatable_tabletools {
         font-family: 'Open Sans', Arial, Helvetica, sans-serif;
         font-size: 12px;
@@ -110,6 +96,13 @@ $this->registerCss(<<<CSS
         padding-left: 4px;
         padding-right: 4px;
     }
+    .input-icon-left > i {
+        left: 12px !important;
+        top: 10px !important;
+    }
+    .input-icon-left .form-control {
+        padding-left: 28px !important;
+    }
 CSS
 );
 $property_type_array = array(
@@ -172,7 +165,7 @@ $property_type_array = array(
                 <!-- NEW WIDGET START -->
                 <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                     <!-- Widget ID (each widget will need unique ID)-->
-                    <div class="jarviswidget jarviswidget-color-blueDark" id="wid-id-sfilter" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-collapsed="false" data-widget-fullscreenbutton="false">
+                    <div class="jarviswidget" id="wid-id-sfilter" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-deletebutton="false" data-widget-collapsed="false" data-widget-fullscreenbutton="false">
                         <!-- widget options:
                         usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
 
@@ -493,7 +486,7 @@ $property_type_array = array(
                                                 </div>
                                             </div>
                                             <div class="col-md-5">
-                                                <div class="alert alert-info fade in" id="alert_guest">
+                                                <div class="alert alert-info fade in" id="alert_guest" style="display:none">
                                                     <button class="close"  id="eg1">
                                                         ×
                                                     </button>
@@ -868,32 +861,9 @@ $property_type_array = array(
 </div>
 <!-- END MAIN PANEL -->
 
-<!-- SHORTCUT AREA : With large tiles (activated via clicking user name tag)
-Note: These tiles are completely responsive,
-you can add as many as you like
--->
-<div id="shortcut">
-    <ul>
-       <li>
-            <a href="/user/profile" class="jarvismetro-tile big-cubes selected bg-color-pinkDark"> <span class="iconbox"> <i class="fa fa-user fa-4x"></i> <span>My Profile </span> </span> </a>
-        </li>
-        <li>
-            <a id="alerts_menu" href="#ajax/inbox.html" class="jarvismetro-tile big-cubes bg-color-red"> <span class="iconbox"> <i class="fa fa-envelope fa-4x"></i> <span>Alerts<span class="label pull-right bg-color-darken">14</span></span> </span> </a>
-        </li>
-        <li>
-            <a id="calendar_menu" href="#ajax/calendar.html" class="jarvismetro-tile big-cubes bg-color-orangeDark"> <span class="iconbox"> <i class="fa fa-calendar fa-4x"></i> <span>Calendar</span> </span> </a>
-        </li>
-        <li>
-            <a id="search_nearby_menu" href="#ajax/gmap-xml.html" class="jarvismetro-tile big-cubes bg-color-purple"> <span class="iconbox"> <i class="fa fa-map-marker fa-4x"></i> <span>Search Nearby</span> </span> </a>
-        </li>
-        <li>
-            <a id="invoice_menu" href="#ajax/invoice.html" class="jarvismetro-tile big-cubes bg-color-blueDark"> <span class="iconbox"> <i class="fa fa-book fa-4x"></i> <span>Invoice <span class="label pull-right bg-color-darken">99</span></span> </span> </a>
-        </li>
-        <li>
-            <a id="gallery_menu" href="#ajax/gallery.html" class="jarvismetro-tile big-cubes bg-color-greenLight"> <span class="iconbox"> <i class="fa fa-picture-o fa-4x"></i> <span>Gallery </span> </span> </a>
-        </li>
-    </ul>
+
 </div>
+<!-- END MAIN PANEL -->
 <div id="demo"></div>
 <div class="detail-pop-up">
     <button class="close" type="button">×</button>
@@ -1917,7 +1887,7 @@ $this->registerJs("if($('.success1').css('display')=='block'){
 
 $this->registerJs("
 (function($){
-    var guest = " . (Yii::$app->user->isGuest ? 1 : 0) . ";
+     var guest = " . (Yii::$app->user->isGuest ? 0 : 1) . ";
 
                    
         if(guest == 0){
