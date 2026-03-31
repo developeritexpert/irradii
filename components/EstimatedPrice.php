@@ -25,7 +25,7 @@ class EstimatedPrice
         $curStage = 1;
         $gettoday_date = date('Y-m-d');
         $comp_time = date('Y-m-d', time() - 200 * 24 * 60 * 60);
-        $session_id = Yii::$app->session->id;
+        $session_id = (Yii::$app instanceof \yii\web\Application) ? Yii::$app->session->id : 'console';
 
         if ($del_id) {
             $this->actionExcludeProperty($del_id, $session_id);
