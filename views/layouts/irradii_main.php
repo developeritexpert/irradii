@@ -585,22 +585,23 @@ $this->registerJs("
         <?php //$this->registerJsFile(CPathCDN::baseurl( 'js' ) . "/js/plugin/datatables/DT_bootstrap.js", ['position' => $this::POS_END]); ?>
 
 
-        <?php $this->registerJs("
+        <?php $this->registerJs('
                 function setLastVisit(){
                     $.ajax({
-                            url: '/property/online',
+                            url: \'/property/online\',
                             data: {
-                                    guest: guest 
+                                    guest: guest,
+                                    ' . json_encode(Yii::$app->request->csrfParam) . ': ' . json_encode(Yii::$app->request->csrfToken) . '
                             },
-                            type: 'POST',
-                            dataType: 'json',
+                            type: \'POST\',
+                            dataType: \'json\',
                             cache: false,
                             success: function(data){/*console.log(data);*/},
                             error: function(data){/*console.log(data);*/}
                         });
                 }
                 
-                var guest = " . $guest . ";
+                var guest = ' . $guest . ';
                
                 if(guest === 1){
                     setLastVisit();
@@ -608,7 +609,7 @@ $this->registerJs("
                         setLastVisit();
                     },1000*60*5);
                 }
-              ", $this::POS_END); ?>
+              ', $this::POS_END); ?>
         <?php
         $this->registerJs(" 
             //app.js_st_477 // #myprofile, #editmyprofile,

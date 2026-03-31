@@ -466,7 +466,7 @@ $property_type_array = array(
                                     </fieldset>
 
                                     <div class="form-actions">
-                                        <div id="search-btn-block" class="row" style="display: none;">
+                                        <div id="search-btn-block" class="row">
 <?php if (!Yii::$app->user->isGuest) : ?>
                                             <div class="col-md-4">
                                                 <div class="row">
