@@ -43,7 +43,7 @@ return [
     'linkToBuyingSubscrFreeTrial30days' => '/user/profile',
 
     // RETS Configuration
-    'rets_login_url' => $_ENV['RETS_LOGIN_URL'] ?? 'http://rets.las.mlsmatrix.com/rets/login.ashx',
+    'rets_login_url' => $_ENV['RETS_LOGIN_URL'] ?? 'https://rets.las.mlsmatrix.com/rets/login.ashx',
     'rets_username' => $_ENV['RETS_USERNAME'] ?? 'prop',
     'rets_password' => $_ENV['RETS_PASSWORD'] ?? 'glvaridx',
 ];

@@ -1182,15 +1182,15 @@ class phRETS {
 		if (empty($this->static_headers['User-Agent'])) {
 			$this->AddHeader("User-Agent", "PHRETS/1.0");
 		}
-		if (empty($this->static_headers['Accept']) && $this->static_headers['RETS-Version'] == "RETS/1.5") {
+		if (empty($this->static_headers['Accept']) && (isset($this->static_headers['RETS-Version']) && $this->static_headers['RETS-Version'] == "RETS/1.5")) {
 			$this->AddHeader("Accept", "*/*");
 		}
 
 		// chop up Login URL to use for later requests
 		$url_parts = parse_url($login_url);
 		$this->server_hostname = $url_parts['host'];
-		$this->server_port = (empty($url_parts['port'])) ? 80 : $url_parts['port'];
 		$this->server_protocol = $url_parts['scheme'];
+		$this->server_port = (empty($url_parts['port'])) ? (($this->server_protocol == 'https') ? 443 : 80) : $url_parts['port'];
 
 		$this->capability_url['Login'] = $url_parts['path'];
 
@@ -1240,6 +1240,8 @@ class phRETS {
 		}
 		curl_setopt($this->ch, CURLOPT_USERPWD, $this->username.":".$this->password);
 		curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($this->ch, CURLOPT_SSL_VERIFYHOST, false);
 		curl_setopt($this->ch, CURLOPT_COOKIEFILE, $this->cookie_file);
 
 		// make request to Login transaction
@@ -1397,10 +1399,13 @@ class phRETS {
 		$request_url = $request_url.$request_arguments;
 
 		// build headers to pass in cURL
-		$request_headers = "";
+		$this->last_request_url = $request_url;
+		curl_setopt($this->ch, CURLOPT_URL, $request_url);
+
+		$curl_headers = array();
 		if (is_array($this->static_headers)) {
 			foreach ($this->static_headers as $key => $value) {
-				$request_headers .= "{$key}: {$value}\r\n";
+				$curl_headers[] = "{$key}: {$value}";
 			}
 		}
 
@@ -1411,13 +1416,10 @@ class phRETS {
 			$ua_a1 = md5($this->static_headers['User-Agent'] .':'. $this->ua_pwd);
 			$session_id_to_calculate_with = ($this->use_interealty_ua_auth == true) ? "" : $this->session_id;
 			$ua_dig_resp = md5(trim($ua_a1) .':'. trim($this->request_id) .':'. trim($session_id_to_calculate_with) .':'. trim($this->static_headers['RETS-Version']));
-			$request_headers .= "RETS-UA-Authorization: Digest {$ua_dig_resp}\r\n";
+			$curl_headers[] = "RETS-UA-Authorization: Digest {$ua_dig_resp}";
 		}
 
-		$this->last_request_url = $request_url;
-		curl_setopt($this->ch, CURLOPT_URL, $request_url);
-
-		curl_setopt($this->ch, CURLOPT_HTTPHEADER, array($request_headers));
+		curl_setopt($this->ch, CURLOPT_HTTPHEADER, $curl_headers);
 		// do it
 		$response_body = curl_exec($this->ch);
 		$response_code = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);

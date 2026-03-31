@@ -65,57 +65,78 @@ class CronController extends Controller
         ];
 
         foreach ($tables as $key => $config) {
+            $this->stdout("Processing table: {$config['table']}... ");
             $start = time();
             $table = $config['table'];
             $groupBy = $config['group_by'];
-            $selectField = $config['select_field'];
             $idField = $config['id_field'] ?? $key;
+            $isNumeric = isset($config['id_field']);
+            if ($isNumeric) {
+                $where = "`tbl_p`.`{$groupBy}` IS NOT NULL AND `tbl_p`.`{$groupBy}` != 0";
+            } else {
+                $where = "`tbl_p`.`{$groupBy}` IS NOT NULL AND `tbl_p`.`{$groupBy}` != ''";
+            }
 
-            $sql = "INSERT INTO `{$table}` (
-                `id`,
-                `{$idField}`,
-                `date`,
-                `total`,
-                `sale`,
-                `sold`,
-                `foreclosure`,
-                `short_sales`,
-                `avg_price`,
-                `high_ppsf`,
-                `low_ppsf`,
-                `avg_ppsf`
-            )
-            SELECT null, `tbl_p`.`{$selectField}`, NOW(),
-                (SELECT count(*) FROM `property_info` tp1 WHERE `tp1`.`{$selectField}` = `tbl_p`.`{$selectField}`),
-                (SELECT count(*) FROM `property_info_additional_brokerage_details` tb1 
-                 LEFT JOIN `property_info` tp2 ON `tp2`.`property_id` = `tb1`.`property_id` 
-                 WHERE `tp2`.`{$selectField}` = `tbl_p`.`{$selectField}` AND UPPER(`tb1`.`status`) = 'FOR SALE'),
-                (SELECT count(*) FROM `property_info_additional_brokerage_details` tb2 
-                 LEFT JOIN `property_info` tp3 ON `tp3`.`property_id` = `tb2`.`property_id` 
-                 WHERE `tp3`.`{$selectField}` = `tbl_p`.`{$selectField}` AND UPPER(`tb2`.`status`) = 'SOLD'),
-                (SELECT count(*) FROM `property_info_additional_brokerage_details` tb3 
-                 LEFT JOIN `property_info` tp4 ON `tp4`.`property_id` = `tb3`.`property_id` 
-                 WHERE `tp4`.`{$selectField}` = `tbl_p`.`{$selectField}` AND UPPER(`tb3`.`status`) = 'FORECLOSURE'),
-                (SELECT count(*) FROM `property_info_additional_brokerage_details` tb4 
-                 LEFT JOIN `property_info` tp5 ON `tp5`.`property_id` = `tb4`.`property_id` 
-                 WHERE `tp5`.`{$selectField}` = `tbl_p`.`{$selectField}` AND UPPER(`tb4`.`status`) = 'SHORT_SALES'),
-                (SELECT AVG(`tp6`.`property_price`) FROM `property_info` tp6 WHERE `tp6`.`{$selectField}` = `tbl_p`.`{$selectField}`),
-                (SELECT MAX(IF(`tp7`.`house_square_footage`, `tp7`.`property_price` / `tp7`.`house_square_footage`, 0)) 
-                 FROM `property_info` tp7 WHERE `tp7`.`{$selectField}` = `tbl_p`.`{$selectField}`),
-                (SELECT MIN(IF(`tp8`.`house_square_footage`, `tp8`.`property_price` / `tp8`.`house_square_footage`, 0)) 
-                 FROM `property_info` tp8 WHERE `tp8`.`{$selectField}` = `tbl_p`.`{$selectField}`),
-                (SELECT AVG(IF(`tp9`.`house_square_footage`, `tp9`.`property_price` / `tp9`.`house_square_footage`, 0)) 
-                 FROM `property_info` tp9 WHERE `tp9`.`{$selectField}` = `tbl_p`.`{$selectField}`)
-            FROM `property_info` tbl_p 
-            WHERE `tbl_p`.`{$selectField}` != ''
-            GROUP BY `tbl_p`.`{$selectField}`";
+            $this->stdout("Processing table: {$table}...\n");
 
             try {
-                Yii::$app->db->createCommand($sql)->execute();
-                $duration = time() - $start;
-                $this->stdout("Table {$table} updated successfully in {$duration} seconds.\n");
+                // Fetch distinct IDs first to batch the heavy aggregation
+                $distinctIds = (new \yii\db\Query())
+                    ->select([$groupBy])
+                    ->from('property_info tbl_p')
+                    ->where($where)
+                    ->groupBy([$groupBy])
+                    ->column();
+
+                $totalIds = count($distinctIds);
+                $this->stdout("Found {$totalIds} unique groups to process.\n");
+
+                $batchSize = 50; 
+                for ($i = 0; $i < $totalIds; $i += $batchSize) {
+                    $batchIds = array_slice($distinctIds, $i, $batchSize);
+                    $idList = "'" . implode("','", array_map(function($id) { return addslashes($id); }, $batchIds)) . "'";
+                    
+                    $batchWhere = "{$where} AND `tbl_p`.`{$groupBy}` IN ({$idList})";
+
+                    $sqlRaw = "SELECT 
+                        `tbl_p`.`{$groupBy}`, 
+                        NOW(),
+                        COUNT(*),
+                        COUNT(IF(UPPER(`tbS`.`status`) = 'FOR SALE', 1, NULL)),
+                        COUNT(IF(UPPER(`tbS`.`status`) = 'SOLD', 1, NULL)),
+                        COUNT(IF(UPPER(`tbS`.`status`) = 'FORECLOSURE', 1, NULL)),
+                        COUNT(IF(UPPER(`tbS`.`status`) = 'SHORT_SALES', 1, NULL)),
+                        AVG(`tbl_p`.`property_price`),
+                        MAX(IF(`tbl_p`.`house_square_footage` > 0, `tbl_p`.`property_price` / `tbl_p`.`house_square_footage`, 0)),
+                        MIN(IF(`tbl_p`.`house_square_footage` > 0, `tbl_p`.`property_price` / `tbl_p`.`house_square_footage`, 0)),
+                        AVG(IF(`tbl_p`.`house_square_footage` > 0, `tbl_p`.`property_price` / `tbl_p`.`house_square_footage`, 0))
+                    FROM `property_info` tbl_p 
+                    LEFT JOIN `property_info_additional_brokerage_details` tbS ON `tbS`.`property_id` = `tbl_p`.`property_id`
+                    WHERE {$batchWhere}
+                    GROUP BY `tbl_p`.`{$groupBy}`";
+
+                    $results = Yii::$app->db->createCommand($sqlRaw)->queryAll(\PDO::FETCH_NUM);
+                    
+                    if (!empty($results)) {
+                        // Add NULL for the auto-increment ID column at the beginning of each result row
+                        foreach ($results as &$row) {
+                            array_unshift($row, null);
+                        }
+                        
+                        Yii::$app->db->createCommand()->batchInsert($table, [
+                            'id', $idField, 'date', 'total', 'sale', 'sold', 'foreclosure', 'short_sales', 'avg_price', 'high_ppsf', 'low_ppsf', 'avg_ppsf'
+                        ], $results)->execute();
+                    }
+
+                    $processedCount = min($i + $batchSize, $totalIds);
+                    $this->stdout("Processed {$processedCount} of {$totalIds} groups for {$table}...\n");
+                }
+
+                $timeTaken = time() - $start;
+                $this->stdout("Finished table {$table} in {$timeTaken} seconds.\n\n");
             } catch (\Exception $e) {
-                $this->stderr("Error updating table {$table}: " . $e->getMessage() . "\n");
+                $this->stdout("Error updating table {$table}: " . $e->getMessage() . "\n");
+                if (isset($sql)) $this->stdout("The SQL being executed was: {$sql}\n");
             }
         }
 
@@ -131,48 +152,50 @@ class CronController extends Controller
     {
         $this->stdout("Starting Estimated Price update at " . date('Y-m-d H:i:s') . "\n");
 
-        $properties = PropertyInfo::find()->all();
-        $count = count($properties);
+        $query = PropertyInfo::find();
+        $count = $query->count();
         $i = 0;
 
         $estimator = new EstimatedPrice();
 
-        foreach ($properties as $property) {
-            $i++;
-            
-            // Get additional details for estimation
-            $details = $property->propertyInfoDetails;
-            
-            $result = $estimator->getComparePropertyInfo(
-                null, // del_id
-                $property->property_id,
-                $property->property_type,
-                $property->property_zipcode,
-                $property->getlatitude ?? '0.000000', 
-                $property->getlongitude ?? '0.000000',
-                $property->year_biult_id,
-                $property->lot_acreage,
-                $property->house_square_footage,
-                $property->bathrooms,
-                $property->garages,
-                $property->pool,
-                $property->percentage_depreciation_value,
-                $property->estimated_price,
-                $property->bedrooms,
-                $property->subdivision,
-                0, // fundamentals_factor (default)
-                0, // conditional_factor (default)
-                $details->house_views ?? '',
-                $property->sub_type
-            );
+        foreach ($query->batch(100) as $properties) {
+            foreach ($properties as $property) {
+                $i++;
+                
+                // Get additional details for estimation
+                $details = $property->propertyInfoDetails;
+                
+                $result = $estimator->getComparePropertyInfo(
+                    null, // del_id
+                    $property->property_id,
+                    $property->property_type,
+                    $property->property_zipcode,
+                    $property->getlatitude ?? '0.000000', 
+                    $property->getlongitude ?? '0.000000',
+                    $property->year_biult_id,
+                    $property->lot_acreage,
+                    $property->house_square_footage,
+                    $property->bathrooms,
+                    $property->garages,
+                    $property->pool,
+                    $property->percentage_depreciation_value,
+                    $property->estimated_price,
+                    $property->bedrooms,
+                    $property->subdivision,
+                    0, // fundamentals_factor (default)
+                    0, // conditional_factor (default)
+                    $details->house_views ?? '',
+                    $property->sub_type
+                );
 
-            if (isset($result['estimated_value_subject_property'])) {
-                $property->estimated_price = (int)$result['estimated_value_subject_property'];
-                $property->save(false);
-            }
+                if (isset($result['estimated_value_subject_property'])) {
+                    $property->estimated_price = (int)$result['estimated_value_subject_property'];
+                    $property->save(false);
+                }
 
-            if ($i % 100 === 0) {
-                $this->stdout("Processed {$i} of {$count} properties.\n");
+                if ($i % 100 === 0) {
+                    $this->stdout("Processed {$i} of {$count} properties.\n");
+                }
             }
         }
 
@@ -192,11 +215,13 @@ class CronController extends Controller
         // If it doesn't exist, we might need to create it or use a different tracking mechanism.
         // For now, let's assume the table exists or we'll process properties without photos.
         
+        // Use intval to ensure limit is numeric and avoid quoting issues in SQL
+        $limit = (int)$limit;
         $sql = "SELECT * FROM `tbl_property_info_cron_load_photo` 
                 WHERE `process` is NULL OR (`process` is NOT NULL AND 60 <= TIMESTAMPDIFF(MINUTE, process_at, NOW()))
-                LIMIT :limit";
+                LIMIT {$limit}";
         
-        $items = Yii::$app->db->createCommand($sql, [':limit' => $limit])->queryAll();
+        $items = Yii::$app->db->createCommand($sql)->queryAll();
         
         if (empty($items)) {
             $this->stdout("No photos in queue to load.\n");
@@ -237,13 +262,13 @@ class CronController extends Controller
             if (!empty($photos) && is_array($photos)) {
                 $temp = [];
                 $number = 0;
-
-                foreach ($photos as $photo) {
-                    $number++;
-                    if ($number > 25) break;
-
+                foreach ($photos as $photoIndex => $photo) {
                     if ($photo['Success'] == true && !empty($photo['Data'])) {
-                        $key = "photo/{$id}/image-{$id}-{$photo['Object-ID']}.jpg";
+                        $number++;
+                        if ($number > 25) break;
+
+                        $objId = $photo['Object-ID'] ?? ($photo['Content-ID'] ?? $photoIndex);
+                        $key = "photo/{$id}/image-{$id}-{$objId}.jpg";
                         try {
                             $s3->putObject([
                                 'Body' => $photo['Data'],
@@ -254,6 +279,9 @@ class CronController extends Controller
 
                             if ($number > 1) {
                                 $temp["photo{$number}"] = "//img1.ippraisall.com/" . $key;
+                            } else {
+                                // Update main photo1 in property_info if first photo
+                                Yii::$app->db->createCommand()->update('property_info', ['photo1' => "//img1.ippraisall.com/" . $key], ['mls_sysid' => $id])->execute();
                             }
                         } catch (\Exception $e) {
                             $this->stderr("S3 Upload failed for {$id}: " . $e->getMessage() . "\n");
@@ -306,18 +334,19 @@ class CronController extends Controller
         $xml .= "  <url><loc>https://ippraisall.com/property/search</loc><changefreq>daily</changefreq><priority>0.8</priority></url>\n";
 
         // Add property details URLs via Slug model
-        $slugs = \app\models\PropertyInfoSlug::find()->all();
-        foreach ($slugs as $slug) {
-            $xml .= "  <url><loc>{$base_url}" . urlencode($slug->slug) . "</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>\n";
+        $query = \app\models\PropertyInfoSlug::find();
+        $count = $query->count();
+        $this->stdout("Processing {$count} slugs... ");
+        
+        foreach ($query->batch(1000) as $slugs) {
+            foreach ($slugs as $slug) {
+                $xml .= "  <url><loc>{$base_url}" . urlencode($slug->slug) . "</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>\n";
+            }
         }
 
         $xml .= "</urlset>";
 
-        $filePath = Yii::getAlias('@webroot/sitemap.xml');
-        // Console apps might not have @webroot alias defined, fallback to @app/web/sitemap.xml
-        if (!$filePath || $filePath == '@webroot/sitemap.xml') {
-            $filePath = Yii::getAlias('@app/web/sitemap.xml');
-        }
+        $filePath = Yii::getAlias('@app/web/sitemap.xml');
 
         if (file_put_contents($filePath, $xml)) {
             $this->stdout("Sitemap generated successfully at {$filePath}\n");
