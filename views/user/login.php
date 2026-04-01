@@ -118,7 +118,7 @@ $act_content = Yii::$app->request->get('content');
                             <!-- Remember -->
                             <section>
                                 <label class="checkbox">
-                                    <?= $form->field($model, 'rememberMe')->checkbox(['checked' => 'checked'], false) ?>
+                                    <input type="checkbox" name="remember" checked>
                                     <i></i>Stay signed in
                                 </label>
                             </section>
