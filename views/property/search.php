@@ -50,6 +50,16 @@ $this->registerCss(<<<CSS
         border-bottom: 1px solid #eee !important;
         line-height: 1.5;
     }
+    .select2-container .select2-choice .select2-arrow {
+        background-image: none !important;
+        background: transparent !important;
+        border-left: none !important;
+    }
+    .show-row td {
+        background-color: #f0f7fd !important;
+        border-top: 2px solid #3276b1 !important;
+        border-bottom: 2px solid #3276b1 !important;
+    }
     .dt-top-row {
         background: #fff;
         padding: 8px 10px;
@@ -466,7 +476,7 @@ $property_type_array = array(
                                     </fieldset>
 
                                     <div class="form-actions">
-                                        <div id="search-btn-block" class="row" style="display: none;">
+                                        <div id="search-btn-block" class="row">
 <?php if (!Yii::$app->user->isGuest) : ?>
                                             <div class="col-md-4">
                                                 <div class="row">
@@ -895,6 +905,11 @@ $property_type_array = array(
             <div class="row">
                 <div class="col-xs-5 col-sm-4 popup-tmv"></div>
                 <div class="col-xs-7 col-sm-8 popup-tmv-price"></div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <a href="javascript:void(0);" class="show-in-table" style="font-size:11px; margin-top:5px; display:inline-block; color:#005580;"><i class="fa fa-list"></i> Show in Table</a>
+                </div>
             </div>
         </div>
     </div>
@@ -1398,6 +1413,70 @@ function getPathImages(){
                 $('.detail-pop-up').css('display', 'none');
             };
 
+            window.showinmap = function(el){
+                var id = $(el).attr('property_id');
+                var targetMap = ( $('#search_map_block').is(':visible') ) ? window.map2 : window.map;
+                var mapContainer = ( $('#search_map_block').is(':visible') ) ? $('#map_canvas2') : $('#map_canvas');
+                
+                $.each(window.markers, function() {
+                   if (this.property == id) {
+                      this.setAnimation(google.maps.Animation.BOUNCE);
+                      targetMap.setCenter(this.getPosition());
+                      if(targetMap.getZoom() < 12) {
+                          targetMap.setZoom(15);
+                      }
+                   } else {
+                      this.setAnimation(null);
+                   }
+                });
+                
+                var scroll = 0;
+                if(mapContainer.length) {
+                    scroll = mapContainer.offset().top - 100;
+                }
+                $('html, body').animate(
+                    {scrollTop: scroll},
+                    1000,
+                    'easeOutQuart'
+                );
+                return false;
+            };
+
+            window.showPropertyInTable = function(id){
+                var targetRow;
+                if($('#search_map_block').is(':visible')){
+                    targetRow = $('#search_map_block')
+                    .find('[data-property_id=\"'+id + '\"]')
+                    .closest('tr');
+                    if (targetRow.length) {
+                        var targetBody = targetRow.closest('.widget-body');
+                        var scroll = targetRow.closest('tbody').scrollTop() + targetRow.position().top;
+                        targetBody.animate({scrollTop: scroll}, 1000, 'easeOutQuart');
+                    }
+                } else {
+                    $('#search_list_block').find('.table').addClass('blur');
+                    targetRow = $('#search_list_block')
+                    .find('[data-property_id=\"'+id + '\"]')
+                    .closest('tr');
+                    if (targetRow.length) {
+                        var targetBody = $('html, body');
+                        var scroll = targetRow.offset().top - $( window ).height()/2;
+                        targetRow.addClass('show-row');
+                        targetBody.animate({scrollTop: scroll}, 1000, 'easeOutQuart');
+                        setTimeout(function(){
+                            $('#search_list_block').find('.table').removeClass('blur');
+                            targetRow.removeClass('show-row');
+                        },3000);
+                    }
+                }
+            };
+
+            $(document).on('click', '.show-in-table', function(e){
+                e.preventDefault();
+                var id = $(this).attr('property_id');
+                window.showPropertyInTable(id);
+            });
+
             
             function showDetailPopup(marker) {
             
@@ -1539,6 +1618,8 @@ function getPathImages(){
                             .find('.carousel-inner')
                                 .append(data['carousel'])
                             .end();
+                            
+                         $('.detail-pop-up .show-in-table').attr('property_id', prop_id);
                             
                          if(data['tmv'].length > 0){
                             $('.detail-pop-up')
