@@ -172,7 +172,9 @@ $this->title = 'Searches/Alerts';
                                     <tr>
                                         <td><?php echo $savedSearch->id?></td>
                                         <td>
-                                            <form method="POST" action="<?php echo Url::to(['property/search'])?>">
+                                            <form method="POST" action="<?php echo Url::to(['/property/search'])?>">
+                                                <input type="hidden" name="<?php echo Yii::$app->request->csrfParam; ?>" value="<?php echo Yii::$app->request->csrfToken; ?>">
+
                                                 <?php foreach($savedSearch->savedSearchCriteria as $criteria):
 
                                                     $attr_value = @unserialize($criteria->attr_value);
@@ -202,7 +204,7 @@ $this->title = 'Searches/Alerts';
                                                data-type="text"
                                                data-pk=<?php echo $savedSearch->id?>
                                                data-name="name"
-                                               data-url="<?php echo Url::to(['searches/editable'])?>"
+                                               data-url="<?php echo Url::to(['/searches/editable'])?>"
                                                data-original-title="Enter a Search Name/ Title">
                                                 <?php echo $savedSearch->name?>
                                             </a>
@@ -215,7 +217,7 @@ $this->title = 'Searches/Alerts';
                                                data-viewformat="yyyy-mm-dd"
                                                data-pk=<?php echo $savedSearch->id?>
                                                data-name="expiry_date"
-                                               data-url="<?php echo Url::to(['searches/editable'])?>"
+                                               data-url="<?php echo Url::to(['/searches/editable'])?>"
                                                data-placement="right"
                                                data-original-title="When do you want the wealth to end?">
 
@@ -294,7 +296,7 @@ $this->title = 'Searches/Alerts';
                                                data-pk=<?php echo $savedSearch->id?>
                                                data-name="email_alert_freq"
                                                data-value=<?php echo $savedSearch->email_alert_freq?>
-                                               data-url="<?php echo Url::to(['searches/editable'])?>"
+                                               data-url="<?php echo Url::to(['/searches/editable'])?>"
                                                data-original-title="Select frequency">
 
                                                 <?php echo SavedSearch::getEmailFreqName($savedSearch->email_alert_freq)?>
@@ -310,7 +312,7 @@ $this->title = 'Searches/Alerts';
                                                        data-pk="<?php echo $alertEmailModel->id?>"
                                                        data-name="email"
                                                        data-saved_search_id=<?php echo $savedSearch->id?>
-                                                       data-url="<?php echo Url::to(['searches/editable'])?>"
+                                                       data-url="<?php echo Url::to(['/searches/editable'])?>"
                                                        data-emptytext="Add"
                                                        data-original-title="Enter email">
 
@@ -326,7 +328,7 @@ $this->title = 'Searches/Alerts';
                                                    data-pk="0"
                                                    data-name="email"
                                                    data-saved_search_id=<?php echo $savedSearch->id?>
-                                                   data-url="<?php echo Url::to(['searches/editable'])?>"
+                                                   data-url="<?php echo Url::to(['/searches/editable'])?>"
                                                    data-emptytext="Add"
                                                    data-original-title="Enter email">Add</a>
                                             </p>
@@ -341,7 +343,7 @@ $this->title = 'Searches/Alerts';
                                         -->
                                         <td>
                                             <?php echo Html::a('DELETE',
-                                                Url::to(['searches/delete']),
+                                                Url::to(['/searches/delete']),
                                                 ['data-id'=>$savedSearch->id,
                                                     'class'=>'dialog_delete_link btn btn-danger',
                                                 ]

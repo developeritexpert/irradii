@@ -1053,7 +1053,7 @@ window.mapBoundaries = [];
             // Shared global from earlier block
             window.coordinates_filter = window.coordinates_filter || '';
 
-            window.searchOnLoad = " . (isset($general_search_fields['auto_search']) && $general_search_fields['auto_search'] ? 'true' : 'false') . ";
+            window.searchOnLoad = " . ((isset($general_search_fields['auto_search']) && $general_search_fields['auto_search']) || (isset($general_search_fields['searchOnLoad']) && $general_search_fields['searchOnLoad']=='1') ? 'true' : 'false') . ";
 
             window.setAddressFields = function(){
                 var a = $('#autocomplete').val();
@@ -1153,6 +1153,7 @@ window.mapBoundaries = [];
                     minZoom: 2
                 };
                 window.map2 = new google.maps.Map(document.getElementById('map_canvas2'), mapOptions2);
+                mapReady = true;
 
                for (var key in window.mapBoundaries) {
                     if (window.mapBoundaries.hasOwnProperty(key)) {
@@ -1182,8 +1183,6 @@ window.mapBoundaries = [];
 
                 var markersLoadedOnStartup = false;
                 google.maps.event.addListener(map, 'idle', function(){
-
-                    mapReady = true;
                     if(!markersLoadedOnStartup){
                         if((dataSearchResultSmallQuery.status == 'nothing') ||
                            (dataSearchResultSmallQuery.status == 'success') ){
@@ -1954,7 +1953,7 @@ function getPathImages(){
             });
 
             window.myMap = google.maps.event.addDomListener(window, 'load', window.initialize);
-            var searchOnLoadMain = " . ((isset($general_search_fields['searchOnLoad']) && $general_search_fields['searchOnLoad']=='1')? '1' :'0') . ";
+
 })(jQuery);
 ", \yii\web\View::POS_READY, "main");
 
