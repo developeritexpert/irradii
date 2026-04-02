@@ -100,9 +100,9 @@ $profile = $user ? $user->profile : null;
                             </ul>
                         </li>
                         <li><a id="meta_tags_admins_menu" href="<?php echo Url::to(['yiiseo/seo'])?>">Meta tags</a></li>
-                        <li><a id="statistic_admins_menu" href="<?php echo Url::to(['stat-info/index'])?>">Statistics</a></li>
-                        <li><a id="history_admins_menu" href="<?php echo Url::to(['stat-info/history'])?>">Property History</a></li>
-                        <li><a id="factors_admins_menu" href="<?php echo Url::to(['stat-info/factor'])?>">Factors</a></li>
+                        <li><a id="statistic_admins_menu" href="<?php echo Url::to(['landing/statInfo'])?>">Statistics</a></li>
+                        <li><a id="history_admins_menu" href="<?php echo Url::to(['statInfo/history'])?>">Property History</a></li>
+                        <li><a id="factors_admins_menu" href="<?php echo Url::to(['statInfo/factor'])?>">Factors</a></li>
                         <li>
                             <a id="blog_menu" href="javascript:void(0);"> Blog </a>
                             <ul>
