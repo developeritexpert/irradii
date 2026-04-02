@@ -60,28 +60,28 @@ $profile = $user ? $user->profile : null;
             <?php endif; ?>
 
             <li>
-                <a id="myprofile" href="<?php echo Url::to(['user/profile'])?>">
+                <a id="myprofile" href="<?php echo Url::to(['/user/profile'])?>">
                     <i class="fa fa-lg fa-fw fa-pencil-square-o"></i> 
                     <span class="menu-item-parent">My Profile</span>
                 </a>
             </li>
 
             <li>
-                <a href="<?php echo Url::to(['property/search']);?>">
+                <a href="<?php echo Url::to(['/property/search']);?>">
                     <i class="fa fa-lg fa-fw fa-search"></i> 
                     <span class="menu-item-parent">Search</span>
                 </a>
             </li>
 
             <li>
-                <a id="searches_alerts_menu" href="<?php echo Url::to(['searches/alerts'])?>">
+                <a id="searches_alerts_menu" href="<?php echo Url::to(['/searches/alerts'])?>">
                     <i class="fa fa-lg fa-fw fa-bell"></i>
                     <span class="menu-item-parent">Searches / Alerts</span>
                 </a>
             </li>
 
             <li>
-                <a id="saved_alerts_menu" href="<?php echo Url::to(['saved/properties'])?>">
+                <a id="saved_alerts_menu" href="<?php echo Url::to(['/saved/properties'])?>">
                     <i class="fa fa-lg fa-fw fa-heart"></i>
                     <span class="menu-item-parent">Saved Properties</span>
                 </a>
@@ -94,28 +94,28 @@ $profile = $user ? $user->profile : null;
                         <li>
                             <a id="adclient_menu" href="javascript:void(0);"> Ad Clients </a>
                             <ul>
-                                <li><a id="adclient_1_menu" href="<?php echo Url::to(['adclient/activity/admin'])?>"> Manage Ad Client Activities </a></li>
-                                <li><a id="adclient_2_menu" href="<?php echo Url::to(['adclient/adclient/admin'])?>"> Manage Ad Clients </a></li>
-                                <li><a id="adclient_3_menu" href="<?php echo Url::to(['adclient/adclient/create'])?>"> Create Ad Client </a></li>
+                                <li><a id="adclient_1_menu" href="<?php echo Url::to(['/adclient/activity/admin'])?>"> Manage Ad Client Activities </a></li>
+                                <li><a id="adclient_2_menu" href="<?php echo Url::to(['/adclient/adclient/admin'])?>"> Manage Ad Clients </a></li>
+                                <li><a id="adclient_3_menu" href="<?php echo Url::to(['/adclient/adclient/create'])?>"> Create Ad Client </a></li>
                             </ul>
                         </li>
-                        <li><a id="meta_tags_admins_menu" href="<?php echo Url::to(['yiiseo/seo'])?>">Meta tags</a></li>
-                        <li><a id="statistic_admins_menu" href="<?php echo Url::to(['landing/statInfo'])?>">Statistics</a></li>
-                        <li><a id="history_admins_menu" href="<?php echo Url::to(['statInfo/history'])?>">Property History</a></li>
-                        <li><a id="factors_admins_menu" href="<?php echo Url::to(['statInfo/factor'])?>">Factors</a></li>
+                        <li><a id="meta_tags_admins_menu" href="<?php echo Url::to(['/yiiseo/seo'])?>">Meta tags</a></li>
+                        <li><a id="statistic_admins_menu" href="<?php echo Url::to(['/stat-info/index'])?>">Statistics</a></li>
+                        <li><a id="history_admins_menu" href="<?php echo Url::to(['/stat-info/history'])?>">Property History</a></li>
+                        <li><a id="factors_admins_menu" href="<?php echo Url::to(['/stat-info/factor'])?>">Factors</a></li>
                         <li>
                             <a id="blog_menu" href="javascript:void(0);"> Blog </a>
                             <ul>
-                                <li><a id="blog_1_menu" href="<?php echo Url::to(['blog/index'])?>"> Posts </a></li>
-                                <li><a id="blog_2_menu" href="<?php echo Url::to(['blog/post/admin'])?>"> Manage Posts </a></li>
-                                <li><a id="blog_3_menu" href="<?php echo Url::to(['blog/post/create'])?>"> Create Post </a></li>
+                                <li><a id="blog_1_menu" href="<?php echo Url::to(['/blog/index'])?>"> Posts </a></li>
+                                <li><a id="blog_2_menu" href="<?php echo Url::to(['/blog/post/admin'])?>"> Manage Posts </a></li>
+                                <li><a id="blog_3_menu" href="<?php echo Url::to(['/blog/post/create'])?>"> Create Post </a></li>
                             </ul>
                         </li>
                         <li>
                             <a id="landing_menu" href="javascript:void(0);"> Landing Pages </a>
                             <ul>
-                                <li><a id="landing_1_menu" href="<?php echo Url::to(['landing/index'])?>"> Landing Pages </a></li>
-                                <li><a id="landing_2_menu" href="<?php echo Url::to(['landing/create'])?>"> Create Landing Page </a></li>
+                                <li><a id="landing_1_menu" href="<?php echo Url::to(['/landing/index'])?>"> Landing Pages </a></li>
+                                <li><a id="landing_2_menu" href="<?php echo Url::to(['/landing/create'])?>"> Create Landing Page </a></li>
                             </ul>
                         </li>
                         <li><a href="<?php echo Url::to(['/membership/membership/search-membership'])?>">User Subscriptions</a></li>
