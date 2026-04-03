@@ -1681,6 +1681,11 @@ class PropertyController extends Controller
             if (!empty($params['bath']) && $params['bath'] > 0) {
                 $query->andWhere(['>=', 'property_info.bathrooms', (float)$params['bath']]);
             }
+
+            // Below Market filter
+            if (!empty($params['bmarket']) && (float)$params['bmarket'] > 0) {
+                $query->andWhere(['>=', 'property_info.percentage_depreciation_value', (float)$params['bmarket']]);
+            }
             
             // Coordinate/Map Boundary Filters
             if (!empty($params['geodistance_rectangle'])) {
