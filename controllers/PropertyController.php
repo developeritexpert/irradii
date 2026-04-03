@@ -1637,6 +1637,22 @@ class PropertyController extends Controller
                 $query->andWhere(['<=', 'property_info.house_square_footage', (int)preg_replace('/[^0-9]/', '', $params['max_sqft'])]);
             }
 
+            // Stories Filter
+            if (!empty($params['stories']) && is_array($params['stories'])) {
+                $stories = array_filter($params['stories']);
+                if (!empty($stories)) {
+                    $query->joinWith('propertyInfoDetails')->andWhere(['in', 'property_info_details.stories', $stories]);
+                }
+            }
+
+            // Garages Filter
+            if (!empty($params['garage']) && is_array($params['garage'])) {
+                $garages = array_filter($params['garage']);
+                if (!empty($garages)) {
+                    $query->andWhere(['in', 'property_info.garages', $garages]);
+                }
+            }
+
             // Year Built Filters (e.g., "Yr 1990")
             if (!empty($params['min_year_built']) && $params['min_year_built'] != 'undefined') {
                 $val = (int)preg_replace('/[^0-9]/', '', $params['min_year_built']);
