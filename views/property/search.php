@@ -515,7 +515,7 @@ $property_type_array = array(
                                             </div>
 <?php endif; ?>
                                             <div class="col-md-3">
-                                                <button class="btn btn-default" type="submit">
+                                                <button class="btn btn-default" type="button" id="reset-filters">
                                                     Cancel
                                                 </button>
 
@@ -2329,6 +2329,25 @@ $this->registerJs("
             
 
             
+            $('#reset-filters').click(function(){
+                var form = $('#main_search_form');
+                form.find('input[type=\"text\"]').val('');
+                $('#street_number, #route, #locality, #administrative_area_level_1, #postal_code, #country').val('');
+                $('#sale_type_select').val('ALL Sale Types').trigger('change');
+                $('#bed_select').val('0').trigger('change');
+                $('#bath_select').val('0').trigger('change');
+                $('.select2').val(null).trigger('change');
+                $('select[name=\"pool\"]').val('').trigger('change');
+                $('select[name=\"bmarket\"]').val('').trigger('change');
+                if($('.tagsinput').length) {
+                    $('.tagsinput').tagsinput('removeAll');
+                }
+                if(typeof deleteSelectedShape === 'function'){
+                    deleteSelectedShape();
+                }
+                makeSearch();
+            });
+
             $(document).keypress(function(eventObject){
                 var code = parseInt((eventObject.keyCode ? eventObject.keyCode : eventObject.which));
                 if(code === 13){
