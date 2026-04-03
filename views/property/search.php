@@ -467,9 +467,15 @@ $property_type_array = array(
                                                 </select>
                                             </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <select class="form-control" name="below_market">
-                                                    <option <?php echo (!isset($general_search_fields['below_market']) || $general_search_fields['below_market']=='')? 'selected' :''; ?> value="">Below Market</option>
-                                                    <option <?php echo (isset($general_search_fields['below_market']) && $general_search_fields['below_market']=='1')? 'selected' :''; ?> value="1">Yes</option>
+                                                <select class="form-control bmarket" id="select-bmarket" name="bmarket">
+                                                    <option <?php echo (!isset($general_search_fields['bmarket']) || $general_search_fields['bmarket']=='')? 'selected' :''; ?> value="">Below Market</option>
+                                                    <option <?php echo (isset($general_search_fields['bmarket']) && $general_search_fields['bmarket']=='1')? 'selected' :''; ?> value="1">1% +</option>
+                                                    <option <?php echo (isset($general_search_fields['bmarket']) && $general_search_fields['bmarket']=='3')? 'selected' :''; ?> value="3">3% +</option>
+                                                    <option <?php echo (isset($general_search_fields['bmarket']) && $general_search_fields['bmarket']=='5')? 'selected' :''; ?> value="5">5% +</option>
+                                                    <option <?php echo (isset($general_search_fields['bmarket']) && $general_search_fields['bmarket']=='8')? 'selected' :''; ?> value="8">8% +</option>
+                                                    <option <?php echo (isset($general_search_fields['bmarket']) && $general_search_fields['bmarket']=='10')? 'selected' :''; ?> value="10">10% +</option>
+                                                    <option <?php echo (isset($general_search_fields['bmarket']) && $general_search_fields['bmarket']=='15')? 'selected' :''; ?> value="15">15% +</option>
+                                                    <option <?php echo (isset($general_search_fields['bmarket']) && $general_search_fields['bmarket']=='20')? 'selected' :''; ?> value="20">20% +</option>
                                                 </select>
                                             </div>
                                         </div>
