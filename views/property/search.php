@@ -453,12 +453,27 @@ $property_type_array = array(
                                             <div class="col-xs-12 col-sm-12 col-md-4" id="keywords_block">
                                                 <input class="form-control tagsinput" value="<?php if(isset($general_search_fields['keywords']) && $general_search_fields['keywords']!='') {echo $general_search_fields['keywords'];} ?> " placeholder="Keywords... foreclosure, view, etc" data-role="tagsinput"  name="keywords" >
                                             </div>
-                                            <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input value="<?php echo (isset($general_search_fields['stories']))? $general_search_fields['stories'] :''; ?>" class="form-control" type="text" placeholder="# of Stories" name="stories">
-                                            </div>
-                                            <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input value="<?php echo (isset($general_search_fields['garages']))? $general_search_fields['garages'] :''; ?>" class="form-control" type="text" placeholder="# of Garages" name="garages">
-                                            </div>
+                                             <div class="col-xs-12 col-sm-6 col-md-2">
+                                                 <select multiple style="width:100%" class="select2 stories" placeholder="# of Stories" id="select-stories" name="stories[]">
+                                                     <option <?php echo (isset($general_search_fields['stories']) && in_array('', (array)$general_search_fields['stories']))? 'selected':'' ?> value="">Any</option>
+                                                     <option <?php echo (isset($general_search_fields['stories']) && in_array('1 Story', (array)$general_search_fields['stories']))? 'selected':'' ?> value="1 Story">1</option>
+                                                     <option <?php echo (isset($general_search_fields['stories']) && in_array('2 Stories', (array)$general_search_fields['stories']))? 'selected':'' ?> value="2 Stories">2</option>
+                                                     <option <?php echo (isset($general_search_fields['stories']) && in_array('3 Stories', (array)$general_search_fields['stories']))? 'selected':'' ?> value="3 Stories">3</option>
+                                                     <option <?php echo (isset($general_search_fields['stories']) && in_array('4 Stories', (array)$general_search_fields['stories']))? 'selected':'' ?> value="4 Stories">4</option>
+                                                     <option <?php echo (isset($general_search_fields['stories']) && in_array('5 Stories', (array)$general_search_fields['stories']))? 'selected':'' ?> value="5 Stories">5</option>
+                                                     <option <?php echo (isset($general_search_fields['stories']) && in_array('Tri-level', (array)$general_search_fields['stories']))? 'selected':'' ?> value="Tri-level">Tri-level</option>
+                                                 </select>
+                                             </div>
+                                             <div class="col-xs-12 col-sm-6 col-md-2">
+                                                 <select multiple style="width:100%" class="select2 garage" placeholder="# of Garages" id="select-garage" name="garage[]">
+                                                     <option <?php echo (isset($general_search_fields['garage']) && in_array('', (array)$general_search_fields['garage']))? 'selected' :''; ?> value="">ANY</option>
+                                                     <option <?php echo (isset($general_search_fields['garage']) && in_array('1', (array)$general_search_fields['garage']))? 'selected' :''; ?> value="1">1</option>
+                                                     <option <?php echo (isset($general_search_fields['garage']) && in_array('2', (array)$general_search_fields['garage']))? 'selected' :''; ?> value="2">2</option>
+                                                     <option <?php echo (isset($general_search_fields['garage']) && in_array('3', (array)$general_search_fields['garage']))? 'selected' :''; ?> value="3">3</option>
+                                                     <option <?php echo (isset($general_search_fields['garage']) && in_array('4', (array)$general_search_fields['garage']))? 'selected' :''; ?> value="4">4</option>
+                                                     <option <?php echo (isset($general_search_fields['garage']) && in_array('5', (array)$general_search_fields['garage']))? 'selected' :''; ?> value="5">5+</option>
+                                                 </select>
+                                             </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
                                                 <select class="form-control" name="pool">
                                                     <option <?php echo (!isset($general_search_fields['pool']) || $general_search_fields['pool']=='')? 'selected' :''; ?> value="">Pool</option>
@@ -699,6 +714,7 @@ $property_type_array = array(
                                 <table class="table table-striped table-hover datatable_tabletools">
                                     <thead>
                                         <tr>
+                                            <th>Weight</th>
                                             <th>Value</th>
                                             <th>Address</th>
                                             <th>Status</th>
@@ -1773,10 +1789,15 @@ function getPathImages(){
                                     }
                         },
                       'aoColumns': [
-                           { 'bVisible': false, 'sType': 'natural' },
+                           { 'sType': 'natural' },
+                           { 'bVisible': false },
                            { 'sType': 'num-html' },
-                           { 'sType': 'currency' },
-                           { 'bVisible': false}
+                           { 'bVisible': false },
+                           { 'bVisible': false },
+                           { 'bVisible': false },
+                           { 'bVisible': false },
+                           { 'sType': 'natural' },
+                           { 'sType': 'natural' }
                         ],
                         'aaSorting': [[ 0, 'desc' ]],
                         'oLanguage': {
