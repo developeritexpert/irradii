@@ -100,11 +100,17 @@ class EstimatedPrice
         }
 
         $compare_property_zipcode = '';
-        if ($property_zipcode != '') {
+        if ($property_zipcode != '' && (int)$curStage < 5) {
             $compare_property_zipcode = "AND property_info.property_zipcode = {$property_zipcode}";
         }
 
         $distance = (float)($select_estimated_price_result->distance ?? 0);
+
+        // Relax dates in later stages to ensures we find enough properties for a meaningful range
+        $effective_comp_time = $comp_time;
+        if ((int)$curStage >= 8) {
+            $effective_comp_time = date('Y-m-d', time() - 730 * 24 * 60 * 60); // 2 years back
+        }
 
         $compare_property_lat = '';
         if (($property_lat != '0.000000') && ($property_lat != '') && $distance > 0) {
@@ -175,7 +181,7 @@ class EstimatedPrice
             $percentage_depreciation_value = 0.0;
 
             $total_count = $this->countComparePropertyInfo(
-                $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
+                $session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
                 $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
             );
 
@@ -189,7 +195,7 @@ class EstimatedPrice
                 $total_count = $this->countComparePropertyInfo(
                     $session_id,
                     $gettoday_date,
-                    $comp_time,
+                    $effective_comp_time,
                     $compare_property_type,
                     $compare_property_zipcode,
                     $compare_property_year_build,
@@ -211,7 +217,7 @@ class EstimatedPrice
                     $total_count = $this->countComparePropertyInfo(
                         $session_id,
                         $gettoday_date,
-                        $comp_time,
+                        $effective_comp_time,
                         $compare_property_type,
                         $compare_property_zipcode,
                         $compare_property_year_build,
@@ -235,7 +241,7 @@ class EstimatedPrice
                     $total_count = $this->countComparePropertyInfo(
                         $session_id,
                         $gettoday_date,
-                        $comp_time,
+                        $effective_comp_time,
                         $compare_property_type,
                         $compare_property_zipcode,
                         $compare_property_year_build,
@@ -259,7 +265,7 @@ class EstimatedPrice
                     $total_count = $this->countComparePropertyInfo(
                         $session_id,
                         $gettoday_date,
-                        $comp_time,
+                        $effective_comp_time,
                         $compare_property_type,
                         $compare_property_zipcode,
                         $compare_property_year_build,
@@ -287,21 +293,51 @@ class EstimatedPrice
             // In legacy Yii1 the comparable table is populated as long as at least one matching row exists.
             // In Yii2 we were gating on `min_comp`, which can leave `result_queryAllRows` empty and the table blank.
             // So: only require `> 0` matches here.
-            if ((int)$total_count > 0) {
+            // Use min_comp gating (legacy) to ensure stages retry if not enough comps.
+            // Allow proceeding if we've reached the maximum possible stage even with fewer comps.
+            if ((int)$total_count >= (int)$select_estimated_price_result->min_comp
+                || ((int)$total_count > 0 && (int)$curStage >= (int)(Yii::$app->params['maxCalcStages'] ?? 10))
+            ) {
                 $result_queryAllRows = $this->actionComparePropertyInfoAllRows(
                     $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
                     $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
                 );
 
                 $result_query = $this->actionComparePropertyInfo(
-                    $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
+                    $session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
                     $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
                 );
 
                 $result_t_score = $this->actionTtable2Tail($total_count);
                 $t_score = self::getTail($result_t_score);
+                
+                // Fallback for single-comp case: if t_score is 0 or result is null (e.g. df=0),
+                // use a baseline score (e.g., from df=1) to ensure we can still show a range spread.
+                if ($t_score == 0) {
+                    $fallback_score = $this->actionTtable2Tail(2); // Use df=1 as baseline
+                    $t_score = self::getTail($fallback_score);
+                }
+
                 $low_sd = $t_score;
                 $high_sd = $t_score;
+
+                // If stddev is 0 (single comp), provide a minimal baseline stddev (5% of average) 
+                // to allow the t-score spread to create a legible price range.
+                if ($result_query->square_footage_stddev == 0 && $result_query->house_footage_average > 0) {
+                    $result_query->square_footage_stddev = $result_query->house_footage_average * 0.05;
+                }
+                if ($result_query->lot_footage_stddev == 0 && $result_query->lot_footage_average > 0) {
+                    $result_query->lot_footage_stddev = $result_query->lot_footage_average * 0.05;
+                }
+                // Apply similar baseline to amenities stddevs if they are 0
+                $factors = ['bathrooms_amenity', 'bedrooms_amenity', 'garages_amenity', 'pool_amenity'];
+                foreach ($factors as $f) {
+                    $std_key = $f . '_stddev';
+                    $avg_key = $f . '_average';
+                    if (isset($result_query->$std_key) && $result_query->$std_key == 0 && ($result_query->$avg_key ?? 0) > 0) {
+                        $result_query->$std_key = $result_query->$avg_key * 0.05;
+                    }
+                }
 
                 $result['low_sd'] = $low_sd;
                 $result['high_sd'] = $high_sd;
