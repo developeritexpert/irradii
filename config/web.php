@@ -89,6 +89,19 @@ $config = [
                 'searches/editable' => 'searches/editable',
                 'searches/unsubscribe/<email>' => 'searches/unsubscribe',
                 'stat-info/uploadalertsmessages' => 'stat-info/upload-alerts-messages',
+
+                // Explicit property AJAX routes — must come before the slug catch-all
+                'property/updateexcludedstatuses'  => 'property/update-excluded-statuses',
+                'property/updateminstage'          => 'property/update-min-stage',
+                'property/updatepropsbyshape'      => 'property/update-props-by-shape',
+                'property/updateuserpropertystatus'=> 'property/update-user-property-status',
+                'property/addexcludeproperty'      => 'property/add-exclude-property',
+                'property/deleteexcludeproperty'   => 'property/delete-exclude-property',
+                'property/getmoreconfidenceinfo'   => 'property/get-more-confidence-info',
+                'property/getcomppropertydetails'  => 'property/get-comp-property-details',
+                'property/table2tail'              => 'property/table2-tail',
+                'property/<action:[a-zA-Z0-9\-]+>' => 'property/<action>',
+
                 '<slug:[a-zA-Z0-9\-]+>' => 'landing/landing',
             ],
         ],

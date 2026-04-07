@@ -143,6 +143,19 @@ $isGuest = Yii::$app->user->isGuest;
     #total_comp_prop tr:nth-child(3) a:hover .thumb-img {
         top: 20px; bottom: auto;
     }
+    .h2-fake {
+        height: 100%;
+        width: auto;
+        display: inline-block;
+        float: left;
+        font-size: 14px;
+        position: relative;
+        margin-left: 10px;
+        margin-top: 0px;
+        line-height: 34px;
+        font-weight: 400;
+        letter-spacing: 0;
+    }
 </style>
 
 <?php 
@@ -853,91 +866,144 @@ if (!$isGuest) {
                     <div class="no-padding" role="content">
                         <div class="widget-body">
                             <div class="row no-space">
-                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 show-stats">
-                                    <div class="row">
-                                        <!-- TMV -->
-                                        <div class="col-xs-6 col-sm-3 col-md-3 col-lg-3">
-                                            <span class="text-muted small"><?= $details->property_type == 9 ? 'TRUE MARKET RENT' : 'TRUE MARKET VALUE' ?></span><br>
-                                            <span id="tmv" class="h4"><?php
-                                                if (isset($comparebles_properties->estimated_value_subject_property)) {
-                                                    echo $comparebles_properties->estimated_value_subject_property != 0 ? '<span class="'.$text_color_if_discont.'">$' . number_format(round($comparebles_properties->estimated_value_subject_property)) . '</span>' : '<span title="Not Enough Data" class="'.$text_color_if_discont.'">-</span>';
-                                                } else {
-                                                    echo '<span title="Not Enough Data" class="'.$text_color_if_discont.'">-</span>';
-                                                }
-                                                ?></span>
-                                        </div>
-                                        <!-- Equity -->
-                                        <div class="col-xs-6 col-sm-3 col-md-3 col-lg-3">
-                                            <span class="text-muted small"><?= $details->property_type == 9 ? 'ESTIMATED SPREAD' : 'ESTIMATED EQUITY' ?></span><br>
-                                            <span id="dynamicEstimatedEquity" class="h4 <?php echo $text_color_if_discont ?>"><?php echo (isset($comparebles_properties->estimated_value_subject_property) && $comparebles_properties->estimated_value_subject_property != 0) ? '$'.number_format($comparebles_properties->estimated_value_subject_property - $details->property_price, 0, '.', ',') : '-'; ?></span>
+                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 show-stat-microcharts">
+                                    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                                        <ul id="sparks" class="pull-left">
+                                            <!-- TMV -->
+                                            <li class="sparks-info">
+                                                <h5><?= $details->property_type == 9 ? 'TRUE MARKET RENT' : 'TRUE MARKET VALUE' ?>
+                                                    <span id="tmv"><?php
+                                                        if (isset($comparebles_properties->estimated_value_subject_property)) {
+                                                            echo $comparebles_properties->estimated_value_subject_property != 0 ? '<span class="'.$text_color_if_discont.'">$' . number_format(round($comparebles_properties->estimated_value_subject_property)) . '</span>' : '<span title="Not Enough Data" class="'.$text_color_if_discont.'">-</span>';
+                                                        } else {
+                                                            echo '<span title="Not Enough Data" class="'.$text_color_if_discont.'">-</span>';
+                                                        }
+                                                        ?></span>
+                                                </h5>
+                                            </li>
+                                            <!-- Equity -->
+                                            <li class="sparks-info">
+                                                <h5><?= $details->property_type == 9 ? 'ESTIMATED SPREAD' : 'ESTIMATED EQUITY' ?>
+                                                    <span id="dynamicEstimatedEquity" class="<?php echo $text_color_if_discont ?>"><?php echo (isset($comparebles_properties->estimated_value_subject_property) && $comparebles_properties->estimated_value_subject_property != 0) ? '$'.number_format($comparebles_properties->estimated_value_subject_property - $details->property_price, 0, '.', ',') : '-'; ?></span>
+                                                </h5>
+                                            </li>
+                                        </ul>
+                                        <!-- Percentage indicator -->
+                                        <ul class="smaller-stat pull-right">
+                                            <li>
+                                                <span class="label bg-color-green" title="Asking Price"><?= $details->property_price ? '$'.round($details->property_price / $round_value).$postfix_after_rounded : '' ?></span>
+                                            </li>
                                             <?php if (isset($comparebles_properties->estimated_price_dollar) && $comparebles_properties->estimated_price_dollar > 0) :?>
                                                 <?php $percentage = (($details->property_price - $comparebles_properties->estimated_price_dollar) / $comparebles_properties->estimated_price_dollar) * 100 ;?>
-                                                <span class="label bg-color-green display-inline-block" style="vertical-align: top; margin-left: 5px;" title="Asking Price <?= round($percentage) ?>% Below TMV"><i class="fa fa-caret-down"></i><?= round($percentage) ?>%</span>
+                                                <li>
+                                                    <span class="label bg-color-green" title="Asking Price <?= round($percentage) ?>% Below TMV"><i class="fa fa-caret-down"></i><?= round($percentage) ?>%</span>
+                                                </li>
                                             <?php endif; ?>
-                                        </div>
+                                        </ul>
+                                    </div>
+
+                                    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
                                         <!-- Value Range -->
-                                        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
-                                            <span class="text-muted small">VALUE RANGE</span><br>
-                                            <span class="h4 <?= $text_color_if_discont ?>">$<span class="low_value_b">
-                                            <?php if (isset($comparebles_properties->low_range)) { echo number_format(round($comparebles_properties->low_range / $round_value ),0,'.',',') . $postfix_after_rounded; } ?></span>-$<span class="high_value_b">
-                                            <?php if (isset($comparebles_properties->high_range)) { echo number_format(round($comparebles_properties->high_range / $round_value),0,'.',',') . $postfix_after_rounded; } ?></span></span>
+                                        <ul id="sparks" class="pull-left">
+                                            <li class="sparks-info">
+                                                <h5>VALUE RANGE
+                                                    <span class="<?= $text_color_if_discont ?>">$<span class="low_value_b">
+                                                    <?php if (isset($comparebles_properties->low_range)) { echo number_format(round($comparebles_properties->low_range / $round_value ),0,'.',',') . $postfix_after_rounded; } ?></span>-$<span class="high_value_b">
+                                                    <?php if (isset($comparebles_properties->high_range)) { echo number_format(round($comparebles_properties->high_range / $round_value),0,'.',',') . $postfix_after_rounded; } ?></span></span>
+                                                </h5>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="clearfix"></div>
+
+                                    <!-- Confidence Gauge -->
+                                    <div class="overflow-visible col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                                        <div class="col-xs-8 col-sm-7 col-md-7 col-lg-8">
+                                            <div id="confidence_chart" class="easy-pie-chart txt-color-green" data-pie-percent="90" data-percent="90" data-pie-size="50" data-size="50">
+                                                <span id="confidence_chart_text" class="percent percent-sign">90</span>
+                                            </div>
+                                            <span class="easy-pie-title"> CONFIDENCE </span>
+                                        </div>
+                                        <div class="margin-top-10 col-xs-4 col-sm-5 col-md-5 col-lg-4">
+                                            <div id="confidence_slider">
+                                                <input type="text" class="slider slider-primary" id="g1" value=""
+                                                       data-slider-max="98"
+                                                       data-slider-min="50"
+                                                       data-slider-value="90"
+                                                       data-slider-selection="before"
+                                                       data-slider-handle="round">
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="row no-space margin-top-10">
-                                        <!-- Confidence Gauge -->
-                                        <div class="overflow-visible col-xs-12 col-sm-6 col-md-6 col-lg-6">
-                                            <div class="col-xs-8 col-sm-7 col-md-7 col-lg-8">
-                                                <div id="confidence_chart" class="easy-pie-chart txt-color-green" data-pie-percent="90" data-percent="90" data-pie-size="50" data-size="50">
-                                                    <span id="confidence_chart_text" class="percent percent-sign">90</span>
-                                                </div>
-                                                <span class="easy-pie-title"> CONFIDENCE </span>
-                                            </div>
-                                            <div class="margin-top-10 col-xs-4 col-sm-5 col-md-5 col-lg-4">
-                                                <div id="confidence_slider">
-                                                    <input type="text" class="slider slider-primary" id="g1" value=""
-                                                           data-slider-max="98"
-                                                           data-slider-min="50"
-                                                           data-slider-value="90"
-                                                           data-slider-selection="before"
-                                                           data-slider-handle="round">
-                                                </div>
-                                            </div>
+                                    <!-- Days on Market Gauge -->
+                                    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                                        <?php
+                                        $dtz = new DateTimeZone(Yii::$app->timeZone ?? "UTC");
+                                        $datetime_now = new DateTime('now', $dtz);
+                                        $propertyDate = !empty($details->propertyInfoAdditionalBrokerageDetails->entry_date)
+                                            ? $details->propertyInfoAdditionalBrokerageDetails->entry_date : $details->property_uploaded_date;
+                                        if ($propertyDate) {
+                                            $datetime_exp = new DateTime($propertyDate, $dtz);
+                                            $interval = $datetime_now->diff($datetime_exp);
+                                            $quantity = $interval->days;
+                                            $quantity_percent = $quantity;
+                                            if($quantity_percent > 100) $quantity_percent = 100;
+                                        } else {
+                                            $quantity = 0;
+                                            $quantity_percent = 0;
+                                        }
+
+                                        // Gauge color logic from legacy
+                                        $chart_class = 'txt-color-green';
+                                        if ($quantity >= 31 && $quantity <= 90) {
+                                            $chart_class = 'txt-color-orange';
+                                        } elseif ($quantity >= 91) {
+                                            $chart_class = 'txt-color-red';
+                                        }
+                                        ?>
+                                        <div id="days_on_market_chart" class="easy-pie-chart <?= $chart_class ?>" data-pie-percent="<?= $quantity_percent ?>" data-percent="<?= $quantity_percent ?>" data-pie-size="50" data-size="50">
+                                            <span class="percent percent-sign"><?= $quantity ?></span>
                                         </div>
+                                        <span class="easy-pie-title"> DAYSONMARKET </span>
 
-                                        <!-- Days on Market Gauge -->
-                                        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                                        <?php if (property_exists($comparebles_properties, 'result_query')) : ?>
                                             <?php
-                                            $dtz = new DateTimeZone(Yii::$app->timeZone ?? "UTC");
-                                            $datetime_now = new DateTime('now', $dtz);
-                                            $propertyDate = !empty($details->propertyInfoAdditionalBrokerageDetails->entry_date)
-                                                ? $details->propertyInfoAdditionalBrokerageDetails->entry_date : $details->property_uploaded_date;
-                                            if ($propertyDate) {
-                                                $datetime_exp = new DateTime($propertyDate, $dtz);
-                                                $interval = $datetime_now->diff($datetime_exp);
-                                                $quantity = $interval->days;
-                                                $quantity_percent = $quantity;
-                                                if($quantity_percent > 100) $quantity_percent = 100;
-                                            } else {
-                                                $quantity = 0;
-                                                $quantity_percent = 0;
+                                            $min_uploaded_date = '';
+                                            $max_uploaded_date = '';
+                                            if (is_object($comparebles_properties->result_query)) {
+                                                $min_uploaded_date = $comparebles_properties->result_query->min_uploaded_date ?? '';
+                                                $max_uploaded_date = $comparebles_properties->result_query->max_uploaded_date ?? '';
+                                            } elseif (is_array($comparebles_properties->result_query)) {
+                                                $min_uploaded_date = $comparebles_properties->result_query['min_uploaded_date'] ?? '';
+                                                $max_uploaded_date = $comparebles_properties->result_query['max_uploaded_date'] ?? '';
                                             }
-
-                                            // Gauge color logic from legacy
-                                            $chart_class = 'txt-color-green';
-                                            if ($quantity >= 31 && $quantity <= 90) {
-                                                $chart_class = 'txt-color-orange';
-                                            } elseif ($quantity >= 91) {
-                                                $chart_class = 'txt-color-red';
+                                            
+                                            $quantity_min = '';
+                                            $quantity_max = '';
+                                            if ($min_uploaded_date) {
+                                                $datetime_exp_min = new DateTime($min_uploaded_date, $dtz);
+                                                $interval_min = $datetime_now->diff($datetime_exp_min);
+                                                $quantity_min = $interval_min->days;
+                                            }
+                                            if ($max_uploaded_date) {
+                                                $datetime_exp_max = new DateTime($max_uploaded_date, $dtz);
+                                                $interval_max = $datetime_now->diff($datetime_exp_max);
+                                                $quantity_max = $interval_max->days;
                                             }
                                             ?>
-                                            <div id="days_on_market_chart" class="easy-pie-chart <?= $chart_class ?>" data-pie-percent="<?= $quantity_percent ?>" data-percent="<?= $quantity_percent ?>" data-pie-size="50" data-size="50">
-                                                <span class="percent percent-sign"><?= $quantity ?></span>
-                                            </div>
-                                            <span class="easy-pie-title"> DAYSONMARKET </span>
-                                        </div>
+                                            <ul class="smaller-stat hidden-sm pull-right">
+                                                <li>
+                                                    <span class="label bg-color-red"><i class="fa fa-caret-up"></i> <?= $quantity_min ?></span>
+                                                </li>
+                                                <li>
+                                                    <span class="label bg-color-green"><i class="fa fa-caret-down"></i> <?= $quantity_max ?></span>
+                                                </li>
+                                            </ul>
+                                        <?php endif; ?>
                                     </div>
-                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -981,14 +1047,17 @@ if (!$isGuest) {
                                         <form action="#" class="status_filter">
                                             <select multiple class="select2" name="status_type">
                                                 <?php
+                                                // Only 4 status groups matching legacy — For Sale, Under Contract, Sold, History
                                                 $all_status_types = [
-                                                    'For Sale' => 'For Sale', 'Pending' => 'Pending', 'Sold' => 'Sold',
-                                                    'In Escrow' => 'In Escrow', 'Active' => 'Active', 'Cancelled' => 'Cancelled',
-                                                    'For Rent' => 'For Rent', 'Leased' => 'Leased', 'Archive' => 'Archive'
+                                                    'For Sale'       => 'For Sale',
+                                                    'Under Contract' => 'Under Contract',
+                                                    'Sold'           => 'Sold',
+                                                    'History'        => 'History',
                                                 ];
                                                 $session_data = Yii::$app->session;
                                                 $excluded_statuses = [];
-                                                $excluded_statuses_for_prop = ['Archive'];
+                                                // Default: History is excluded (unchecked), all others are shown
+                                                $excluded_statuses_for_prop = ['History'];
 
                                                 if ($session_data->has('excluded_statuses')) {
                                                     $excluded_statuses = $session_data->get('excluded_statuses');
@@ -998,11 +1067,13 @@ if (!$isGuest) {
                                                 }
 
                                                 foreach ($all_status_types as $key => $name) {
+                                                    // For rental properties (type=9): skip "For Sale" / "Sold", show "For Rent"/"Leased"
+                                                    // For non-rental: skip "For Rent" / "Leased"
                                                     if ($details->property_type == 9 && ($key == 'For Sale' || $key == 'Sold')) continue;
                                                     if ($details->property_type != 9 && ($key == 'For Rent' || $key == 'Leased')) continue;
 
                                                     $selected = in_array($key, $excluded_statuses_for_prop) ? '' : 'selected';
-                                                    echo '<option value="' . Html::encode($key) . '" ' . $selected . '>' . Html::encode($key) . '</option>';
+                                                    echo '<option value="' . Html::encode($key) . '" ' . $selected . '>' . Html::encode($name) . '</option>';
                                                 }
                                                 ?>
                                             </select>
@@ -1345,7 +1416,19 @@ $estimated_value_subject_property = is_object($comparebles_properties) && proper
 // Register the main property details script
 $cleanTitle = str_replace(["\r","\n"], '', $details->property_street);
 $this->registerJs("
+    // Set CSRF token for all jQuery AJAX POST requests (required by Yii2)
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (settings.type === 'POST') {
+                xhr.setRequestHeader('X-CSRF-Token', yii.getCsrfToken());
+            }
+        }
+    });
+");
+
+$this->registerJs("
     c_properties = " . json_encode($c_properties) . ";
+
     details_property = " . json_encode($details) . ";
     details_latitude = " . (float)$details->getlatitude . ";
     details_longitude = " . (float)$details->getlongitude . ";
@@ -1471,18 +1554,28 @@ $this->registerJs("
         $.ajax({ url: '/property/updateexcludedstatuses', data: data, type: 'POST', dataType: 'json', cache: false, success: function(){ getNewComparaplesProperties(); } });
     });
 
-    // Stage slider
-    $('#stage-slider input.slider').on('slideStop', function(slideEvt) {
-        var sliderValue = slideEvt.value;
+    // Stage slider — do not initialize manually as SmartAdmin auto-initializes it.
+    // Use delegated binding to handle events.
+    $(document).on('slideStop', '#stage-slider input.slider', function(slideEvt) {
+        var sliderValue = (slideEvt.value !== undefined) ? slideEvt.value : $(this).val();
         if (sliderValue <= 0) { sliderValue = 1; }
         setStageSliderValue(sliderValue);
-        $.ajax({ url: '/property/updateminstage', data: { property_id: details_property_id, min_stage: sliderValue }, type: 'POST', dataType: 'json', cache: false, success: function(){ getNewComparaplesProperties(); } });
+        $.ajax({ 
+            url: '/property/updateminstage', 
+            data: { property_id: details_property_id, min_stage: sliderValue }, 
+            type: 'POST', 
+            dataType: 'json', 
+            cache: false, 
+            success: function(){ getNewComparaplesProperties(); } 
+        });
     });
 
     function setStageSliderValue(value) {
-        var slider = $('#stage-slider input.slider');
-        slider.attr('data-slider-value', value);
-        slider.slider('setValue', value);
+        var \$slider = $('#stage-slider input.slider');
+        \$slider.attr('data-slider-value', value);
+        if (typeof \$slider.slider === 'function') {
+            \$slider.slider('setValue', value);
+        }
         $('#stage-slider .tooltip-inner').text(value);
     }
 
@@ -1690,6 +1783,30 @@ $this->registerJs("
     }
 
     $('.detail-pop-up .close').on('click', function() { hideDetailPopup(); });
+
+    window.showinmap = function(el) {
+        var id = $(el).attr('property_id');
+        $.each(markers, function() {
+            if (this.property_id == id) {
+                this.setAnimation(google.maps.Animation.BOUNCE);
+            } else {
+                this.setAnimation(null);
+            }
+        });
+        var scroll = $('#wid-id-2map').offset().top;
+        $('html, body').animate({ scrollTop: scroll - 100 }, 1000);
+        return false;
+    };
+
+    window.showPopover = function(item) {
+        var content = $(item).hasClass('fa-reply') ? 'Reinclude this property' : 'Exclude this property';
+        if ($(item).hasClass('show-in-map')) content = 'Show on map';
+        $(item).popover({ content: content, placement: 'left', trigger: 'manual' }).popover('show');
+    };
+
+    window.hidePopover = function(item) {
+        $(item).popover('destroy');
+    };
 
     // Show Comps toggle
     $('#wid-id-2map .onoffswitch-label').click(function(){
