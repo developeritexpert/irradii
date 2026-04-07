@@ -17,19 +17,7 @@ if (!isset($session['recent_pages']) || count($session['recent_pages']) == 0) {
 $this->title = 'Real Estate Search | Homes for Sale';
 $this->registerCssFile('@web/css/concat-style.min.css');
 $this->registerCss(<<<CSS
-    #main {
-        margin-left: 220px !important;
-        position: relative;
-        z-index: 1;
-        min-height: 100vh;
-        background: #f4f4f4;
-    }
-    .minified #main {
-        margin-left: 45px !important;
-    }
-    @media (max-width: 979px) {
-        #main { margin-left: 0 !important; }
-    }
+
 
     .datatable_tabletools {
         font-family: 'Open Sans', Arial, Helvetica, sans-serif;
