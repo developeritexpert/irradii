@@ -17,19 +17,7 @@ if (!isset($session['recent_pages']) || count($session['recent_pages']) == 0) {
 $this->title = 'Real Estate Search | Homes for Sale';
 $this->registerCssFile('@web/css/concat-style.min.css');
 $this->registerCss(<<<CSS
-    #main {
-        margin-left: 220px !important;
-        position: relative;
-        z-index: 1;
-        min-height: 100vh;
-        background: #f4f4f4;
-    }
-    .minified #main {
-        margin-left: 45px !important;
-    }
-    @media (max-width: 979px) {
-        #main { margin-left: 0 !important; }
-    }
+
 
     .datatable_tabletools {
         font-family: 'Open Sans', Arial, Helvetica, sans-serif;
@@ -1325,20 +1313,21 @@ window.mapBoundaries = [];
             var latLon_arr = [];
             var search_map_results;
 
-function getPathImages(){
-    var a_path_cdn = '" . CPathCDN::baseurl( 'images' ) ."';
-        if(a_path_cdn === '') {
-            if (!window.location.origin) { // IE
-                return window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
-            } else {
-                return window.location.origin ;
-            }
-        } else {
-            return a_path_cdn;
-        }
-}
+            window.getPathImages = function(){
+                var a_path_cdn = '" . CPathCDN::baseurl( 'images' ) ."';
+                if(a_path_cdn === '') {
+                    if (!window.location.origin) { // IE
+                        return window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
+                    } else {
+                        return window.location.origin ;
+                    }
+                } else {
+                    return a_path_cdn;
+                }
+            };
             window.setMarkersArray = function(latLon_arr) {
                 var a_path = window.getPathImages();
+                window.bounds = new google.maps.LatLngBounds();
                 window.markers = [];
                 for(var i = 0; i < latLon_arr.length; i++){
                     for(var key in latLon_arr[i]){
@@ -1386,13 +1375,16 @@ function getPathImages(){
                     }
                 }
                 window.setAllMap(null);
-                if(latLon_arr[0] && latLon_arr[0].length != 0){
-                    window.setAllMap(window.map);
-                } else {
+                if($('#search_map_block').is(':visible')){
                     window.setAllMap(window.map2);
-                }
-                if(!window.bounds.isEmpty()) {
-                    window.map.fitBounds(window.bounds);
+                    if(!window.bounds.isEmpty()) {
+                        window.map2.fitBounds(window.bounds);
+                    }
+                } else {
+                    window.setAllMap(window.map);
+                    if(!window.bounds.isEmpty()) {
+                        window.map.fitBounds(window.bounds);
+                    }
                 }
             };
 /*POPUP WORKER START*/
@@ -1686,34 +1678,35 @@ function getPathImages(){
      
 /*POPUP WORKER END*/
             function getDataCurrentPage(data){
-                latLon_arr = [];
-                latLon_arr[0] = [];
-                latLon_arr[1] = [];
-                data.find('.property_info_row').each(function(){
-                    var arr = {};
-                    arr.lat = $(this).data('lat');
-                    arr.lon = $(this).data('lon');
-                    arr.address = $(this).data('address');
-                    arr.status = $(this).data('status');
-                    arr.property_id = $(this).data('property_id');
-                    latLon_arr[0].push(arr);
-                    delete arr;
-                });
-                data.find('.property_info_row_map').each(function(){
-                var arr2 = {};
-                    arr2.lat = $(this).data('lat');
-                    arr2.lon = $(this).data('lon');
-                    arr2.address = $(this).data('address');
-                    arr2.status = $(this).data('status');
-                    arr2.property_id = $(this).data('property_id');
-                    latLon_arr[1].push(arr2);
-                    delete arr2;
-                });
+                latLon_arr = [[], []];
+                if($('#search_map_block').is(':visible')){
+                    data.find('.property_info_row_map').each(function(){
+                        var arr2 = {
+                            lat: $(this).attr('data-lat'),
+                            lon: $(this).attr('data-lon'),
+                            address: $(this).attr('data-address'),
+                            status: $(this).attr('data-status'),
+                            property_id: $(this).attr('data-property_id')
+                        };
+                        latLon_arr[1].push(arr2);
+                    });
+                } else {
+                    data.find('.property_info_row').each(function(){
+                        var arr = {
+                            lat: $(this).attr('data-lat'),
+                            lon: $(this).attr('data-lon'),
+                            address: $(this).attr('data-address'),
+                            status: $(this).attr('data-status'),
+                            property_id: $(this).attr('data-property_id')
+                        };
+                        latLon_arr[0].push(arr);
+                    });
+                }
 
                 setMarkersArray(latLon_arr);
             }
 
-            function resetDataTableList(){
+            window.resetDataTableList = function(){
                 setAllMap(null);
                 dTable = $('.datatable_tabletools').dataTable().fnDestroy();
                 dTable = $('.datatable_tabletools').dataTable({
@@ -1789,9 +1782,9 @@ function getPathImages(){
                                     }
                         },
                       'aoColumns': [
-                           { 'sType': 'natural' },
-                           { 'bVisible': false },
+                           { 'bVisible': false, 'sType': 'natural' },
                            { 'sType': 'num-html' },
+                           { 'sType': 'natural' },
                            { 'bVisible': false },
                            { 'bVisible': false },
                            { 'bVisible': false },
