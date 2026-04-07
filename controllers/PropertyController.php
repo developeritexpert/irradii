@@ -1194,8 +1194,8 @@ class PropertyController extends Controller
             $toolBtn = '';
         } else {
             $excludeClass = $isExcluded ? 'fa-reply' : 'fa-times';
-            $toolBtn = '<button class="btn btn-xs btn-danger exclude_reinclude ' . $excludeClass . '" data-property_id="' . $comparebles_property->property_id . '"></button>'
-                . ' <a href="' . \yii\helpers\Url::to(['property/details', 'slug' => ($comparebles_property->slug ?? $comparebles_property->property_id)]) . '" class="btn btn-xs btn-success"><i class="fa fa-map-marker"></i></a>';
+            $toolBtn = '<button class="btn btn-xs btn-danger exclude_reinclude ' . $excludeClass . '" data-property_id="' . $comparebles_property->property_id . '" onmouseover="showPopover(this)" onmouseout="hidePopover(this)"></button>'
+                . ' <a href="javascript:void(0);" onclick="return showinmap(this);" property_id="' . $comparebles_property->property_id . '" class="btn btn-xs btn-success show-in-map" title="Show on map" onmouseover="showPopover(this)" onmouseout="hidePopover(this)"><i class="fa fa-map-marker"></i></a>';
         }
 
         // Disabled/row-disable class if excluded
@@ -1216,7 +1216,8 @@ class PropertyController extends Controller
             ? ($details->slug ? $details->slug->slug : $details->property_id)
             : ($comparebles_property->slug ?? $comparebles_property->property_id);
         $propUrl  = \yii\helpers\Url::to(['property/details', 'slug' => $slug_val]);
-        $col_address = '<a data-property_id="' . $comparebles_property->property_id . '" href="' . $propUrl . '">'
+        $col_address = '<a data-property_id="' . $comparebles_property->property_id . '" property_id="' . $comparebles_property->property_id . '" href="javascript:void(0);" onclick="return showinmap(this);">'
+            . '<i class="fa fa-map-marker text-color-green"></i> '
             . Html::encode($comparebles_property->property_street);
         if (!empty($comparebles_property->photo1)) {
             if (!isset($comparebles_property->fullAddress)) {

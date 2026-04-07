@@ -1757,6 +1757,30 @@ $this->registerJs("
 
     $('.detail-pop-up .close').on('click', function() { hideDetailPopup(); });
 
+    window.showinmap = function(el) {
+        var id = $(el).attr('property_id');
+        $.each(markers, function() {
+            if (this.property_id == id) {
+                this.setAnimation(google.maps.Animation.BOUNCE);
+            } else {
+                this.setAnimation(null);
+            }
+        });
+        var scroll = $('#wid-id-2map').offset().top;
+        $('html, body').animate({ scrollTop: scroll - 100 }, 1000);
+        return false;
+    };
+
+    window.showPopover = function(item) {
+        var content = $(item).hasClass('fa-reply') ? 'Reinclude this property' : 'Exclude this property';
+        if ($(item).hasClass('show-in-map')) content = 'Show on map';
+        $(item).popover({ content: content, placement: 'left', trigger: 'manual' }).popover('show');
+    };
+
+    window.hidePopover = function(item) {
+        $(item).popover('destroy');
+    };
+
     // Show Comps toggle
     $('#wid-id-2map .onoffswitch-label').click(function(){
         if($('#myonoffswitch2').prop('checked') === true) { setAllMap(null); } else { setAllMap(map); }
