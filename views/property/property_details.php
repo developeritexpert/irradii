@@ -61,7 +61,6 @@ $status_str2    = 'Last Updated: ' . date('m/d/Y', strtotime($details->property_
 $prop_stat_caps = '';
 if (isset($details->propertyInfoAdditionalBrokerageDetails->status)) {
     $brok_status    = $details->propertyInfoAdditionalBrokerageDetails->status;
-    $prop_stat_caps = '<h5 class="' . $colorScheme['color'] . '">' . strtoupper($brok_status) . '</h5>';
     $property_price = number_format($details->property_price);
     $status_str2    = 'Last Updated: ' . date('m/d/Y', strtotime($details->property_updated_date));
 
@@ -69,7 +68,11 @@ if (isset($details->propertyInfoAdditionalBrokerageDetails->status)) {
     if (in_array(strtoupper($brok_status), $sold_statuses)) {
         $listOrSold = ($details->property_type == 9) ? 'LEASED PRICE' : 'SOLD PRICE';
     }
-    $status_str = $prop_stat_caps . '<span class="' . $text_color_if_discont . '"> $' . $property_price . '</span>';
+    // Uppercase label and price span for clean stacking
+    $label_txt = (strtoupper($brok_status) == 'ACTIVE') ? 'LIST PRICE' : strtoupper($brok_status);
+    if ($label_txt == 'FOR SALE') $label_txt = 'LIST PRICE';
+
+    $status_str = $label_txt . ' <span class="' . $text_color_if_discont . '"> $' . $property_price . '</span>';
 }
 
 $underValueDeals = Yii::$app->params['underValueDeals'] ?? 5;
@@ -81,11 +84,11 @@ if ($discont >= $underValueDeals && method_exists($details, 'getEstimatedEquity'
 
 $status_str2 .= '<span class="views-for-equity"> Page Views <span><i class="fa fa-eye"></i>&nbsp;<span id="jarviswidget-ctrls">' . ($details->views ?? 0) . '</span></span></span>';
 
-// Sparkline placeholders for structure parity
-$sparks_true_marker_value = '<div class="sparkline ' . ($text_color_if_discont ?? '') . ' hidden-mobile hidden-md hidden-sm">1000, 1200, 931, 1071, 930, 1031</div>';
-$sparks_mo_mo_chg = '<div class="sparkline ' . ($text_color_if_discont ?? '') . ' hidden-mobile hidden-md hidden-sm">1000, 1200, 931, 1071, 930, 1031</div>';
-$sparks_true_marker = '<div class="sparkline ' . ($text_color_if_discont ?? '') . ' hidden-mobile hidden-md hidden-sm">1000, 1200, 931, 1071, 930, 1031</div>';
-$sparks_page_views = '<div class="sparkline ' . ($text_color_if_discont ?? '') . ' hidden-mobile hidden-md hidden-sm">1000, 1200, 931, 1071, 930, 1031</div>';
+// Removed sparkline placeholders as requested to match clean design
+$sparks_true_marker_value = '';
+$sparks_mo_mo_chg = '';
+$sparks_true_marker = '';
+$sparks_page_views = '';
 
 // Photo slider
 $slider_arr = [];
@@ -224,27 +227,28 @@ if (!$isGuest) {
                             <script>var current_stage = <?= (int)$comparebles_properties->current_stage ?>;</script>
                         <?php endif; ?>
                         <h5>
-                            <?= $details->property_type == 9 ? 'True Market Rent' : 'True Market Value' ?>
-                            <?php
-                            if (isset($comparebles_properties->estimated_price_dollar)) {
-                                if ($comparebles_properties->estimated_price_dollar != 0) {
-                                    $new_discont = 100 - ($details->property_price * 100 / $comparebles_properties->estimated_price_dollar);
-                                    echo '<span class="">$' . number_format(round($comparebles_properties->estimated_price_dollar)) . '</span>';
+                            <?= $details->property_type == 9 ? 'TRUE MARKET RENT' : 'TRUE MARKET VALUE' ?>
+                            <span class="<?= $text_color_if_discont ?>">
+                                <?php
+                                if (isset($comparebles_properties->estimated_price_dollar)) {
+                                    if ($comparebles_properties->estimated_price_dollar != 0) {
+                                        $new_discont = 100 - ($details->property_price * 100 / $comparebles_properties->estimated_price_dollar);
+                                        echo '$' . number_format(round($comparebles_properties->estimated_price_dollar));
+                                    } else {
+                                        echo '<span title="Not Enough Data">-</span>';
+                                    }
                                 } else {
-                                    echo '<span title="Not Enough Data" class="">-</span>';
+                                    echo '<span title="Not Enough Data">-</span>';
                                 }
-                            } else {
-                                echo '<span title="Not Enough Data" class="">-</span>';
-                            }
-                            ?>
-                            <a id="goToComparables" href="javascript:void(0);">View Comparables</a>
+                                ?>
+                            </span>
+                            <a id="goToComparables" href="javascript:void(0);" style="display:block; font-size:10px; margin-top:4px; font-weight:400; text-decoration:none;">VIEW COMPARABLES</a>
                         </h5>
-                        <?= $sparks_true_marker_value; ?>
                     </li>
 
                     <?php if (isset($comparebles_properties->low_range) && isset($comparebles_properties->high_range)): ?>
                         <li class="sparks-info">
-                            <h5>Value Range
+                            <h5>VALUE RANGE
                                 <span class="<?= $text_color_if_discont ?>">
                                     $<span class="low_value_b">
                                         <?= number_format(round($comparebles_properties->low_range / $round_value), 0, '.', ',') . $postfix_after_rounded ?>
@@ -253,14 +257,13 @@ if (!$isGuest) {
                                     </span>
                                 </span>
                             </h5>
-                            <?= $sparks_mo_mo_chg; ?>
                         </li>
                     <?php endif; ?>
 
                     <?php if (isset($new_discont) && $new_discont >= $underValueDeals): ?>
                         <li class="sparks-info">
                             <h5>
-                                <?= $details->property_type == 9 ? 'Estimated Spread' : 'Estimated Equity' ?>
+                                <?= $details->property_type == 9 ? 'ESTIMATED SPREAD' : 'ESTIMATED EQUITY' ?>
                                 <span class="<?= $text_color_if_discont ?>">
                                     $<?php
                                     if (isset($comparebles_properties->estimated_price_dollar)
@@ -279,8 +282,7 @@ if (!$isGuest) {
                             </h5>
                         </li>
                         <li class="sparks-info">
-                            <h5> Below <?= $details->property_type == 9 ? 'TMR' : 'TMV' ?> <span class="<?= $text_color_if_discont ?>"><?= round($new_discont) ?>%</span></h5>
-                            <?= $sparks_page_views; ?>
+                            <h5> BELOW <?= $details->property_type == 9 ? 'TMR' : 'TMV' ?> <span class="<?= $text_color_if_discont ?>"><?= round($new_discont) ?>%</span></h5>
                         </li>
                     <?php endif; ?>
 
@@ -1802,8 +1804,16 @@ $this->registerJs("
             var est_str = '$' + parseInt(obj.estimated_value_subject_property).toLocaleString();
             $('#tmvalue').html(est_str);
         }
-        if (obj.low_range) { $('#low_value').html('$' + Math.round(obj.low_range / roundValue).toLocaleString() + postfixAfterRounding); }
-        if (obj.high_range) { $('#high_value').html('$' + Math.round(obj.high_range / roundValue).toLocaleString() + postfixAfterRounding); }
+        if (obj.low_range) {
+            var low_str = '$' + Math.round(obj.low_range / roundValue).toLocaleString() + postfixAfterRounding;
+            $('#low_value').html(low_str);
+            $('.low_value_b').html(low_str); // Update header sparkline
+        }
+        if (obj.high_range) {
+            var high_str = '$' + Math.round(obj.high_range / roundValue).toLocaleString() + postfixAfterRounding;
+            $('#high_value').html(high_str);
+            $('.high_value_b').html(high_str); // Update header sparkline
+        }
     }
 
     // Exclude/include button handler

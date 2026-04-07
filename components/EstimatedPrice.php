@@ -287,7 +287,11 @@ class EstimatedPrice
             // In legacy Yii1 the comparable table is populated as long as at least one matching row exists.
             // In Yii2 we were gating on `min_comp`, which can leave `result_queryAllRows` empty and the table blank.
             // So: only require `> 0` matches here.
-            if ((int)$total_count > 0) {
+            // Use min_comp gating (legacy) to ensure stages retry if not enough comps.
+            // Allow proceeding if we've reached the maximum possible stage even with fewer comps.
+            if ((int)$total_count >= (int)$select_estimated_price_result->min_comp
+                || ((int)$total_count > 0 && (int)$curStage >= (int)(Yii::$app->params['maxCalcStages'] ?? 10))
+            ) {
                 $result_queryAllRows = $this->actionComparePropertyInfoAllRows(
                     $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
                     $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type

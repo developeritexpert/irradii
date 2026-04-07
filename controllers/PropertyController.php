@@ -518,6 +518,18 @@ class PropertyController extends Controller
                 $details->fundamentals_factor, $details->conditional_factor,
                 $house_views, $details->sub_type
             );
+
+            // Ensure we have objects for result_query before using them
+            if (is_array($comparebles_properties)) {
+                if (isset($comparebles_properties['result_query']) && is_array($comparebles_properties['result_query'])) {
+                    $comparebles_properties['result_query'] = (object)$comparebles_properties['result_query'];
+                }
+                if (isset($comparebles_properties['result_queryAllRows']) && is_array($comparebles_properties['result_queryAllRows'])) {
+                    $comparebles_properties['result_queryAllRows'] = (object)$comparebles_properties['result_queryAllRows'];
+                }
+                $comparebles_properties = (object)$comparebles_properties;
+            }
+
             $result['status']       = 'success';
             $result['c_properties'] = $this->getCompareblesProperties($comparebles_properties, $details);
             $result['comparebles']  = $comparebles_properties;
@@ -1143,14 +1155,19 @@ class PropertyController extends Controller
     private function getCompareblesProperties($comparebles_properties, $details)
     {
         $result = [];
-        if (!property_exists($comparebles_properties, 'result_query')) {
+        $comparebles_properties = (object)$comparebles_properties;
+
+        if (!isset($comparebles_properties->result_query)) {
             return $result;
         }
 
         $excludedPropertiesIDs = [];
-        if (property_exists($comparebles_properties, 'exclude')) {
+        if (isset($comparebles_properties->exclude)) {
             foreach ($comparebles_properties->exclude as $exclude) {
-                $excludedPropertiesIDs[] = $exclude['product_id'];
+                $pid = is_array($exclude) ? ($exclude['product_id'] ?? null) : ($exclude->product_id ?? null);
+                if ($pid) {
+                    $excludedPropertiesIDs[] = $pid;
+                }
             }
         }
 
