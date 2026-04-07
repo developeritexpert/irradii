@@ -106,6 +106,12 @@ class EstimatedPrice
 
         $distance = (float)($select_estimated_price_result->distance ?? 0);
 
+        // Relax dates in later stages to ensures we find enough properties for a meaningful range
+        $effective_comp_time = $comp_time;
+        if ((int)$curStage >= 8) {
+            $effective_comp_time = date('Y-m-d', time() - 730 * 24 * 60 * 60); // 2 years back
+        }
+
         $compare_property_lat = '';
         if (($property_lat != '0.000000') && ($property_lat != '') && $distance > 0) {
             $compare_property_lat = $this->actionComparePropertyLat($property_lat, $distance);
@@ -175,7 +181,7 @@ class EstimatedPrice
             $percentage_depreciation_value = 0.0;
 
             $total_count = $this->countComparePropertyInfo(
-                $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
+                $session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
                 $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
             );
 
@@ -189,7 +195,7 @@ class EstimatedPrice
                 $total_count = $this->countComparePropertyInfo(
                     $session_id,
                     $gettoday_date,
-                    $comp_time,
+                    $effective_comp_time,
                     $compare_property_type,
                     $compare_property_zipcode,
                     $compare_property_year_build,
@@ -211,7 +217,7 @@ class EstimatedPrice
                     $total_count = $this->countComparePropertyInfo(
                         $session_id,
                         $gettoday_date,
-                        $comp_time,
+                        $effective_comp_time,
                         $compare_property_type,
                         $compare_property_zipcode,
                         $compare_property_year_build,
@@ -235,7 +241,7 @@ class EstimatedPrice
                     $total_count = $this->countComparePropertyInfo(
                         $session_id,
                         $gettoday_date,
-                        $comp_time,
+                        $effective_comp_time,
                         $compare_property_type,
                         $compare_property_zipcode,
                         $compare_property_year_build,
@@ -259,7 +265,7 @@ class EstimatedPrice
                     $total_count = $this->countComparePropertyInfo(
                         $session_id,
                         $gettoday_date,
-                        $comp_time,
+                        $effective_comp_time,
                         $compare_property_type,
                         $compare_property_zipcode,
                         $compare_property_year_build,
@@ -298,7 +304,7 @@ class EstimatedPrice
                 );
 
                 $result_query = $this->actionComparePropertyInfo(
-                    $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
+                    $session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
                     $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
                 );
 
