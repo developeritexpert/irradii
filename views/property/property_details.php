@@ -143,6 +143,19 @@ $isGuest = Yii::$app->user->isGuest;
     #total_comp_prop tr:nth-child(3) a:hover .thumb-img {
         top: 20px; bottom: auto;
     }
+    .h2-fake {
+        height: 100%;
+        width: auto;
+        display: inline-block;
+        float: left;
+        font-size: 14px;
+        position: relative;
+        margin-left: 10px;
+        margin-top: 0px;
+        line-height: 34px;
+        font-weight: 400;
+        letter-spacing: 0;
+    }
 </style>
 
 <?php 
@@ -853,91 +866,144 @@ if (!$isGuest) {
                     <div class="no-padding" role="content">
                         <div class="widget-body">
                             <div class="row no-space">
-                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 show-stats">
-                                    <div class="row">
-                                        <!-- TMV -->
-                                        <div class="col-xs-6 col-sm-3 col-md-3 col-lg-3">
-                                            <span class="text-muted small"><?= $details->property_type == 9 ? 'TRUE MARKET RENT' : 'TRUE MARKET VALUE' ?></span><br>
-                                            <span id="tmv" class="h4"><?php
-                                                if (isset($comparebles_properties->estimated_value_subject_property)) {
-                                                    echo $comparebles_properties->estimated_value_subject_property != 0 ? '<span class="'.$text_color_if_discont.'">$' . number_format(round($comparebles_properties->estimated_value_subject_property)) . '</span>' : '<span title="Not Enough Data" class="'.$text_color_if_discont.'">-</span>';
-                                                } else {
-                                                    echo '<span title="Not Enough Data" class="'.$text_color_if_discont.'">-</span>';
-                                                }
-                                                ?></span>
-                                        </div>
-                                        <!-- Equity -->
-                                        <div class="col-xs-6 col-sm-3 col-md-3 col-lg-3">
-                                            <span class="text-muted small"><?= $details->property_type == 9 ? 'ESTIMATED SPREAD' : 'ESTIMATED EQUITY' ?></span><br>
-                                            <span id="dynamicEstimatedEquity" class="h4 <?php echo $text_color_if_discont ?>"><?php echo (isset($comparebles_properties->estimated_value_subject_property) && $comparebles_properties->estimated_value_subject_property != 0) ? '$'.number_format($comparebles_properties->estimated_value_subject_property - $details->property_price, 0, '.', ',') : '-'; ?></span>
+                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 show-stat-microcharts">
+                                    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                                        <ul id="sparks" class="pull-left">
+                                            <!-- TMV -->
+                                            <li class="sparks-info">
+                                                <h5><?= $details->property_type == 9 ? 'TRUE MARKET RENT' : 'TRUE MARKET VALUE' ?>
+                                                    <span id="tmv"><?php
+                                                        if (isset($comparebles_properties->estimated_value_subject_property)) {
+                                                            echo $comparebles_properties->estimated_value_subject_property != 0 ? '<span class="'.$text_color_if_discont.'">$' . number_format(round($comparebles_properties->estimated_value_subject_property)) . '</span>' : '<span title="Not Enough Data" class="'.$text_color_if_discont.'">-</span>';
+                                                        } else {
+                                                            echo '<span title="Not Enough Data" class="'.$text_color_if_discont.'">-</span>';
+                                                        }
+                                                        ?></span>
+                                                </h5>
+                                            </li>
+                                            <!-- Equity -->
+                                            <li class="sparks-info">
+                                                <h5><?= $details->property_type == 9 ? 'ESTIMATED SPREAD' : 'ESTIMATED EQUITY' ?>
+                                                    <span id="dynamicEstimatedEquity" class="<?php echo $text_color_if_discont ?>"><?php echo (isset($comparebles_properties->estimated_value_subject_property) && $comparebles_properties->estimated_value_subject_property != 0) ? '$'.number_format($comparebles_properties->estimated_value_subject_property - $details->property_price, 0, '.', ',') : '-'; ?></span>
+                                                </h5>
+                                            </li>
+                                        </ul>
+                                        <!-- Percentage indicator -->
+                                        <ul class="smaller-stat pull-right">
+                                            <li>
+                                                <span class="label bg-color-green" title="Asking Price"><?= $details->property_price ? '$'.round($details->property_price / $round_value).$postfix_after_rounded : '' ?></span>
+                                            </li>
                                             <?php if (isset($comparebles_properties->estimated_price_dollar) && $comparebles_properties->estimated_price_dollar > 0) :?>
                                                 <?php $percentage = (($details->property_price - $comparebles_properties->estimated_price_dollar) / $comparebles_properties->estimated_price_dollar) * 100 ;?>
-                                                <span class="label bg-color-green display-inline-block" style="vertical-align: top; margin-left: 5px;" title="Asking Price <?= round($percentage) ?>% Below TMV"><i class="fa fa-caret-down"></i><?= round($percentage) ?>%</span>
+                                                <li>
+                                                    <span class="label bg-color-green" title="Asking Price <?= round($percentage) ?>% Below TMV"><i class="fa fa-caret-down"></i><?= round($percentage) ?>%</span>
+                                                </li>
                                             <?php endif; ?>
-                                        </div>
+                                        </ul>
+                                    </div>
+
+                                    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
                                         <!-- Value Range -->
-                                        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
-                                            <span class="text-muted small">VALUE RANGE</span><br>
-                                            <span class="h4 <?= $text_color_if_discont ?>">$<span class="low_value_b">
-                                            <?php if (isset($comparebles_properties->low_range)) { echo number_format(round($comparebles_properties->low_range / $round_value ),0,'.',',') . $postfix_after_rounded; } ?></span>-$<span class="high_value_b">
-                                            <?php if (isset($comparebles_properties->high_range)) { echo number_format(round($comparebles_properties->high_range / $round_value),0,'.',',') . $postfix_after_rounded; } ?></span></span>
+                                        <ul id="sparks" class="pull-left">
+                                            <li class="sparks-info">
+                                                <h5>VALUE RANGE
+                                                    <span class="<?= $text_color_if_discont ?>">$<span class="low_value_b">
+                                                    <?php if (isset($comparebles_properties->low_range)) { echo number_format(round($comparebles_properties->low_range / $round_value ),0,'.',',') . $postfix_after_rounded; } ?></span>-$<span class="high_value_b">
+                                                    <?php if (isset($comparebles_properties->high_range)) { echo number_format(round($comparebles_properties->high_range / $round_value),0,'.',',') . $postfix_after_rounded; } ?></span></span>
+                                                </h5>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="clearfix"></div>
+
+                                    <!-- Confidence Gauge -->
+                                    <div class="overflow-visible col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                                        <div class="col-xs-8 col-sm-7 col-md-7 col-lg-8">
+                                            <div id="confidence_chart" class="easy-pie-chart txt-color-green" data-pie-percent="90" data-percent="90" data-pie-size="50" data-size="50">
+                                                <span id="confidence_chart_text" class="percent percent-sign">90</span>
+                                            </div>
+                                            <span class="easy-pie-title"> CONFIDENCE </span>
+                                        </div>
+                                        <div class="margin-top-10 col-xs-4 col-sm-5 col-md-5 col-lg-4">
+                                            <div id="confidence_slider">
+                                                <input type="text" class="slider slider-primary" id="g1" value=""
+                                                       data-slider-max="98"
+                                                       data-slider-min="50"
+                                                       data-slider-value="90"
+                                                       data-slider-selection="before"
+                                                       data-slider-handle="round">
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="row no-space margin-top-10">
-                                        <!-- Confidence Gauge -->
-                                        <div class="overflow-visible col-xs-12 col-sm-6 col-md-6 col-lg-6">
-                                            <div class="col-xs-8 col-sm-7 col-md-7 col-lg-8">
-                                                <div id="confidence_chart" class="easy-pie-chart txt-color-green" data-pie-percent="90" data-percent="90" data-pie-size="50" data-size="50">
-                                                    <span id="confidence_chart_text" class="percent percent-sign">90</span>
-                                                </div>
-                                                <span class="easy-pie-title"> CONFIDENCE </span>
-                                            </div>
-                                            <div class="margin-top-10 col-xs-4 col-sm-5 col-md-5 col-lg-4">
-                                                <div id="confidence_slider">
-                                                    <input type="text" class="slider slider-primary" id="g1" value=""
-                                                           data-slider-max="98"
-                                                           data-slider-min="50"
-                                                           data-slider-value="90"
-                                                           data-slider-selection="before"
-                                                           data-slider-handle="round">
-                                                </div>
-                                            </div>
+                                    <!-- Days on Market Gauge -->
+                                    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                                        <?php
+                                        $dtz = new DateTimeZone(Yii::$app->timeZone ?? "UTC");
+                                        $datetime_now = new DateTime('now', $dtz);
+                                        $propertyDate = !empty($details->propertyInfoAdditionalBrokerageDetails->entry_date)
+                                            ? $details->propertyInfoAdditionalBrokerageDetails->entry_date : $details->property_uploaded_date;
+                                        if ($propertyDate) {
+                                            $datetime_exp = new DateTime($propertyDate, $dtz);
+                                            $interval = $datetime_now->diff($datetime_exp);
+                                            $quantity = $interval->days;
+                                            $quantity_percent = $quantity;
+                                            if($quantity_percent > 100) $quantity_percent = 100;
+                                        } else {
+                                            $quantity = 0;
+                                            $quantity_percent = 0;
+                                        }
+
+                                        // Gauge color logic from legacy
+                                        $chart_class = 'txt-color-green';
+                                        if ($quantity >= 31 && $quantity <= 90) {
+                                            $chart_class = 'txt-color-orange';
+                                        } elseif ($quantity >= 91) {
+                                            $chart_class = 'txt-color-red';
+                                        }
+                                        ?>
+                                        <div id="days_on_market_chart" class="easy-pie-chart <?= $chart_class ?>" data-pie-percent="<?= $quantity_percent ?>" data-percent="<?= $quantity_percent ?>" data-pie-size="50" data-size="50">
+                                            <span class="percent percent-sign"><?= $quantity ?></span>
                                         </div>
+                                        <span class="easy-pie-title"> DAYSONMARKET </span>
 
-                                        <!-- Days on Market Gauge -->
-                                        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                                        <?php if (property_exists($comparebles_properties, 'result_query')) : ?>
                                             <?php
-                                            $dtz = new DateTimeZone(Yii::$app->timeZone ?? "UTC");
-                                            $datetime_now = new DateTime('now', $dtz);
-                                            $propertyDate = !empty($details->propertyInfoAdditionalBrokerageDetails->entry_date)
-                                                ? $details->propertyInfoAdditionalBrokerageDetails->entry_date : $details->property_uploaded_date;
-                                            if ($propertyDate) {
-                                                $datetime_exp = new DateTime($propertyDate, $dtz);
-                                                $interval = $datetime_now->diff($datetime_exp);
-                                                $quantity = $interval->days;
-                                                $quantity_percent = $quantity;
-                                                if($quantity_percent > 100) $quantity_percent = 100;
-                                            } else {
-                                                $quantity = 0;
-                                                $quantity_percent = 0;
+                                            $min_uploaded_date = '';
+                                            $max_uploaded_date = '';
+                                            if (is_object($comparebles_properties->result_query)) {
+                                                $min_uploaded_date = $comparebles_properties->result_query->min_uploaded_date ?? '';
+                                                $max_uploaded_date = $comparebles_properties->result_query->max_uploaded_date ?? '';
+                                            } elseif (is_array($comparebles_properties->result_query)) {
+                                                $min_uploaded_date = $comparebles_properties->result_query['min_uploaded_date'] ?? '';
+                                                $max_uploaded_date = $comparebles_properties->result_query['max_uploaded_date'] ?? '';
                                             }
-
-                                            // Gauge color logic from legacy
-                                            $chart_class = 'txt-color-green';
-                                            if ($quantity >= 31 && $quantity <= 90) {
-                                                $chart_class = 'txt-color-orange';
-                                            } elseif ($quantity >= 91) {
-                                                $chart_class = 'txt-color-red';
+                                            
+                                            $quantity_min = '';
+                                            $quantity_max = '';
+                                            if ($min_uploaded_date) {
+                                                $datetime_exp_min = new DateTime($min_uploaded_date, $dtz);
+                                                $interval_min = $datetime_now->diff($datetime_exp_min);
+                                                $quantity_min = $interval_min->days;
+                                            }
+                                            if ($max_uploaded_date) {
+                                                $datetime_exp_max = new DateTime($max_uploaded_date, $dtz);
+                                                $interval_max = $datetime_now->diff($datetime_exp_max);
+                                                $quantity_max = $interval_max->days;
                                             }
                                             ?>
-                                            <div id="days_on_market_chart" class="easy-pie-chart <?= $chart_class ?>" data-pie-percent="<?= $quantity_percent ?>" data-percent="<?= $quantity_percent ?>" data-pie-size="50" data-size="50">
-                                                <span class="percent percent-sign"><?= $quantity ?></span>
-                                            </div>
-                                            <span class="easy-pie-title"> DAYSONMARKET </span>
-                                        </div>
+                                            <ul class="smaller-stat hidden-sm pull-right">
+                                                <li>
+                                                    <span class="label bg-color-red"><i class="fa fa-caret-up"></i> <?= $quantity_min ?></span>
+                                                </li>
+                                                <li>
+                                                    <span class="label bg-color-green"><i class="fa fa-caret-down"></i> <?= $quantity_max ?></span>
+                                                </li>
+                                            </ul>
+                                        <?php endif; ?>
                                     </div>
-                                </div>
+
                             </div>
                         </div>
                     </div>
