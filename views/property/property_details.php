@@ -1554,18 +1554,28 @@ $this->registerJs("
         $.ajax({ url: '/property/updateexcludedstatuses', data: data, type: 'POST', dataType: 'json', cache: false, success: function(){ getNewComparaplesProperties(); } });
     });
 
-    // Stage slider
-    $('#stage-slider input.slider').on('slideStop', function(slideEvt) {
-        var sliderValue = slideEvt.value;
+    // Stage slider — do not initialize manually as SmartAdmin auto-initializes it.
+    // Use delegated binding to handle events.
+    $(document).on('slideStop', '#stage-slider input.slider', function(slideEvt) {
+        var sliderValue = (slideEvt.value !== undefined) ? slideEvt.value : $(this).val();
         if (sliderValue <= 0) { sliderValue = 1; }
         setStageSliderValue(sliderValue);
-        $.ajax({ url: '/property/updateminstage', data: { property_id: details_property_id, min_stage: sliderValue }, type: 'POST', dataType: 'json', cache: false, success: function(){ getNewComparaplesProperties(); } });
+        $.ajax({ 
+            url: '/property/updateminstage', 
+            data: { property_id: details_property_id, min_stage: sliderValue }, 
+            type: 'POST', 
+            dataType: 'json', 
+            cache: false, 
+            success: function(){ getNewComparaplesProperties(); } 
+        });
     });
 
     function setStageSliderValue(value) {
-        var slider = $('#stage-slider input.slider');
-        slider.attr('data-slider-value', value);
-        slider.slider('setValue', value);
+        var \$slider = $('#stage-slider input.slider');
+        \$slider.attr('data-slider-value', value);
+        if (typeof \$slider.slider === 'function') {
+            \$slider.slider('setValue', value);
+        }
         $('#stage-slider .tooltip-inner').text(value);
     }
 
