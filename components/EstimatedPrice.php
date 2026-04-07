@@ -100,7 +100,7 @@ class EstimatedPrice
         }
 
         $compare_property_zipcode = '';
-        if ($property_zipcode != '') {
+        if ($property_zipcode != '' && (int)$curStage < 5) {
             $compare_property_zipcode = "AND property_info.property_zipcode = {$property_zipcode}";
         }
 
@@ -304,8 +304,34 @@ class EstimatedPrice
 
                 $result_t_score = $this->actionTtable2Tail($total_count);
                 $t_score = self::getTail($result_t_score);
+                
+                // Fallback for single-comp case: if t_score is 0 or result is null (e.g. df=0),
+                // use a baseline score (e.g., from df=1) to ensure we can still show a range spread.
+                if ($t_score == 0) {
+                    $fallback_score = $this->actionTtable2Tail(2); // Use df=1 as baseline
+                    $t_score = self::getTail($fallback_score);
+                }
+
                 $low_sd = $t_score;
                 $high_sd = $t_score;
+
+                // If stddev is 0 (single comp), provide a minimal baseline stddev (5% of average) 
+                // to allow the t-score spread to create a legible price range.
+                if ($result_query->square_footage_stddev == 0 && $result_query->house_footage_average > 0) {
+                    $result_query->square_footage_stddev = $result_query->house_footage_average * 0.05;
+                }
+                if ($result_query->lot_footage_stddev == 0 && $result_query->lot_footage_average > 0) {
+                    $result_query->lot_footage_stddev = $result_query->lot_footage_average * 0.05;
+                }
+                // Apply similar baseline to amenities stddevs if they are 0
+                $factors = ['bathrooms_amenity', 'bedrooms_amenity', 'garages_amenity', 'pool_amenity'];
+                foreach ($factors as $f) {
+                    $std_key = $f . '_stddev';
+                    $avg_key = $f . '_average';
+                    if (isset($result_query->$std_key) && $result_query->$std_key == 0 && ($result_query->$avg_key ?? 0) > 0) {
+                        $result_query->$std_key = $result_query->$avg_key * 0.05;
+                    }
+                }
 
                 $result['low_sd'] = $low_sd;
                 $result['high_sd'] = $high_sd;
