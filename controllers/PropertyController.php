@@ -1223,8 +1223,8 @@ class PropertyController extends Controller
             $toolBtn = '';
         } else {
             $excludeClass = $isExcluded ? 'fa-reply' : 'fa-times';
-            $toolBtn = '<button class="btn btn-xs btn-danger exclude_reinclude ' . $excludeClass . '" data-property_id="' . $comparebles_property->property_id . '" onmouseover="showPopover(this)" onmouseout="hidePopover(this)"></button>'
-                . ' <a href="javascript:void(0);" onclick="return showinmap(this);" property_id="' . $comparebles_property->property_id . '" class="btn btn-xs btn-success show-in-map" title="Show on map" onmouseover="showPopover(this)" onmouseout="hidePopover(this)"><i class="fa fa-map-marker"></i></a>';
+            $toolBtn = '<button class="btn btn-danger btn-xs exclude_reinclude fa ' . $excludeClass . '" data-property_id="' . $comparebles_property->property_id . '" onmouseover="showPopover(this)" onmouseout="hidePopover(this)"></button>'
+                . ' <a href="javascript:void(0);" onclick="return showinmap(this);" property_id="' . $comparebles_property->property_id . '" class="btn btn-success btn-xs show-in-map fa fa-map-marker" title="Show on map" onmouseover="showPopover(this)" onmouseleave="hidePopover(this)"></a>';
         }
 
         // Disabled/row-disable class if excluded
