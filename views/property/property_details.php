@@ -90,15 +90,8 @@ $sparks_mo_mo_chg = '';
 $sparks_true_marker = '';
 $sparks_page_views = '';
 
-// Photo slider
-$slider_arr = [];
-$photoArr   = $this->context->getPhotoArr($details);
-foreach ($photoArr as $i => $propertyInfoPhoto) {
-    if (empty($propertyInfoPhoto->photo1)) continue;
-    $photocaption = $propertyInfoPhoto->caption ? "<p>{$propertyInfoPhoto->caption}</p>" : '';
-    $active_cls = ($i == 0) ? ' active' : '';
-    $slider_arr[] = '<div class="item' . $active_cls . '">' . CPathCDN::checkPhoto($propertyInfoPhoto, 'img-responsive', 0) . $photocaption . '</div>';
-}
+// Photo slider array will be built inline in the view to avoid duplication
+$photoArr = $this->context->getPhotoArr($details);
 
 // Session tracking for recent pages
 $session    = Yii::$app->session;
@@ -323,7 +316,7 @@ if (!$isGuest) {
                                 <?php echo $status_str2; ?>
                             </h3>
 
-                            <?php if (count($slider_arr) > 0): ?>
+                            <?php if (count($photoArr) > 0): ?>
                                 <div class="widget-toolbar hidden-mobile">
                                     <span class="onoffswitch-title">Slideshow</span>
                                     <span class="onoffswitch">
@@ -342,26 +335,33 @@ if (!$isGuest) {
 
                             <!-- photo slide fade widget content -->
                             <div class="col-sm-9 col-md-9 col-lg-9" id="parentCarouselBlock">
-                                <?php if (!empty($details->photo1) || count($slider_arr) > 0): ?>
+                                <?php if (!empty($details->photo1) || count($photoArr) > 0): ?>
 <?php
     $final_slides = [];
     $main_photo_url = $details->photo1;
-    $main_caption = !empty($details->caption1) ? "<p>{$details->caption1}</p>" : "";
+    if (strpos($main_photo_url, 'irradii') !== false) {
+        $main_photo_url = str_replace('irradii', 'ippraisall', $main_photo_url);
+    }
     
-    // Always start with the primary photo
+    // 1. Primary Photo
     if (!empty($main_photo_url)) {
-        $final_slides[] = '<div class="item active">' . CPathCDN::checkPhoto($details, 'img-responsive', 0) . $main_caption . '</div>';
+        $final_slides[] = '<div class="item active">' . CPathCDN::checkPhoto($details, 'img-responsive', 0) . (!empty($details->caption1) ? "<p>{$details->caption1}</p>" : "") . '</div>';
     }
 
-    // Add others from photoArr
+    // 2. Secondary Photos
     if (!empty($photoArr)) {
         foreach ($photoArr as $photoObj) {
             $url = $photoObj->photo1 ?? '';
+            if (strpos($url, 'irradii') !== false) { $url = str_replace('irradii', 'ippraisall', $url); }
+            
+            // Skip the primary photo to avoid duplication
             if (!empty($url) && $url != $main_photo_url) {
-                $caption = !empty($photoObj->caption) ? "<p>{$photoObj->caption}</p>" : '';
-                $final_slides[] = '<div class="item">' . CPathCDN::checkPhoto($photoObj, 'img-responsive', 0) . $caption . '</div>';
-                // Limit to prevent overflow if database has duplicates
-                if (count($final_slides) >= 41) break; 
+                 // Check if photo exists before adding to final slides
+                 $photo_html = CPathCDN::checkPhoto($photoObj, 'img-responsive', 1);
+                 if (strpos($photo_html, 'image_absent.jpg') === false) {
+                     $caption = !empty($photoObj->caption) ? "<p>{$photoObj->caption}</p>" : "";
+                     $final_slides[] = '<div class="item">' . $photo_html . $caption . '</div>';
+                 }
             }
         }
     }
@@ -369,9 +369,9 @@ if (!$isGuest) {
                                         <div id="myCarousel" class="carousel fade">
                                             <?php if (count($final_slides) > 0): ?>
                                                 <ol class="carousel-indicators">
-                                                    <?php foreach ($final_slides as $i => $s): ?>
+                                                    <?php for($i = 0; $i < count($final_slides); $i++): ?>
                                                         <li data-target="#myCarousel" data-slide-to="<?= $i ?>" class="<?= $i == 0 ? 'active' : '' ?>"></li>
-                                                    <?php endforeach; ?>
+                                                    <?php endfor; ?>
                                                 </ol>
                                                 <div class="carousel-inner">
                                                     <?php foreach ($final_slides as $slide_html) { echo $slide_html; } ?>

@@ -1531,6 +1531,26 @@ class PropertyController extends Controller
             }
         }
 
+        // 3. Dynamic CDN Fallback (Strategy: If no secondary photos found, speculate URLs based on mls_sysid)
+        if (count($photoArr) <= 1 && !empty($modelArr->mls_sysid) && $modelArr->mls_sysid != 0) {
+            $mls = $modelArr->mls_sysid;
+            $baseUrl = "http://img1.ippraisall.com/photo/{$mls}/image-{$mls}-";
+            
+            // Generate secondary images (X=1..24, X=0 is already in photo1)
+            for ($i = 1; $i <= 25; $i++) {
+                $speculatedUrl = "{$baseUrl}{$i}.jpg";
+                if (!in_array($speculatedUrl, $urls)) {
+                    $photoArr[] = (object)[
+                        'property_id' => $modelArr->property_id,
+                        'caption'     => '',
+                        'photo1'      => $speculatedUrl,
+                        'fullAddress' => $fullAddress,
+                    ];
+                    $urls[] = $speculatedUrl;
+                }
+            }
+        }
+
         return $photoArr;
     }
 
