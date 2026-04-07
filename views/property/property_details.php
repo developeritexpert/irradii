@@ -1047,14 +1047,17 @@ if (!$isGuest) {
                                         <form action="#" class="status_filter">
                                             <select multiple class="select2" name="status_type">
                                                 <?php
+                                                // Only 4 status groups matching legacy — For Sale, Under Contract, Sold, History
                                                 $all_status_types = [
-                                                    'For Sale' => 'For Sale', 'Pending' => 'Pending', 'Sold' => 'Sold',
-                                                    'In Escrow' => 'In Escrow', 'Active' => 'Active', 'Cancelled' => 'Cancelled',
-                                                    'For Rent' => 'For Rent', 'Leased' => 'Leased', 'Archive' => 'Archive'
+                                                    'For Sale'       => 'For Sale',
+                                                    'Under Contract' => 'Under Contract',
+                                                    'Sold'           => 'Sold',
+                                                    'History'        => 'History',
                                                 ];
                                                 $session_data = Yii::$app->session;
                                                 $excluded_statuses = [];
-                                                $excluded_statuses_for_prop = ['Archive'];
+                                                // Default: History is excluded (unchecked), all others are shown
+                                                $excluded_statuses_for_prop = ['History'];
 
                                                 if ($session_data->has('excluded_statuses')) {
                                                     $excluded_statuses = $session_data->get('excluded_statuses');
@@ -1064,11 +1067,13 @@ if (!$isGuest) {
                                                 }
 
                                                 foreach ($all_status_types as $key => $name) {
+                                                    // For rental properties (type=9): skip "For Sale" / "Sold", show "For Rent"/"Leased"
+                                                    // For non-rental: skip "For Rent" / "Leased"
                                                     if ($details->property_type == 9 && ($key == 'For Sale' || $key == 'Sold')) continue;
                                                     if ($details->property_type != 9 && ($key == 'For Rent' || $key == 'Leased')) continue;
 
                                                     $selected = in_array($key, $excluded_statuses_for_prop) ? '' : 'selected';
-                                                    echo '<option value="' . Html::encode($key) . '" ' . $selected . '>' . Html::encode($key) . '</option>';
+                                                    echo '<option value="' . Html::encode($key) . '" ' . $selected . '>' . Html::encode($name) . '</option>';
                                                 }
                                                 ?>
                                             </select>
@@ -1411,7 +1416,19 @@ $estimated_value_subject_property = is_object($comparebles_properties) && proper
 // Register the main property details script
 $cleanTitle = str_replace(["\r","\n"], '', $details->property_street);
 $this->registerJs("
+    // Set CSRF token for all jQuery AJAX POST requests (required by Yii2)
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (settings.type === 'POST') {
+                xhr.setRequestHeader('X-CSRF-Token', yii.getCsrfToken());
+            }
+        }
+    });
+");
+
+$this->registerJs("
     c_properties = " . json_encode($c_properties) . ";
+
     details_property = " . json_encode($details) . ";
     details_latitude = " . (float)$details->getlatitude . ";
     details_longitude = " . (float)$details->getlongitude . ";

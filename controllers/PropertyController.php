@@ -56,6 +56,21 @@ class PropertyController extends Controller
         'Leased' => [
             'RECENTLY SOLD', 'SOLD', 'LEASED', 'CLOSED'
         ],
+        'Pending' => [
+            'PENDING OFFER', 'CONTINGENT OFFER', 'Under Contract - No Show', 'Under Contract - Show'
+        ],
+        'In Escrow' => [
+            'IN ESCROW'
+        ],
+        'Active' => [
+            'ACTIVE'
+        ],
+        'Cancelled' => [
+            'CANCELLED'
+        ],
+        'Archive' => [
+            'HISTORY', 'TEMPOFF','INCOMPLETE','NOT FOR SALE', 'TEMPORARILY OFF THE MARKET', 'EXPIRED', 'WITHDRAWN', 'WITHDRAWN UNCONDITIONAL', 'WITHDRAWN CONDITIONAL'
+        ],
         'History' => [
             'HISTORY', 'TEMPOFF','INCOMPLETE','NOT FOR SALE', 'TEMPORARILY OFF THE MARKET', 'EXPIRED', 'WITHDRAWN', 'WITHDRAWN UNCONDITIONAL', 'WITHDRAWN CONDITIONAL'
         ]
@@ -1051,11 +1066,25 @@ class PropertyController extends Controller
      */
     private function getExcludedStatusesStr($property_id)
     {
-        $excluded_statuses = Yii::$app->session->get('excluded_statuses', []);
-        if (isset($excluded_statuses[$property_id]) && is_array($excluded_statuses[$property_id])) {
-            return implode(',', $excluded_statuses[$property_id]);
+        $session_excluded = Yii::$app->session->get('excluded_statuses', []);
+        $excluded_labels = $session_excluded[$property_id] ?? ['Archive']; // Default to Archive if not in session
+
+        $resolved_statuses = ["'DEFAULT'"]; // Start with a dummy value to avoid empty IN clause issues
+
+        if (is_array($excluded_labels)) {
+            foreach ($excluded_labels as $label) {
+                if (isset($this->status_types[$label])) {
+                    foreach ($this->status_types[$label] as $status) {
+                        $resolved_statuses[] = "'" . addslashes((string)$status) . "'";
+                    }
+                } else {
+                    // If it's a direct status and not a group
+                    $resolved_statuses[] = "'" . addslashes((string)$label) . "'";
+                }
+            }
         }
-        return '';
+
+        return implode(',', array_unique($resolved_statuses));
     }
 
 
@@ -1384,6 +1413,8 @@ class PropertyController extends Controller
         $house_views_list_full = \app\models\MarketTrendTable::houseViewsList();
         $house_views_list      = $this->getHouseViewsArr($house_views_list_full, $house_views);
 
+        $excluded_statuses_str = $this->getExcludedStatusesStr($property_id);
+
         $estimatedPrice = new \app\components\EstimatedPrice();
         $estimatedPrice->calculateEstimatedPriceStage(
             $curStage,
@@ -1393,7 +1424,8 @@ class PropertyController extends Controller
             $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
             $percentage_depreciation_value, $estimated_price, $bedrooms,
             $subdivision, $fundamentals_factor, $conditional_factor,
-            $house_views_list, $sub_type
+            $house_views_list, $sub_type,
+            $excluded_statuses_str
         );
 
         $result['estimated_value_subject_property_stage'] = $result['estimated_value_subject_property'] ?? 0;

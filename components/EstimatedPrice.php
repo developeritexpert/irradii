@@ -46,7 +46,8 @@ class EstimatedPrice
             $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
             $percentage_depreciation_value, $estimated_price, $bedrooms,
             $subdivision, $fundamentals_factor, $conditional_factor,
-            $house_views_list, $sub_type
+            $house_views_list, $sub_type,
+            "'HISTORY','TEMPOFF','INCOMPLETE','NOT FOR SALE','TEMPORARILY OFF THE MARKET','EXPIRED','WITHDRAWN','WITHDRAWN UNCONDITIONAL','WITHDRAWN CONDITIONAL'"
         );
 
         $result['estimated_value_subject_property_stage'] = $result['estimated_value_subject_property'] ?? 0;
@@ -77,7 +78,8 @@ class EstimatedPrice
         $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
         $percentage_depreciation_value, $estimated_price, $bedrooms,
         $subdivision, $fundamentals_factor, $conditional_factor,
-        $house_views_list, $sub_type
+        $house_views_list, $sub_type,
+        $excluded_statuses_sql = "'HISTORY','TEMPOFF','INCOMPLETE','NOT FOR SALE','TEMPORARILY OFF THE MARKET','EXPIRED','WITHDRAWN','WITHDRAWN UNCONDITIONAL','WITHDRAWN CONDITIONAL'"
     ) {
         $compare_property_type = "AND property_info.property_type = {$property_type}";
         $select_estimated_price_result = $this->actionCompareEstimatedPriceTable($curStage, $property_type);
@@ -180,10 +182,7 @@ class EstimatedPrice
             $high_range = 0;
             $percentage_depreciation_value = 0.0;
 
-            $total_count = $this->countComparePropertyInfo(
-                $session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
-                $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
-            );
+            $total_count = $this->countComparePropertyInfo($session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id, $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type, $excluded_statuses_sql);
 
             // Fallback retries: if the full constraint set yields zero comparable rows,
             // progressively relax the most specific filters so we can still render comparables.
@@ -192,94 +191,26 @@ class EstimatedPrice
                 $compare_subdivision = '';
                 $compare_house_views = '';
                 $compare_sub_type = '';
-                $total_count = $this->countComparePropertyInfo(
-                    $session_id,
-                    $gettoday_date,
-                    $effective_comp_time,
-                    $compare_property_type,
-                    $compare_property_zipcode,
-                    $compare_property_year_build,
-                    $compare_lot_sq_footage,
-                    $compare_house_sq_footage,
-                    $compare_property_lon,
-                    $compare_property_lat,
-                    $property_id,
-                    $compare_bedrooms,
-                    $compare_bathrooms,
-                    $compare_subdivision,
-                    $compare_house_views,
-                    $compare_sub_type
-                );
+                $total_count = $this->countComparePropertyInfo($session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id, $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type, $excluded_statuses_sql);
 
                 // Retry 2: if still zero, remove lot acreage constraint.
                 if ((int)$total_count === 0) {
                     $compare_lot_sq_footage = '';
-                    $total_count = $this->countComparePropertyInfo(
-                        $session_id,
-                        $gettoday_date,
-                        $effective_comp_time,
-                        $compare_property_type,
-                        $compare_property_zipcode,
-                        $compare_property_year_build,
-                        $compare_lot_sq_footage,
-                        $compare_house_sq_footage,
-                        $compare_property_lon,
-                        $compare_property_lat,
-                        $property_id,
-                        $compare_bedrooms,
-                        $compare_bathrooms,
-                        $compare_subdivision,
-                        $compare_house_views,
-                        $compare_sub_type
-                    );
+                    $total_count = $this->countComparePropertyInfo($session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id, $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type, $excluded_statuses_sql);
                 }
 
                 // Retry 3: if still zero, remove bed/bath constraints.
                 if ((int)$total_count === 0) {
                     $compare_bedrooms = '';
                     $compare_bathrooms = '';
-                    $total_count = $this->countComparePropertyInfo(
-                        $session_id,
-                        $gettoday_date,
-                        $effective_comp_time,
-                        $compare_property_type,
-                        $compare_property_zipcode,
-                        $compare_property_year_build,
-                        $compare_lot_sq_footage,
-                        $compare_house_sq_footage,
-                        $compare_property_lon,
-                        $compare_property_lat,
-                        $property_id,
-                        $compare_bedrooms,
-                        $compare_bathrooms,
-                        $compare_subdivision,
-                        $compare_house_views,
-                        $compare_sub_type
-                    );
+                    $total_count = $this->countComparePropertyInfo($session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id, $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type, $excluded_statuses_sql);
                 }
 
                 // Retry 4: if still zero, remove lat/lon radius constraints.
                 if ((int)$total_count === 0) {
                     $compare_property_lat = '';
                     $compare_property_lon = '';
-                    $total_count = $this->countComparePropertyInfo(
-                        $session_id,
-                        $gettoday_date,
-                        $effective_comp_time,
-                        $compare_property_type,
-                        $compare_property_zipcode,
-                        $compare_property_year_build,
-                        $compare_lot_sq_footage,
-                        $compare_house_sq_footage,
-                        $compare_property_lon,
-                        $compare_property_lat,
-                        $property_id,
-                        $compare_bedrooms,
-                        $compare_bathrooms,
-                        $compare_subdivision,
-                        $compare_house_views,
-                        $compare_sub_type
-                    );
+                    $total_count = $this->countComparePropertyInfo($session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id, $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type, $excluded_statuses_sql);
                 }
             }
 
@@ -299,13 +230,15 @@ class EstimatedPrice
                 || ((int)$total_count > 0 && (int)$curStage >= (int)(Yii::$app->params['maxCalcStages'] ?? 10))
             ) {
                 $result_queryAllRows = $this->actionComparePropertyInfoAllRows(
-                    $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
-                    $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
+                    $session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
+                    $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type,
+                    $excluded_statuses_sql
                 );
 
                 $result_query = $this->actionComparePropertyInfo(
                     $session_id, $gettoday_date, $effective_comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
-                    $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
+                    $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type,
+                    $excluded_statuses_sql
                 );
 
                 $result_t_score = $this->actionTtable2Tail($total_count);
@@ -494,7 +427,8 @@ class EstimatedPrice
                         $lot_sq_footage, $house_sq_footage, $bathrooms, $garages, $pool,
                         $percentage_depreciation_value, $estimated_price, $bedrooms,
                         $subdivision, $fundamentals_factor, $conditional_factor,
-                        $house_views_list, $sub_type
+                        $house_views_list, $sub_type,
+                        $excluded_statuses_sql
                     );
                     return;
                 } else {
@@ -588,7 +522,8 @@ class EstimatedPrice
 
     private function actionComparePropertyInfo(
         $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
-        $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
+        $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type,
+        $excluded_statuses_sql
     ) {
         $sql = "SELECT 
                     count(`property_info`.`property_id`) AS count_property,
@@ -634,17 +569,7 @@ class EstimatedPrice
                     LEFT JOIN ( `property_info_details`, `property_info_additional_brokerage_details` )  
                     ON ( `property_info_details`.`property_id` = `property_info`.`property_id` AND `property_info_additional_brokerage_details`.`property_id`=`property_info`.`property_id` )
                     WHERE UPPER(`property_info`.`property_status`)='ACTIVE' 
-                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN (
-                              'HISTORY',
-                              'TEMPOFF',
-                              'INCOMPLETE',
-                              'NOT FOR SALE',
-                              'TEMPORARILY OFF THE MARKET',
-                              'EXPIRED',
-                              'WITHDRAWN',
-                              'WITHDRAWN UNCONDITIONAL',
-                              'WITHDRAWN CONDITIONAL'
-                          )
+                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN ({$excluded_statuses_sql})
                           AND `property_info`.`property_price` > 0 
                           AND `property_info`.`property_expire_date` >=DATE('" . $gettoday_date . "') 
                           AND `property_info`.`property_updated_date` >=DATE('" . $comp_time . "') 
@@ -666,7 +591,8 @@ class EstimatedPrice
 
     private function countComparePropertyInfo(
         $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
-        $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
+        $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type,
+        $excluded_statuses_sql
     ) {
         $sql = "SELECT 
                     count(`property_info`.`property_id`) AS count_property
@@ -674,17 +600,7 @@ class EstimatedPrice
                     LEFT JOIN ( `property_info_details`, `property_info_additional_brokerage_details` )  
                     ON ( `property_info_details`.`property_id` = `property_info`.`property_id` AND `property_info_additional_brokerage_details`.`property_id`=`property_info`.`property_id` )
                     WHERE UPPER(`property_info`.`property_status`)='ACTIVE' 
-                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN (
-                              'HISTORY',
-                              'TEMPOFF',
-                              'INCOMPLETE',
-                              'NOT FOR SALE',
-                              'TEMPORARILY OFF THE MARKET',
-                              'EXPIRED',
-                              'WITHDRAWN',
-                              'WITHDRAWN UNCONDITIONAL',
-                              'WITHDRAWN CONDITIONAL'
-                          )
+                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN ({$excluded_statuses_sql})
                           AND `property_info`.`property_price` > 0 
                           AND `property_info`.`property_expire_date` >=DATE('" . $gettoday_date . "') 
                           AND `property_info`.`property_updated_date` >=DATE('" . $comp_time . "') 
@@ -717,24 +633,15 @@ class EstimatedPrice
 
     private function actionComparePropertyInfoAllRows(
         $session_id, $gettoday_date, $comp_time, $compare_property_type, $compare_property_zipcode, $compare_property_year_build, $compare_lot_sq_footage, $compare_house_sq_footage, $compare_property_lon, $compare_property_lat, $property_id,
-        $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type
+        $compare_bedrooms, $compare_bathrooms, $compare_subdivision, $compare_house_views, $compare_sub_type,
+        $excluded_statuses_sql
     ) {
         $sql = "SELECT *
                     FROM `property_info` 
                     LEFT JOIN ( `property_info_details`, `property_info_additional_brokerage_details` )  
                     ON ( `property_info_details`.`property_id` = `property_info`.`property_id` AND `property_info_additional_brokerage_details`.`property_id`=`property_info`.`property_id` )
                     WHERE UPPER(`property_info`.`property_status`)='ACTIVE' 
-                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN (
-                              'HISTORY',
-                              'TEMPOFF',
-                              'INCOMPLETE',
-                              'NOT FOR SALE',
-                              'TEMPORARILY OFF THE MARKET',
-                              'EXPIRED',
-                              'WITHDRAWN',
-                              'WITHDRAWN UNCONDITIONAL',
-                              'WITHDRAWN CONDITIONAL'
-                          )
+                          AND UPPER(`property_info_additional_brokerage_details`.`status`) NOT IN ({$excluded_statuses_sql})
                           AND `property_info`.`property_price` > 0 
                           AND `property_info`.`property_expire_date` >='" . $gettoday_date . "' 
                           AND `property_info`.`property_updated_date` >='" . $comp_time . "' 
