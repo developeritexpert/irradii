@@ -1233,7 +1233,6 @@ window.mapBoundaries = [];
                     minZoom: 2
                 };
                 window.map2 = new google.maps.Map(document.getElementById('map_canvas2'), mapOptions2);
-                mapReady = true;
 
                for (var key in window.mapBoundaries) {
                     if (window.mapBoundaries.hasOwnProperty(key)) {
@@ -1263,6 +1262,7 @@ window.mapBoundaries = [];
 
                 var markersLoadedOnStartup = false;
                 google.maps.event.addListener(map, 'idle', function(){
+                    mapReady = true;
                     if(!markersLoadedOnStartup){
                         if((dataSearchResultSmallQuery.status == 'nothing') ||
                            (dataSearchResultSmallQuery.status == 'success') ){
@@ -1273,20 +1273,8 @@ window.mapBoundaries = [];
                        markersLoadedOnStartup = true;
                     }
                 });
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        var pos = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                        map.setCenter(pos);
-                        map2.setCenter(pos);
-                    }, function() {
-                        handleNoGeolocation(map);
-                        handleNoGeolocation(map2);
-                    });
-                } else {
-                    // Browser doesn't support Geolocation
-                    handleNoGeolocation(map);
-                    handleNoGeolocation(map2);
-                }
+                handleNoGeolocation(map);
+                handleNoGeolocation(map2);
                 drawingManager = new google.maps.drawing.DrawingManager();
                 drawingManager2 = new google.maps.drawing.DrawingManager();
                 search_fld = new google.maps.places.Autocomplete(document.getElementById('search-fld'),{ types: ['geocode'] });
