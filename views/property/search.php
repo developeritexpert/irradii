@@ -880,10 +880,6 @@ $property_type_array = array(
 
 </div>
 <!-- END MAIN PANEL -->
-
-
-</div>
-<!-- END MAIN PANEL -->
 <div id="demo"></div>
 <div class="detail-pop-up">
     <button class="close" type="button">×</button>
@@ -1401,6 +1397,7 @@ window.mapBoundaries = [];
                 window.hideDetailPopup();
                 window.showDetailPopup(marker);
                 window.updatePopupPosition(marker);
+                $(window).trigger('resize');
             };
 
             
@@ -1491,7 +1488,7 @@ window.mapBoundaries = [];
             });
 
             
-            function showDetailPopup(marker) {
+            window.showDetailPopup = function(marker) {
             
                 if($('#search_map_block').is(':visible')){
                     var rows$ = $('#search_map_block').find('tbody tr');
@@ -1644,7 +1641,8 @@ window.mapBoundaries = [];
                             .end();
                          }    
         
-                        updatePopupPosition(marker_on_popup);
+                        window.updatePopupPosition(marker_on_popup);
+                        $(window).trigger('resize');
                     },
                     error: function(data){
 //                            console.log('error: ',data);
@@ -1652,7 +1650,7 @@ window.mapBoundaries = [];
                 });
             }
             
-            function updatePopupPosition(marker) {
+            window.updatePopupPosition = function(marker) {
                 var map = $('#search_map_block').is(':visible') ? map2 : map;
                 
                 var minTop = 0,
@@ -1673,6 +1671,7 @@ window.mapBoundaries = [];
                     top: top,
                     left: left
                 });
+                $(window).trigger('resize');
             }
      
      
