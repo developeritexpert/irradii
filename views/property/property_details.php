@@ -941,19 +941,15 @@ if (!$isGuest) {
                                     <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
                                         <?php
                                         $dtz = new DateTimeZone(Yii::$app->timeZone ?? "UTC");
-                                        $datetime_now = new DateTime('now', $dtz);
+                                        $datetime_now = new DateTime();
+                                        $datetime_now->setTimezone($dtz);
                                         $propertyDate = !empty($details->propertyInfoAdditionalBrokerageDetails->entry_date)
                                             ? $details->propertyInfoAdditionalBrokerageDetails->entry_date : $details->property_uploaded_date;
-                                        if ($propertyDate) {
-                                            $datetime_exp = new DateTime($propertyDate, $dtz);
-                                            $interval = $datetime_now->diff($datetime_exp);
-                                            $quantity = $interval->days;
-                                            $quantity_percent = $quantity;
-                                            if($quantity_percent > 100) $quantity_percent = 100;
-                                        } else {
-                                            $quantity = 0;
-                                            $quantity_percent = 0;
-                                        }
+                                        
+                                        $datetime_exp = new DateTime($propertyDate, $dtz);
+                                        $interval = $datetime_now->diff($datetime_exp);
+                                        $quantity = $interval->days;
+                                        if ($quantity < 0) { $quantity = 0; }
 
                                         // Gauge color logic from legacy
                                         $chart_class = 'txt-color-green';
@@ -963,22 +959,16 @@ if (!$isGuest) {
                                             $chart_class = 'txt-color-red';
                                         }
                                         ?>
-                                        <div id="days_on_market_chart" class="easy-pie-chart <?= $chart_class ?>" data-pie-percent="<?= $quantity_percent ?>" data-percent="<?= $quantity_percent ?>" data-pie-size="50" data-size="50">
-                                            <span class="percent percent-sign"><?= $quantity ?></span>
+                                        <div id="daysonmarket_chart" class="easy-pie-chart <?= $chart_class ?>" data-percent="<?= $quantity ?>" data-pie-size="50">
+                                            <span id="daysonmarket_chart_text" class=""><?= $quantity ?> <i class="fa fa-caret-up"></i></span>
                                         </div>
-                                        <span class="easy-pie-title"> DAYSONMARKET </span>
+                                        <span class="easy-pie-title"> Days on Market </span>
 
                                         <?php if (property_exists($comparebles_properties, 'result_query')) : ?>
                                             <?php
-                                            $min_uploaded_date = '';
-                                            $max_uploaded_date = '';
-                                            if (is_object($comparebles_properties->result_query)) {
-                                                $min_uploaded_date = $comparebles_properties->result_query->min_uploaded_date ?? '';
-                                                $max_uploaded_date = $comparebles_properties->result_query->max_uploaded_date ?? '';
-                                            } elseif (is_array($comparebles_properties->result_query)) {
-                                                $min_uploaded_date = $comparebles_properties->result_query['min_uploaded_date'] ?? '';
-                                                $max_uploaded_date = $comparebles_properties->result_query['max_uploaded_date'] ?? '';
-                                            }
+                                            $res_q = $comparebles_properties->result_query;
+                                            $min_uploaded_date = is_object($res_q) ? ($res_q->min_uploaded_date ?? '') : ($res_q['min_uploaded_date'] ?? '');
+                                            $max_uploaded_date = is_object($res_q) ? ($res_q->max_uploaded_date ?? '') : ($res_q['max_uploaded_date'] ?? '');
                                             
                                             $quantity_min = '';
                                             $quantity_max = '';
