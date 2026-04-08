@@ -1645,7 +1645,7 @@ class PropertyController extends Controller
             $query = PropertyInfo::find()->with([
                 'city', 'state', 'zipcode', 'slug', 'propertyInfoPhoto',
                 'propertyInfoAdditionalBrokerageDetails', 'propertyInfoDetails'
-            ]);
+            ])->orderBy(['property_info.property_updated_date' => SORT_ASC]);
 
             // Filter by Sale Type
             if (!empty($params['sale_type'])) {
