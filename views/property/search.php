@@ -859,6 +859,7 @@ $property_type_array = array(
                                             <option value="12">% Below Value</option>
                                             <option value="13">Estimated Equity</option>
                                             <option value="14">Full Address</option>
+                                            <option value="9">List Date</option>
                                             <option value="15">Last Updated Date</option>
                                             <option value="16">Viewer Status</option>
                                         </select>
@@ -1818,7 +1819,7 @@ window.mapBoundaries = [];
                         }
                      },
                      'aoColumns': [
-                            { 'bVisible': false, 'sType': 'natural' }, // 0: Hidden
+                            { 'bVisible': false, 'sType': 'natural' }, // 0: Weight
                             { 'sType': 'num-html' },                   // 1: Value (Photo)
                             { 'sType': 'natural' },                    // 2: Address
                             { 'sType': 'natural' },                    // 3: Status
@@ -1826,9 +1827,17 @@ window.mapBoundaries = [];
                             { 'sType': 'num-html' },                   // 5: Sq. Ft.
                             { 'sType': 'natural' },                    // 6: Beds/Baths
                             { 'sType': 'natural' },                    // 7: Public Remarks
-                            { 'sType': 'natural' }                     // 8: List Date
+                            { 'sType': 'natural' },                    // 8: List Date
+                            { 'bVisible': false },                     // 9: Raw List Date
+                            { 'bVisible': false },                     // 10: Raw List Price
+                            { 'bVisible': false },                     // 11: Raw TMV
+                            { 'bVisible': false },                     // 12: Raw % Below Value
+                            { 'bVisible': false },                     // 13: Raw Estimated Equity
+                            { 'bVisible': false },                     // 14: Raw Full Address
+                            { 'bVisible': false },                     // 15: Raw Last Updated Date
+                            { 'bVisible': false }                      // 16: Raw Viewer Status
                      ],
-                     'aaSorting': [[ 8, 'desc' ]],
+                     'aaSorting': [[ 3, 'desc' ]],
 
                     'fnInitComplete' : function(oSettings, json) {
                             $(this).closest('#dt_table_tools_wrapper').find('.DTTT.btn-group').addClass('table_tools_group').children('a.btn').each(function() {
