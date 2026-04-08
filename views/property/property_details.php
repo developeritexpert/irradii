@@ -1838,6 +1838,8 @@ $this->registerJs("
                 setTimeout(function(){ $(window).trigger('resize'); }, 300);
             });
         }
+        $('#content')[0].style.setProperty('margin-bottom', '-50px', 'important');
+
         return false;
     };
 

@@ -1550,6 +1550,16 @@ window.mapBoundaries = [];
                         setTimeout(function(){ $(window).trigger('resize'); }, 300);
                     });
                 }
+                // remove margin-top first
+                $('#content')[0].style.removeProperty('margin-top');
+
+                // then apply margin-bottom
+                $('#content')[0].style.setProperty('margin-bottom', '-100px', 'important');
+
+                // then optionally add margin-top after delay
+                setTimeout(() => {
+                    $('#content')[0].style.setProperty('margin-top', '-1rem', 'important');
+                }, 1000);
                 return false;
             };
 
