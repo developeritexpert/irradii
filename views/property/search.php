@@ -101,6 +101,13 @@ $this->registerCss(<<<CSS
     .input-icon-left .form-control {
         padding-left: 29px !important;
     }
+
+    /* Prevent layout shifting during dynamic interactions */
+    #header, #ribbon {
+        transition: none !important;
+        -webkit-transition: none !important;
+        transform: none !important;
+    }
 CSS
 );
 $property_type_array = array(
@@ -1511,32 +1518,48 @@ window.mapBoundaries = [];
                 $('.detail-pop-up').css('display', 'none');
             };
 
-            window.showinmap = function(el){
+            window.showinmap = function(el) {
                 var id = $(el).attr('property_id');
-                var targetMap = ( $('#search_map_block').is(':visible') ) ? window.map2 : window.map;
-                var mapContainer = ( $('#search_map_block').is(':visible') ) ? $('#map_canvas2') : $('#map_canvas');
+                var targetMap = ($('#search_map_block').is(':visible')) ? window.map2 : window.map;
+                var mapContainer = ($('#search_map_block').is(':visible')) ? $('#map_canvas2') : $('#map_canvas');
                 
-                $.each(window.markers, function() {
-                   if (this.property == id) {
-                      this.setAnimation(google.maps.Animation.BOUNCE);
-                      targetMap.setCenter(this.getPosition());
-                      if(targetMap.getZoom() < 12) {
-                          targetMap.setZoom(15);
-                      }
-                   } else {
-                      this.setAnimation(null);
-                   }
-                });
-                
-                var scroll = 0;
-                if(mapContainer.length) {
-                    scroll = mapContainer.offset().top - 100;
+                if (typeof window.markers !== 'undefined') {
+                    $.each(window.markers, function() {
+                        if (this.property == id) {
+                            this.setAnimation(google.maps.Animation.BOUNCE);
+                            targetMap.setCenter(this.getPosition());
+                            if (targetMap.getZoom() < 12) {
+                                targetMap.setZoom(15);
+                            }
+                        } else {
+                            this.setAnimation(null);
+                        }
+                    });
                 }
-                $('html, body').animate(
-                    {scrollTop: scroll},
-                    1000,
-                    'easeOutQuart'
-                );
+                
+                if (mapContainer.length) {
+                    var scrollTarget = mapContainer.offset().top - 20;
+                    if (scrollTarget < 0) scrollTarget = 0;
+                    
+                    $('html, body').stop(true).animate({ 
+                        scrollTop: scrollTarget 
+                    }, 800, 'easeOutExpo', function() {
+                        // Triple reflow trigger to ensure theme catches up
+                        $(window).trigger('resize');
+                        setTimeout(function(){ $(window).trigger('resize'); }, 100);
+                        setTimeout(function(){ $(window).trigger('resize'); }, 300);
+                    });
+                }
+                // remove margin-top first
+                $('#content')[0].style.removeProperty('margin-top');
+
+                // then apply margin-bottom
+                $('#content')[0].style.setProperty('margin-bottom', '-100px', 'important');
+
+                // then optionally add margin-top after delay
+                setTimeout(() => {
+                    $('#content')[0].style.setProperty('margin-top', '-1rem', 'important');
+                }, 1000);
                 return false;
             };
 
