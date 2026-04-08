@@ -156,6 +156,13 @@ $isGuest = Yii::$app->user->isGuest;
         font-weight: 400;
         letter-spacing: 0;
     }
+
+    /* Prevent layout shifting during dynamic interactions */
+    #header, #ribbon {
+        transition: none !important;
+        -webkit-transition: none !important;
+        transform: none !important;
+    }
 </style>
 
 <?php 
@@ -1346,7 +1353,12 @@ if (!$isGuest) {
 
 
 
-<a href="#" class="close"></a><h4 class="alert-heading">Warning!</h4><p>The property lies outside the drawn area.</p><p>Please remove or expand the area</p></div>
+<div class="alert alert-block alert-warning alert-outside-area" style="display:none;">
+    <a href="#" class="close" data-dismiss="alert">×</a>
+    <h4 class="alert-heading">Warning!</h4>
+    <p>The property lies outside the drawn area.</p>
+    <p>Please remove or expand the area</p>
+</div>
 
 <!-- Detail Popup for Map markers -->
 <div class="comparables-properties-response"></div>
@@ -1774,15 +1786,58 @@ $this->registerJs("
 
     window.showinmap = function(el) {
         var id = $(el).attr('property_id');
-        $.each(markers, function() {
-            if (this.property_id == id) {
-                this.setAnimation(google.maps.Animation.BOUNCE);
-            } else {
-                this.setAnimation(null);
+        
+        // If there's a shape on map, verify the property is inside it
+        if (selectedShape) {
+            var targetMarker = null;
+            if (typeof markers !== 'undefined') {
+                $.each(markers, function() { if (this.property_id == id) targetMarker = this; });
             }
-        });
-        var scroll = $('#wid-id-2map').offset().top;
-        $('html, body').animate({ scrollTop: scroll - 100 }, 1000);
+            if (targetMarker) {
+                var pos = targetMarker.getPosition();
+                var isInside = false;
+                if (selectedShape.constructor === google.maps.Polygon) {
+                    isInside = google.maps.geometry.poly.containsLocation(pos, selectedShape);
+                } else {
+                    isInside = selectedShape.getBounds().contains(pos);
+                }
+                
+                if (!isInside) {
+                    showMessage('The property lies outside the drawn area. <br>Please remove or expand the area.');
+                    // Don't scroll if it's hidden by a shape
+                    return false;
+                }
+            }
+        }
+
+        if (typeof markers !== 'undefined') {
+            $.each(markers, function() {
+                if (this.property_id == id) {
+                    this.setAnimation(google.maps.Animation.BOUNCE);
+                    if (typeof map !== 'undefined') {
+                        map.setCenter(this.getPosition());
+                        if (map.getZoom() < 14) map.setZoom(15);
+                    }
+                } else {
+                    this.setAnimation(null);
+                }
+            });
+        }
+        
+        var mapWidget = $('#wid-id-2map');
+        if(mapWidget.length){
+            var scrollTarget = mapWidget.offset().top - 20; 
+            if (scrollTarget < 0) scrollTarget = 0;
+            
+            $('html, body').stop(true).animate({ 
+                scrollTop: scrollTarget 
+            }, 800, 'easeOutExpo', function() {
+                // Triple reflow trigger to ensure theme catches up
+                $(window).trigger('resize');
+                setTimeout(function(){ $(window).trigger('resize'); }, 100);
+                setTimeout(function(){ $(window).trigger('resize'); }, 300);
+            });
+        }
         return false;
     };
 
@@ -1795,6 +1850,12 @@ $this->registerJs("
     window.hidePopover = function(item) {
         $(item).popover('destroy');
     };
+
+    function showMessage(text) {
+        var alert = $('.alert-outside-area').clone(true);
+        alert.find('p').first().html(text);
+        alert.appendTo($('body')).fadeIn(300).delay(5000).fadeOut(400, function(){ $(this).remove(); });
+    }
 
     // Show Comps toggle
     $('#wid-id-2map .onoffswitch-label').click(function(){
