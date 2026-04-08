@@ -1635,6 +1635,9 @@ class PropertyController extends Controller
         
         // Initial defaults for search page
         $search_results = [];
+        $count = 0;
+        $latlon = [0, 0];
+        $formattedResults = [];
         $params = $request->isPost ? $request->post() : $request->get();
         
         // If we have search parameters, perform the search
@@ -1833,8 +1836,18 @@ class PropertyController extends Controller
             }
         }
 
+        $searchResultSmallQuery = json_encode([
+            'status' => ($count > 0) ? 'success' : 'nothing',
+            'count_result' => $count,
+            'latlon' => $latlon,
+            'result' => $formattedResults,
+            'res_map_layout' => $formattedResults,
+        ]);
+
         return $this->render('search', [
-            'search_results' => $search_results,
+            'search_results' => $formattedResults,
+            'searchResultSmallQuery' => $searchResultSmallQuery,
+            'count' => $count,
             'general_search_fields' => $params,
             'top_search' => $params,
             'profile' => SiteHelper::getUserProfile(),

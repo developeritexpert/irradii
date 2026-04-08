@@ -680,7 +680,7 @@ $property_type_array = array(
                         -->
                         <header>
                             <span class="widget-icon"> <i class="fa fa-table"></i> </span>
-                            <h2><span class="count_search_result"></span> Search Results</h2>
+                            <h2><span class="count_search_result"><?= (isset($count) ? $count : 0) ?></span> Search Results</h2>
 
                         </header>
 
@@ -835,7 +835,7 @@ $property_type_array = array(
                         -->
                         <header>
                             <span class="widget-icon"> <i class="fa fa-table"></i> </span>
-                            <h2><span class="count_search_result"></span> Search Results</h2>
+                            <h2><span class="count_search_result"><?= (isset($count) ? $count : 0) ?></span> Search Results</h2>
 
                         </header>
 
@@ -1324,6 +1324,7 @@ window.mapBoundaries = [];
                     if (sessionStorage.sorting_param) {
                         $('.sort-type').val(sessionStorage.sorting_param).trigger('change');
                     }
+                    setFiltersString();
                 }
             }
 
@@ -1943,6 +1944,7 @@ window.mapBoundaries = [];
                          map2.setCenter(pos);
                          $('.count_search_result').empty().html(data.count_result);
                          search_results = data.result;
+                         console.log(search_results);
                          search_map_results = data.res_map_layout;
                     } else { /*console.log(data);*/ }
                     if( $('#search_list_block').css('display') === 'block' ){
@@ -1960,79 +1962,42 @@ window.mapBoundaries = [];
             }
 
 
-            function setFiltersString(){
-                var filters = '';
-                var filter_str = '';
-                var min_price = '';
-                var max_price = '';
-                var min_sqft = '';
-                var max_sqft ='';
-                var min_year_built = '';
-                var max_year_built = '';
-                var min_lot_size = '';
-                var max_lot_size = '';
-                var filter_str_pref = '';
-                filters = $('#main_search_form').serializeArray();
-                $.each(filters, function(i, filter){
-                    filter_str_pref = '';
-                    filter_str_pref = filter_str.length > 0 ? ' / ' : '';
-                    if ( (filter.name == 'address') && (filter.value.length != 0) ){
-                        filter_str += filter_str_pref + filter.value;
-                    }
-                     if ( (filter.name == 'sale_type') && (filter.value.length != 0) && (filter.value != 0) ){
-                        filter_str += filter_str_pref + filter.value;
-                    }
-                    if ( (filter.name == 'min_price') && (filter.value.length != 0) && (filter.value != 0) ){
-                        min_price = '$' + filter.value;
-                    }
-                     if ( (filter.name == 'max_price') && (filter.value.length != 0) && (filter.value != 0) ){
-                        max_price = '$' + filter.value;
-                    }
-                     if ( (filter.name == 'min_sqft') && (filter.value.length != 0) && (filter.value != 0) ){
-                        min_sqft = filter.value;
-                    }
-                     if ( (filter.name == 'max_sqft') && (filter.value.length != 0) && (filter.value != 0) ){
-                        max_sqft = filter.value;
-                    }
-                     if ( (filter.name == 'bed') && (filter.value.length != 0) && (filter.value != 0) ){
-                        filter_str += filter_str_pref + filter.value + '+ Bed';
-                    }
-                     if ( (filter.name == 'bath') && (filter.value.length != 0) && (filter.value != 0) ){
-                        filter_str += filter_str_pref + filter.value + '+ Bath' ;
-                    }
-                    if ( (filter.name == 'min_year_built') && (filter.value.length != 0) && (filter.value != 0) ){
-                        var min_year_built_arr = '';
-                        min_year_built_arr = filter.value.split(' ');
-                        min_year_built = min_year_built_arr[1];
-                    }
-                    if ( (filter.name == 'max_year_built') && (filter.value.length != 0) && (filter.value != 0) ){
-                        var max_year_built_arr = '';
-                        max_year_built_arr = filter.value.split(' ')
-                        max_year_built = max_year_built_arr[1];
-                    }
-                    if ( (filter.name == 'min_lot_size') && (filter.value.length != 0) && (filter.value != 0) ){
-                        var min_lot_size_arr = '';
-                        min_lot_size_arr = filter.value.split(' ');
-                        min_lot_size = min_lot_size_arr[0];
-                    }
-                    if ( (filter.name == 'max_lot_size') && (filter.value.length != 0) && (filter.value != 0) ){
-                        var max_lot_size_arr = '';
-                        max_lot_size_arr = filter.value.split(' ');
-                        max_lot_size = max_lot_size_arr[0];
-                    }
-                });
-                if(min_price.length > 0 || max_price.length > 0){
-                    filter_str += filter_str_pref + min_price + ' - ' + max_price;
+            function setFiltersString() {
+                var parts = [];
+                
+                // Address
+                var address = $('.address').val();
+                if (address && address.length > 0) {
+                    parts.push(address);
                 }
-                if(min_sqft.length > 0 || max_sqft.length > 0){
-                    filter_str += filter_str_pref + ' SqFt ' + min_sqft + ' - ' + max_sqft;
+                
+                // Sale Type
+                var sale_type = $('.sale_type').val();
+                if (sale_type && sale_type != '0') {
+                    parts.push(sale_type);
                 }
-                if(min_year_built.length > 0 || max_year_built.length > 0){
-                    filter_str += filter_str_pref + ' Year ' + min_year_built + ' - ' + max_year_built;
+                
+                // Price Range
+                var min_price = $('.min_price').val();
+                var max_price = $('.max_price').val();
+                if (min_price || max_price) {
+                    parts.push((min_price ? '$' + min_price : '') + ' - ' + (max_price ? '$' + max_price : ''));
                 }
-                if(min_lot_size.length > 0 || max_lot_size.length > 0){
-                    filter_str += filter_str_pref +  min_lot_size + ' - ' + max_lot_size + ' Acre';
+                
+                // Bed/Bath
+                var bed = $('.bed').val();
+                var bath = $('.bath').val();
+                if (bed && bed > 0) parts.push(bed + '+ Bed');
+                if (bath && bath > 0) parts.push(bath + '+ Bath');
+                
+                // SqFt
+                var min_sqft = $('.min_sqft').val();
+                var max_sqft = $('.max_sqft').val();
+                if (min_sqft || max_sqft) {
+                    parts.push('SqFt ' + (min_sqft || '') + ' - ' + (max_sqft || ''));
                 }
+
+                var filter_str = parts.join(' / ');
                 $('#filter-search-page').empty().html(filter_str);
             }
 
