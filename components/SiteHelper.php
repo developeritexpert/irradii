@@ -440,7 +440,7 @@ class SiteHelper
             $buttons .= '</div>';
 
             $result[] = [
-                $col0,             // 0: Hidden sort key
+                $col0,             // 0: Weight
                 $col_photo,        // 1: Value (Photo)
                 $col_address,      // 2: Address
                 $col_status,       // 3: Status
@@ -448,7 +448,15 @@ class SiteHelper
                 $col_sqft,         // 5: Sq. Ft.
                 $col_beds_baths,   // 6: Beds/Baths
                 $col_remarks,      // 7: Public Remarks
-                '<div style="min-width:70px;">' . $updatedDate . $dom . $buttons . '</div>' // 8: List Date + Buttons
+                '<div style="min-width:70px;">' . $updatedDate . $dom . $buttons . '</div>', // 8: List Date + Buttons
+                $updatedDateRaw,   // 9: Raw List Date
+                $search_result->property_price, // 10: Raw List Price
+                $search_result->estimated_price, // 11: Raw TMV
+                $discont,          // 12: Raw % Below Value
+                $search_result->getEstimatedEquity($search_result->estimated_price, $search_result->property_price), // 13: Raw Estimated Equity
+                $search_result->property_street, // 14: Raw Full Address
+                $search_result->property_updated_date, // 15: Raw Last Updated Date
+                $user_status       // 16: Raw Viewer Status
             ];
         }
         return $result;

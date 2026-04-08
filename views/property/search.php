@@ -304,10 +304,10 @@ $property_type_array = array(
                                             ?>
 
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input value="<?php echo (isset($general_search_fields['min_price_sqft']))? $general_search_fields['min_price_sqft'] :''; ?>" class="form-control" id="appendprepend_3" type="text" placeholder="Min Price / Sq Ft" name="min_price_sqft">
+                                                <input value="<?php echo (isset($general_search_fields['min_price_sqft']))? $general_search_fields['min_price_sqft'] :''; ?>" class="form-control min_price_sqft" id="appendprepend_3" type="text" placeholder="Min Price / Sq Ft" name="min_price_sqft">
                                             </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input value="<?php echo (isset($general_search_fields['max_price_sqft']))? $general_search_fields['max_price_sqft'] :''; ?>" class="form-control" id="appendprepend_4" type="text" placeholder="Max Price / Sq Ft" name="max_price_sqft">
+                                                <input value="<?php echo (isset($general_search_fields['max_price_sqft']))? $general_search_fields['max_price_sqft'] :''; ?>" class="form-control max_price_sqft" id="appendprepend_4" type="text" placeholder="Max Price / Sq Ft" name="max_price_sqft">
                                             </div>
 
                                             <div class="col-xs-12 col-sm-6 col-md-2">
@@ -315,7 +315,7 @@ $property_type_array = array(
                                                     <div class="col-sm-12">
                                                         <div class="input-group">
                                                             <span class="input-group-addon">$</span>
-                                                            <input value="<?php echo (isset($general_search_fields['min_price']))? $general_search_fields['min_price'] :''; ?>" class="form-control" id="appendprepend" type="text" placeholder="Min Price" name="min_price">
+                                                            <input value="<?php echo (isset($general_search_fields['min_price']))? $general_search_fields['min_price'] :''; ?>" class="form-control min_price" id="appendprepend" type="text" placeholder="Min Price" name="min_price">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -326,7 +326,7 @@ $property_type_array = array(
                                                     <div class="col-sm-12">
                                                         <div class="input-group">
                                                             <span class="input-group-addon">$</span>
-                                                            <input value="<?php echo (isset($general_search_fields['max_price']))? $general_search_fields['max_price'] :''; ?>" class="form-control" id="appendprepend_2" type="text" placeholder="Max Price" name="max_price">
+                                                            <input value="<?php echo (isset($general_search_fields['max_price']))? $general_search_fields['max_price'] :''; ?>" class="form-control max_price" id="appendprepend_2" type="text" placeholder="Max Price" name="max_price">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -337,7 +337,7 @@ $property_type_array = array(
                                         <div class="form-group">
                                             <div class="col-xs-12 col-sm-6 col-md-4">
                                                 <!--                                                <div class="row">-->
-                                                <select class="form-control" id="sale_type_select" name="sale_type">
+                                                <select class="form-control sale_type" id="sale_type_select" name="sale_type">
                                                     <option <?php echo (isset($general_search_fields['sale_type']) && strtolower($general_search_fields['sale_type'])=='all sale types')? 'selected ' :''; ?> value="ALL Sale Types">ALL Sale Types</option>
                                                     <option <?php echo (isset($general_search_fields['sale_type']) && strtolower($general_search_fields['sale_type'])=='for sale')? 'selected' :''; ?> value="For Sale">For Sale</option>
                                                     <option <?php echo (isset($general_search_fields['sale_type']) && strtolower($general_search_fields['sale_type'])=='under value')? 'selected' :''; echo ($membrCheck !== true)? ' non_paid="true" class="non_paid"' : ''; ?> value="Under Value">Under Value 5% - 14% Off<?php echo ($membrCheck !== true)? ' - Full Access Members Only' : ''; ?></option>
@@ -358,14 +358,14 @@ $property_type_array = array(
                                             </div>
 
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input value="<?php echo (isset($general_search_fields['min_sqft']))? $general_search_fields['min_sqft'] :''; ?>" class="form-control" id="appendprepend_3" type="text" placeholder="Min Sq Ft" name="min_sqft">
+                                                <input value="<?php echo (isset($general_search_fields['min_sqft']))? $general_search_fields['min_sqft'] :''; ?>" class="form-control min_sqft" id="appendprepend_3" type="text" placeholder="Min Sq Ft" name="min_sqft">
                                             </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input value="<?php echo (isset($general_search_fields['max_sqft']))? $general_search_fields['max_sqft'] :''; ?>" class="form-control" id="appendprepend_4" type="text" placeholder="Max Sq Ft" name="max_sqft">
+                                                <input value="<?php echo (isset($general_search_fields['max_sqft']))? $general_search_fields['max_sqft'] :''; ?>" class="form-control max_sqft" id="appendprepend_4" type="text" placeholder="Max Sq Ft" name="max_sqft">
                                             </div>
 
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <select class="form-control" id="bed_select" name="bed">
+                                                <select class="form-control bed" id="bed_select" name="bed">
                                                     <option <?php echo (!isset($general_search_fields['bed']) || $general_search_fields['bed']=='0')? 'selected' :''; ?> value="0">ANY Bedrooms</option>
                                                     <option <?php echo (isset($general_search_fields['bed']) && $general_search_fields['bed']=='2')? 'selected' :''; ?> value="2">2+ Beds</option>
                                                     <option <?php echo (isset($general_search_fields['bed']) && $general_search_fields['bed']=='3')? 'selected' :''; ?> value="3">3+ Beds</option>
@@ -378,7 +378,7 @@ $property_type_array = array(
                                             </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
 
-                                                <select class="form-control" id="bath_select" name="bath">
+                                                <select class="form-control bath" id="bath_select" name="bath">
                                                     <option <?php echo (!isset($general_search_fields['bath']) || $general_search_fields['bath']=='0')? 'selected' :''; ?> value="0">ANY Bathrooms</option>
                                                     <option <?php echo (isset($general_search_fields['bath']) && $general_search_fields['bath']=='2')? 'selected' :''; ?> value="2">2+ Baths</option>
                                                     <option <?php echo (isset($general_search_fields['bath']) && $general_search_fields['bath']=='3')? 'selected' :''; ?> value="3">3+ Baths</option>
@@ -393,7 +393,7 @@ $property_type_array = array(
 
                                         <div class="form-group">
                                             <div class="col-xs-12 col-sm-12 col-md-4">
-                                                <select multiple style="width:100%" class="select2" placeholder="Any Property Type" name="property_type[]">
+                                                <select multiple style="width:100%" class="select2 property_type" placeholder="Any Property Type" name="property_type[]">
                                                     <optgroup label="Single Family Homes">
                                                         <option <?php echo (isset($general_search_fields['property_type']) && in_array('AK', $general_search_fields['property_type']))? 'selected':'' ?> value="AK">Attached SFH</option>
                                                         <option <?php echo (isset($general_search_fields['property_type']) && in_array('HI', $general_search_fields['property_type']))? 'selected':'' ?> value="HI">Detached SFH</option>
@@ -424,22 +424,22 @@ $property_type_array = array(
 
                                             </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input value="<?php echo (isset($general_search_fields['min_year_built']))? $general_search_fields['min_year_built'] :''; ?>" class="form-control" id="appendprepend_5" type="text" placeholder="Min Year Built" data-mask="Yr 9999" name="min_year_built">
+                                                <input value="<?php echo (isset($general_search_fields['min_year_built']))? $general_search_fields['min_year_built'] :''; ?>" class="form-control min_year_built" id="appendprepend_5" type="text" placeholder="Min Year Built" data-mask="Yr 9999" name="min_year_built">
                                             </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input value="<?php echo (isset($general_search_fields['max_year_built']))? $general_search_fields['max_year_built'] :''; ?>" class="form-control" id="appendprepend_6" type="text" placeholder="Max Year Built" data-mask="Yr 9999" name="max_year_built">
+                                                <input value="<?php echo (isset($general_search_fields['max_year_built']))? $general_search_fields['max_year_built'] :''; ?>" class="form-control max_year_built" id="appendprepend_6" type="text" placeholder="Max Year Built" data-mask="Yr 9999" name="max_year_built">
                                             </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input class="form-control" id="appendprepend_7" type="text" placeholder="Min Lot Size" data-mask="9.99 Acre" value="<?php echo (isset($general_search_fields['min_lot_size']))? $general_search_fields['min_lot_size'] :''; ?>" name="min_lot_size">
+                                                <input class="form-control min_lot_size" id="appendprepend_7" type="text" placeholder="Min Lot Size" data-mask="9.99 Acre" value="<?php echo (isset($general_search_fields['min_lot_size']))? $general_search_fields['min_lot_size'] :''; ?>" name="min_lot_size">
                                             </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <input class="form-control" id="appendprepend_8" type="text" placeholder="Max Lot Size" data-mask="9.99 Acre" value="<?php echo (isset($general_search_fields['max_lot_size']))? $general_search_fields['max_lot_size'] :''; ?>" name="max_lot_size">
+                                                <input class="form-control max_lot_size" id="appendprepend_8" type="text" placeholder="Max Lot Size" data-mask="9.99 Acre" value="<?php echo (isset($general_search_fields['max_lot_size']))? $general_search_fields['max_lot_size'] :''; ?>" name="max_lot_size">
                                             </div>
                                         </div>
 
                                         <div class="form-group">
                                             <div class="col-xs-12 col-sm-12 col-md-4" id="keywords_block">
-                                                <input class="form-control tagsinput" value="<?php if(isset($general_search_fields['keywords']) && $general_search_fields['keywords']!='') {echo $general_search_fields['keywords'];} ?> " placeholder="Keywords... foreclosure, view, etc" data-role="tagsinput"  name="keywords" >
+                                                <input class="form-control tagsinput keywords" value="<?php if(isset($general_search_fields['keywords']) && $general_search_fields['keywords']!='') {echo $general_search_fields['keywords'];} ?> " placeholder="Keywords... foreclosure, view, etc" data-role="tagsinput"  name="keywords" >
                                             </div>
                                              <div class="col-xs-12 col-sm-6 col-md-2">
                                                  <select multiple style="width:100%" class="select2 stories" placeholder="# of Stories" id="select-stories" name="stories[]">
@@ -463,7 +463,7 @@ $property_type_array = array(
                                                  </select>
                                              </div>
                                             <div class="col-xs-12 col-sm-6 col-md-2">
-                                                <select class="form-control" name="pool">
+                                                <select class="form-control pool" name="pool">
                                                     <option <?php echo (!isset($general_search_fields['pool']) || $general_search_fields['pool']=='')? 'selected' :''; ?> value="">Pool</option>
                                                     <option <?php echo (isset($general_search_fields['pool']) && $general_search_fields['pool']=='1')? 'selected' :''; ?> value="1">Yes</option>
                                                     <option <?php echo (isset($general_search_fields['pool']) && $general_search_fields['pool']=='0')? 'selected' :''; ?> value="0">No</option>
@@ -680,7 +680,7 @@ $property_type_array = array(
                         -->
                         <header>
                             <span class="widget-icon"> <i class="fa fa-table"></i> </span>
-                            <h2><span class="count_search_result"></span> Search Results</h2>
+                            <h2><span class="count_search_result"><?= (isset($count) ? $count : 0) ?></span> Search Results</h2>
 
                         </header>
 
@@ -711,6 +711,14 @@ $property_type_array = array(
                                             <th>Beds/Baths</th>
                                             <th>Public Remarks</th>
                                             <th>List Date</th>
+                                            <th style="display:none">Raw List Date</th>
+                                            <th style="display:none">Raw List Price</th>
+                                            <th style="display:none">Raw TMV</th>
+                                            <th style="display:none">Raw % Below Value</th>
+                                            <th style="display:none">Raw Estimated Equity</th>
+                                            <th style="display:none">Raw Full Address</th>
+                                            <th style="display:none">Raw Last Updated Date</th>
+                                            <th style="display:none">Raw Viewer Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -827,7 +835,7 @@ $property_type_array = array(
                         -->
                         <header>
                             <span class="widget-icon"> <i class="fa fa-table"></i> </span>
-                            <h2><span class="count_search_result"></span> Search Results</h2>
+                            <h2><span class="count_search_result"><?= (isset($count) ? $count : 0) ?></span> Search Results</h2>
 
                         </header>
 
@@ -843,13 +851,39 @@ $property_type_array = array(
 
                             <!-- widget content -->
                             <div class="widget-body no-padding mobile-wrapper" style="height:750px; overflow-y: scroll;">
+                                <div class="widget-body-toolbar">
+                                        <select class="select2 sort-type" name="sorting_param">
+                                            <option value="0" selected>Relevant</option>
+                                            <option value="10">List Price</option>
+                                            <option value="11">TMV</option>
+                                            <option value="12">% Below Value</option>
+                                            <option value="13">Estimated Equity</option>
+                                            <option value="14">Full Address</option>
+                                            <option value="15">Last Updated Date</option>
+                                            <option value="16">Viewer Status</option>
+                                        </select>
+                                    <div style="clear:both"></div>
+                                </div>
                                 <table  class="table table-striped table-hover datatable_tabletools2">
                                     <thead>
                                         <tr>
                                             <th>Weight</th>
+                                            <th>Value</th>
                                             <th>Address</th>
-                                            <th>Desc.</th>
+                                            <th>Status</th>
+                                            <th>List Price</th>
+                                            <th>Sq. Ft.</th>
+                                            <th>Beds/Baths</th>
+                                            <th>Public Remarks</th>
                                             <th>List Date</th>
+                                            <th style="display:none">Raw List Date</th>
+                                            <th style="display:none">Raw List Price</th>
+                                            <th style="display:none">Raw TMV</th>
+                                            <th style="display:none">Raw % Below Value</th>
+                                            <th style="display:none">Raw Estimated Equity</th>
+                                            <th style="display:none">Raw Full Address</th>
+                                            <th style="display:none">Raw Last Updated Date</th>
+                                            <th style="display:none">Raw Viewer Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1102,7 +1136,36 @@ window.mapBoundaries = [];
                 return filter;
             };
 
+            window.saveDataForSearch = function() {
+                var data = $('#main_search_form').serialize();
+                if (typeof(Storage) !== 'undefined') {
+                    sessionStorage.form = data;
+                    sessionStorage.address = $('.address').val();
+                    sessionStorage.sale_type = $('.sale_type').val();
+                    sessionStorage.property_type = $('.property_type').val();
+                    sessionStorage.keywords = $('.keywords').val();
+                    sessionStorage.min_price_sqft = $('.min_price_sqft').val();
+                    sessionStorage.min_sqft = $('.min_sqft').val();
+                    sessionStorage.min_year_built = $('.min_year_built').val();
+                    sessionStorage.stories = $('.stories').val();
+                    sessionStorage.max_price_sqft = $('.max_price_sqft').val();
+                    sessionStorage.max_sqft = $('.max_sqft').val();
+                    sessionStorage.max_year_built = $('.max_year_built').val();
+                    sessionStorage.garage = $('.garage').val();
+                    sessionStorage.min_price = $('.min_price').val();
+                    sessionStorage.bed = $('.bed').val();
+                    sessionStorage.min_lot_size = $('.min_lot_size').val();
+                    sessionStorage.pool = $('.pool').val();
+                    sessionStorage.max_price = $('.max_price').val();
+                    sessionStorage.bath = $('.bath').val();
+                    sessionStorage.max_lot_size = $('.max_lot_size').val();
+                    sessionStorage.bmarket = $('.bmarket').val();
+                    sessionStorage.sorting_param = $('.sort-type').val();
+                }
+            };
+
             window.clickSearchButton = function(){
+                window.saveDataForSearch();
                 window.makeSearch();
             };
 
@@ -1125,8 +1188,15 @@ window.mapBoundaries = [];
                     success: function(data){
                         $('#loader_img').hide();
                         window.dataSearchResultSmallQuery = data;
-                        getSearchResult(data); // Assuming getSearchResult is defined elsewhere or globally
-                        addResponsive(); // Assuming addResponsive is defined elsewhere or globally
+                        getSearchResult(data);
+                        addResponsive();
+
+                        /* Sorting Select Handler (Legacy Hook) */
+                        $('.sort-type').off('select2-selecting').on('select2-selecting', function(e) {
+                            var sortT = \$(this).find('option[value=\"' + e.val + '\"]').text();
+                            $('.sort-type-desc').text(sortT);
+                            $('.datatable_tabletools2').dataTable().fnSort([[e.val, 'desc']]);
+                        });
 
                     },
                     error:  function(xhr, str){
@@ -1163,7 +1233,6 @@ window.mapBoundaries = [];
                     minZoom: 2
                 };
                 window.map2 = new google.maps.Map(document.getElementById('map_canvas2'), mapOptions2);
-                mapReady = true;
 
                for (var key in window.mapBoundaries) {
                     if (window.mapBoundaries.hasOwnProperty(key)) {
@@ -1193,6 +1262,7 @@ window.mapBoundaries = [];
 
                 var markersLoadedOnStartup = false;
                 google.maps.event.addListener(map, 'idle', function(){
+                    mapReady = true;
                     if(!markersLoadedOnStartup){
                         if((dataSearchResultSmallQuery.status == 'nothing') ||
                            (dataSearchResultSmallQuery.status == 'success') ){
@@ -1203,20 +1273,8 @@ window.mapBoundaries = [];
                        markersLoadedOnStartup = true;
                     }
                 });
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        var pos = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                        map.setCenter(pos);
-                        map2.setCenter(pos);
-                    }, function() {
-                        handleNoGeolocation(map);
-                        handleNoGeolocation(map2);
-                    });
-                } else {
-                    // Browser doesn't support Geolocation
-                    handleNoGeolocation(map);
-                    handleNoGeolocation(map2);
-                }
+                handleNoGeolocation(map);
+                handleNoGeolocation(map2);
                 drawingManager = new google.maps.drawing.DrawingManager();
                 drawingManager2 = new google.maps.drawing.DrawingManager();
                 search_fld = new google.maps.places.Autocomplete(document.getElementById('search-fld'),{ types: ['geocode'] });
@@ -1230,6 +1288,32 @@ window.mapBoundaries = [];
                 });
                 bounds = new google.maps.LatLngBounds();
                 bounds2 = new google.maps.LatLngBounds();
+
+                if (sessionStorage.form) {
+                    $('#main_search_form .address').val(sessionStorage.address);
+                    $('#main_search_form .sale_type').val(sessionStorage.sale_type);
+                    $('#main_search_form .property_type').val(sessionStorage.property_type);
+                    $('#main_search_form .keywords').val(sessionStorage.keywords);
+                    $('#main_search_form .min_price_sqft').val(sessionStorage.min_price_sqft);
+                    $('#main_search_form .min_sqft').val(sessionStorage.min_sqft);
+                    $('#main_search_form .stories').val(sessionStorage.stories);
+                    $('#main_search_form .max_price_sqft').val(sessionStorage.max_price_sqft);
+                    $('#main_search_form .max_sqft').val(sessionStorage.max_sqft);
+                    $('#main_search_form .max_year_built').val(sessionStorage.max_year_built);
+                    $('#main_search_form .garage').val(sessionStorage.garage);
+                    $('#main_search_form .min_price').val(sessionStorage.min_price);
+                    $('#main_search_form .bed').val(sessionStorage.bed);
+                    $('#main_search_form .min_lot_size').val(sessionStorage.min_lot_size);
+                    $('#main_search_form .pool').val(sessionStorage.pool);
+                    $('#main_search_form .max_price').val(sessionStorage.max_price);
+                    $('#main_search_form .bath').val(sessionStorage.bath);
+                    $('#main_search_form .max_lot_size').val(sessionStorage.max_lot_size);
+                    $('#main_search_form .bmarket').val(sessionStorage.bmarket);
+                    if (sessionStorage.sorting_param) {
+                        $('.sort-type').val(sessionStorage.sorting_param).trigger('change');
+                    }
+                    setFiltersString();
+                }
             }
 
 
@@ -1781,18 +1865,26 @@ window.mapBoundaries = [];
                                         $(this).attr('style', 'width:100%;');
                                     }
                         },
-                      'aoColumns': [
-                           { 'bVisible': false, 'sType': 'natural' },
-                           { 'sType': 'num-html' },
-                           { 'sType': 'natural' },
-                           { 'bVisible': false },
-                           { 'bVisible': false },
-                           { 'bVisible': false },
-                           { 'bVisible': false },
-                           { 'sType': 'natural' },
-                           { 'sType': 'natural' }
-                        ],
-                        'aaSorting': [[ 0, 'desc' ]],
+                       'aoColumns': [
+                             { 'bVisible': false, 'sType': 'natural' }, // 0: Hidden
+                             { 'sType': 'num-html' },                   // 1: Value (Photo)
+                             { 'sType': 'natural' },                    // 2: Address
+                             { 'sType': 'natural' },                    // 3: Status
+                             { 'sType': 'num-html' },                   // 4: List Price
+                             { 'sType': 'num-html' },                   // 5: Sq. Ft.
+                             { 'sType': 'natural' },                    // 6: Beds/Baths
+                             { 'sType': 'natural' },                    // 7: Public Remarks
+                             { 'sType': 'natural' },                    // 8: List Date
+                             { 'bVisible': false },                     // 9: Raw List Date
+                             { 'bVisible': false },                     // 10: Raw List Price
+                             { 'bVisible': false },                     // 11: Raw TMV
+                             { 'bVisible': false },                     // 12: Raw % Below Value
+                             { 'bVisible': false },                     // 13: Raw Estimated Equity
+                             { 'bVisible': false },                     // 14: Raw Full Address
+                             { 'bVisible': false },                     // 15: Raw Last Updated Date
+                             { 'bVisible': false }                      // 16: Raw Viewer Status
+                         ],
+                         'aaSorting': [[ 0, 'desc' ]],
                         'oLanguage': {
                             'sEmptyTable': 'No data available in table'
                         },
@@ -1840,6 +1932,7 @@ window.mapBoundaries = [];
                          map2.setCenter(pos);
                          $('.count_search_result').empty().html(data.count_result);
                          search_results = data.result;
+                         console.log(search_results);
                          search_map_results = data.res_map_layout;
                     } else { /*console.log(data);*/ }
                     if( $('#search_list_block').css('display') === 'block' ){
@@ -1857,79 +1950,42 @@ window.mapBoundaries = [];
             }
 
 
-            function setFiltersString(){
-                var filters = '';
-                var filter_str = '';
-                var min_price = '';
-                var max_price = '';
-                var min_sqft = '';
-                var max_sqft ='';
-                var min_year_built = '';
-                var max_year_built = '';
-                var min_lot_size = '';
-                var max_lot_size = '';
-                var filter_str_pref = '';
-                filters = $('#main_search_form').serializeArray();
-                $.each(filters, function(i, filter){
-                    filter_str_pref = '';
-                    filter_str_pref = filter_str.length > 0 ? ' / ' : '';
-                    if ( (filter.name == 'address') && (filter.value.length != 0) ){
-                        filter_str += filter_str_pref + filter.value;
-                    }
-                     if ( (filter.name == 'sale_type') && (filter.value.length != 0) && (filter.value != 0) ){
-                        filter_str += filter_str_pref + filter.value;
-                    }
-                    if ( (filter.name == 'min_price') && (filter.value.length != 0) && (filter.value != 0) ){
-                        min_price = '$' + filter.value;
-                    }
-                     if ( (filter.name == 'max_price') && (filter.value.length != 0) && (filter.value != 0) ){
-                        max_price = '$' + filter.value;
-                    }
-                     if ( (filter.name == 'min_sqft') && (filter.value.length != 0) && (filter.value != 0) ){
-                        min_sqft = filter.value;
-                    }
-                     if ( (filter.name == 'max_sqft') && (filter.value.length != 0) && (filter.value != 0) ){
-                        max_sqft = filter.value;
-                    }
-                     if ( (filter.name == 'bed') && (filter.value.length != 0) && (filter.value != 0) ){
-                        filter_str += filter_str_pref + filter.value + '+ Bed';
-                    }
-                     if ( (filter.name == 'bath') && (filter.value.length != 0) && (filter.value != 0) ){
-                        filter_str += filter_str_pref + filter.value + '+ Bath' ;
-                    }
-                    if ( (filter.name == 'min_year_built') && (filter.value.length != 0) && (filter.value != 0) ){
-                        var min_year_built_arr = '';
-                        min_year_built_arr = filter.value.split(' ');
-                        min_year_built = min_year_built_arr[1];
-                    }
-                    if ( (filter.name == 'max_year_built') && (filter.value.length != 0) && (filter.value != 0) ){
-                        var max_year_built_arr = '';
-                        max_year_built_arr = filter.value.split(' ')
-                        max_year_built = max_year_built_arr[1];
-                    }
-                    if ( (filter.name == 'min_lot_size') && (filter.value.length != 0) && (filter.value != 0) ){
-                        var min_lot_size_arr = '';
-                        min_lot_size_arr = filter.value.split(' ');
-                        min_lot_size = min_lot_size_arr[0];
-                    }
-                    if ( (filter.name == 'max_lot_size') && (filter.value.length != 0) && (filter.value != 0) ){
-                        var max_lot_size_arr = '';
-                        max_lot_size_arr = filter.value.split(' ');
-                        max_lot_size = max_lot_size_arr[0];
-                    }
-                });
-                if(min_price.length > 0 || max_price.length > 0){
-                    filter_str += filter_str_pref + min_price + ' - ' + max_price;
+            function setFiltersString() {
+                var parts = [];
+                
+                // Address
+                var address = $('.address').val();
+                if (address && address.length > 0) {
+                    parts.push(address);
                 }
-                if(min_sqft.length > 0 || max_sqft.length > 0){
-                    filter_str += filter_str_pref + ' SqFt ' + min_sqft + ' - ' + max_sqft;
+                
+                // Sale Type
+                var sale_type = $('.sale_type').val();
+                if (sale_type && sale_type != '0') {
+                    parts.push(sale_type);
                 }
-                if(min_year_built.length > 0 || max_year_built.length > 0){
-                    filter_str += filter_str_pref + ' Year ' + min_year_built + ' - ' + max_year_built;
+                
+                // Price Range
+                var min_price = $('.min_price').val();
+                var max_price = $('.max_price').val();
+                if (min_price || max_price) {
+                    parts.push((min_price ? '$' + min_price : '') + ' - ' + (max_price ? '$' + max_price : ''));
                 }
-                if(min_lot_size.length > 0 || max_lot_size.length > 0){
-                    filter_str += filter_str_pref +  min_lot_size + ' - ' + max_lot_size + ' Acre';
+                
+                // Bed/Bath
+                var bed = $('.bed').val();
+                var bath = $('.bath').val();
+                if (bed && bed > 0) parts.push(bed + '+ Bed');
+                if (bath && bath > 0) parts.push(bath + '+ Bath');
+                
+                // SqFt
+                var min_sqft = $('.min_sqft').val();
+                var max_sqft = $('.max_sqft').val();
+                if (min_sqft || max_sqft) {
+                    parts.push('SqFt ' + (min_sqft || '') + ' - ' + (max_sqft || ''));
                 }
+
+                var filter_str = parts.join(' / ');
                 $('#filter-search-page').empty().html(filter_str);
             }
 
