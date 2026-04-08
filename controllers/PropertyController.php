@@ -1815,8 +1815,8 @@ class PropertyController extends Controller
             }
 
             // Result handling
-            $count = (int)$query->count();
-            $search_results = $query->limit(200)->all();
+            $search_results = $query->limit(1000)->all();
+            $count = count($search_results);
             
             $latlon = SiteHelper::getLatLonResult($search_results);
             $formattedResults = SiteHelper::getSearchMapResult($search_results);
@@ -1855,11 +1855,12 @@ class PropertyController extends Controller
                       ->andWhere(['not', ['property_info.property_type' => 9]]);
                 break;
             case 'Under Value':
-                $query->andWhere(['>=', 'percentage_depreciation_value', 5])
-                      ->andWhere(['<', 'percentage_depreciation_value', 15]);
+                $query->andWhere(['between', 'percentage_depreciation_value', 5, 14.999999])
+                      ->andWhere(['property_info.property_type' => [0,1,2,3,4,5,6,7,8,16]]);
                 break;
             case 'Equity Deals':
-                $query->andWhere(['>=', 'percentage_depreciation_value', 15]);
+                $query->andWhere(['>=', 'percentage_depreciation_value', 15])
+                      ->andWhere(['property_info.property_type' => [0,1,2,3,4,5,6,7,8,16]]);
                 break;
             case 'Foreclosures':
                 $query->joinWith('propertyInfoAdditionalBrokerageDetails')
@@ -1869,8 +1870,38 @@ class PropertyController extends Controller
                 $query->joinWith('propertyInfoAdditionalBrokerageDetails')
                       ->andWhere(['property_info_additional_brokerage_details.short_sale' => 'yes']);
                 break;
+            case 'Auction':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['property_info_additional_brokerage_details.status' => 'Auction']);
+                break;
             case 'For Rent':
                 $query->andWhere(['property_info.property_type' => 9]);
+                break;
+            case 'Owner Will Carry':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['like', 'property_info_additional_brokerage_details.financing_considered', 'OWC']);
+                break;
+            case 'AITD Opportunities':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['like', 'property_info_additional_brokerage_details.financing_considered', 'AITD']);
+                break;
+            case 'Mid Cap Rental Potential':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['>=', 'property_info_additional_brokerage_details.cap_rate', 8]);
+                break;
+            case 'High Cap Rental Potential':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['>=', 'property_info_additional_brokerage_details.cap_rate', 12]);
+                break;
+            case 'Rental Properties With Equity':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['>=', 'property_info_additional_brokerage_details.cap_rate', 6])
+                      ->andWhere(['>=', 'property_info.percentage_depreciation_value', 6]);
+                break;
+            case 'High Cap And High Equity Opportunities':
+                $query->joinWith('propertyInfoAdditionalBrokerageDetails')
+                      ->andWhere(['>=', 'property_info_additional_brokerage_details.cap_rate', 10])
+                      ->andWhere(['>=', 'property_info.percentage_depreciation_value', 10]);
                 break;
         }
     }
