@@ -941,19 +941,15 @@ if (!$isGuest) {
                                     <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
                                         <?php
                                         $dtz = new DateTimeZone(Yii::$app->timeZone ?? "UTC");
-                                        $datetime_now = new DateTime('now', $dtz);
+                                        $datetime_now = new DateTime();
+                                        $datetime_now->setTimezone($dtz);
                                         $propertyDate = !empty($details->propertyInfoAdditionalBrokerageDetails->entry_date)
                                             ? $details->propertyInfoAdditionalBrokerageDetails->entry_date : $details->property_uploaded_date;
-                                        if ($propertyDate) {
-                                            $datetime_exp = new DateTime($propertyDate, $dtz);
-                                            $interval = $datetime_now->diff($datetime_exp);
-                                            $quantity = $interval->days;
-                                            $quantity_percent = $quantity;
-                                            if($quantity_percent > 100) $quantity_percent = 100;
-                                        } else {
-                                            $quantity = 0;
-                                            $quantity_percent = 0;
-                                        }
+                                        
+                                        $datetime_exp = new DateTime($propertyDate, $dtz);
+                                        $interval = $datetime_now->diff($datetime_exp);
+                                        $quantity = $interval->days;
+                                        if ($quantity < 0) { $quantity = 0; }
 
                                         // Gauge color logic from legacy
                                         $chart_class = 'txt-color-green';
@@ -963,22 +959,16 @@ if (!$isGuest) {
                                             $chart_class = 'txt-color-red';
                                         }
                                         ?>
-                                        <div id="days_on_market_chart" class="easy-pie-chart <?= $chart_class ?>" data-pie-percent="<?= $quantity_percent ?>" data-percent="<?= $quantity_percent ?>" data-pie-size="50" data-size="50">
-                                            <span class="percent percent-sign"><?= $quantity ?></span>
+                                        <div id="daysonmarket_chart" class="easy-pie-chart <?= $chart_class ?>" data-percent="<?= $quantity ?>" data-pie-size="50">
+                                            <span id="daysonmarket_chart_text" class=""><?= $quantity ?> <i class="fa fa-caret-up"></i></span>
                                         </div>
-                                        <span class="easy-pie-title"> DAYSONMARKET </span>
+                                        <span class="easy-pie-title"> Days on Market </span>
 
                                         <?php if (property_exists($comparebles_properties, 'result_query')) : ?>
                                             <?php
-                                            $min_uploaded_date = '';
-                                            $max_uploaded_date = '';
-                                            if (is_object($comparebles_properties->result_query)) {
-                                                $min_uploaded_date = $comparebles_properties->result_query->min_uploaded_date ?? '';
-                                                $max_uploaded_date = $comparebles_properties->result_query->max_uploaded_date ?? '';
-                                            } elseif (is_array($comparebles_properties->result_query)) {
-                                                $min_uploaded_date = $comparebles_properties->result_query['min_uploaded_date'] ?? '';
-                                                $max_uploaded_date = $comparebles_properties->result_query['max_uploaded_date'] ?? '';
-                                            }
+                                            $res_q = $comparebles_properties->result_query;
+                                            $min_uploaded_date = is_object($res_q) ? ($res_q->min_uploaded_date ?? '') : ($res_q['min_uploaded_date'] ?? '');
+                                            $max_uploaded_date = is_object($res_q) ? ($res_q->max_uploaded_date ?? '') : ($res_q['max_uploaded_date'] ?? '');
                                             
                                             $quantity_min = '';
                                             $quantity_max = '';
@@ -1092,7 +1082,6 @@ if (!$isGuest) {
                                 <table class="table table-striped table-hover datatable_col_reorder">
                                     <thead>
                                         <tr>
-                                            <th style="display:none"></th>
                                             <th>Address</th>
                                             <th>Status</th>
                                             <th><?= $details->property_type == 9 ? 'Rent Price' : 'List Price' ?></th>
@@ -1498,36 +1487,35 @@ $this->registerJs("
             'bAutoWidth': false,
             'stateSave': false,
             'aoColumns': [
-                /* 0  indicator   */ { 'sType': 'num-html', 'bSortable': false },
-                /* 1  address     */ null,
-                /* 2  status      */ null,
-                /* 3  list price  */ { 'sType': 'currency' },
-                /* 4  sale price  */ { 'sType': 'currency' },
-                /* 5  tmv         */ { 'sType': 'currency' },
-                /* 6  date        */ null,
-                /* 7  $/sqft      */ { 'sType': 'currency' },
-                /* 8  sqft        */ { 'sType': 'natural' },
-                /* 9  bed         */ null,
-                /* 10 bath        */ null,
-                /* 11 garage      */ { 'bVisible': false },
-                /* 12 lot         */ null,
-                /* 13 yr blt      */ null,
-                /* 14 dist        */ null,
-                /* 15 stories     */ { 'bVisible': false },
-                /* 16 pool        */ { 'bVisible': false },
-                /* 17 spa         */ { 'bVisible': false },
-                /* 18 condition   */ { 'bVisible': false },
-                /* 19 faces       */ { 'bVisible': false },
-                /* 20 views       */ { 'bVisible': false },
-                /* 21 flooring    */ { 'bVisible': false },
-                /* 22 furnishings */ { 'bVisible': false },
-                /* 23 financing   */ { 'bVisible': false },
-                /* 24 forecl      */ { 'bVisible': false },
-                /* 25 short sale  */ { 'bVisible': false },
-                /* 26 bank owned  */ { 'bVisible': false },
-                /* 27 orig price  */ { 'bVisible': false, 'sType': 'currency' },
-                /* 28 dom         */ { 'bVisible': false },
-                /* 29 tools       */ { 'sType': 'num-html', 'bSortable': false }
+                /* 0  address     */ null,
+                /* 1  status      */ null,
+                /* 2  list price  */ { 'sType': 'currency' },
+                /* 3  sale price  */ { 'sType': 'currency' },
+                /* 4  tmv         */ { 'sType': 'currency' },
+                /* 5  date        */ null,
+                /* 6  $/sqft      */ { 'sType': 'currency' },
+                /* 7  sqft        */ { 'sType': 'natural' },
+                /* 8  bed         */ null,
+                /* 9  bath        */ null,
+                /* 10 garage      */ { 'bVisible': false },
+                /* 11 lot         */ null,
+                /* 12 yr blt      */ null,
+                /* 13 dist        */ null,
+                /* 14 stories     */ { 'bVisible': false },
+                /* 15 pool        */ { 'bVisible': false },
+                /* 16 spa         */ { 'bVisible': false },
+                /* 17 condition   */ { 'bVisible': false },
+                /* 18 faces       */ { 'bVisible': false },
+                /* 19 views       */ { 'bVisible': false },
+                /* 20 flooring    */ { 'bVisible': false },
+                /* 21 furnishings */ { 'bVisible': false },
+                /* 22 financing   */ { 'bVisible': false },
+                /* 23 forecl      */ { 'bVisible': false },
+                /* 24 short sale  */ { 'bVisible': false },
+                /* 25 bank owned  */ { 'bVisible': false },
+                /* 26 orig price  */ { 'bVisible': false, 'sType': 'currency' },
+                /* 27 dom         */ { 'bVisible': false },
+                /* 28 tools       */ { 'sType': 'num-html', 'bSortable': false }
             ],
             'sDom': \"<'dt-top-row'Clf>r<'dt-wrapper't><'dt-row dt-bottom-row'<'row'<'col-sm-6'i><'col-sm-6 text-right'p>>\",
             'fnDrawCallback': function () {

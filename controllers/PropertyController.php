@@ -1227,8 +1227,8 @@ class PropertyController extends Controller
                 . ' <a href="javascript:void(0);" onclick="return showinmap(this);" property_id="' . $comparebles_property->property_id . '" class="btn btn-success btn-xs show-in-map fa fa-map-marker" title="Show on map" onmouseover="showPopover(this)" onmouseleave="hidePopover(this)"></a>';
         }
 
-        // Disabled/row-disable class if excluded
-        $rowDataAttr = '';
+        // data attributes for map logic (placed on address column)
+        $rowDataAttr = ' class="property_info_row"';
         $rowDataAttr .= ' data-property_id="' . $comparebles_property->property_id . '"';
         $rowDataAttr .= ' data-lat="' . ($comparebles_property->getlatitude ?? '') . '"';
         $rowDataAttr .= ' data-lon="' . ($comparebles_property->getlongitude ?? '') . '"';
@@ -1237,15 +1237,12 @@ class PropertyController extends Controller
         $rowDataAttr .= $isSelf ? ' data-self="1"' : '';
         $rowDataAttr .= $isExcluded ? ' data-excluded="1"' : ' data-excluded="0"';
 
-        // col 1: row indicator span (carries map data-attrs for JS)
-        $col_indicator = '<span class="property_info_row"' . $rowDataAttr . '></span>';
-
-        // col 2: Address link
+        // col 1: Address link (carries map data-attrs for JS)
         $slug_val = $isSelf
             ? ($details->slug ? $details->slug->slug : $details->property_id)
             : ($comparebles_property->slug ?? $comparebles_property->property_id);
         $propUrl  = \yii\helpers\Url::to(['property/details', 'slug' => $slug_val]);
-        $col_address = '<a data-property_id="' . $comparebles_property->property_id . '" property_id="' . $comparebles_property->property_id . '" href="javascript:void(0);" onclick="return showinmap(this);">'
+        $col_address = '<a' . $rowDataAttr . ' data-property_id="' . $comparebles_property->property_id . '" property_id="' . $comparebles_property->property_id . '" href="javascript:void(0);" onclick="return showinmap(this);">'
             . '<i class="fa fa-map-marker text-color-green"></i> '
             . Html::encode($comparebles_property->property_street);
         if (!empty($comparebles_property->photo1)) {
@@ -1256,7 +1253,7 @@ class PropertyController extends Controller
         }
         $col_address .= '</a>';
 
-        // col 3: Status badge
+        // col 2: Status badge
         $statusVal   = $isSelf
             ? $details->getStatus()
             : ($comparebles_property->status ?? '');
@@ -1268,41 +1265,44 @@ class PropertyController extends Controller
             $col_status = '<span class="label label-primary label_status_active">' . strtoupper($similar_stat) . '</span>';
         }
 
-        // col 4: List price
+        // col 3: List price
         $col_list_price = $comparebles_property->property_price ? '$' . number_format($comparebles_property->property_price) : '-';
 
-        // col 5: Sale price (closed/sold only)
+        // col 4: Sale price (closed/sold only)
         $soldStatuses = ['RECENTLY SOLD', 'CLOSED', 'SOLD', 'LEASED'];
         $col_sale_price = in_array($similar_stat, $soldStatuses)
             ? (!empty($comparebles_property->sale_price) ? '$' . number_format($comparebles_property->sale_price) : (!empty($comparebles_property->property_price) ? '$' . number_format($comparebles_property->property_price) : '-'))
             : '-';
 
-        // col 6: TMV
+        // col 5: TMV
         $col_tmv = !empty($comparebles_property->estimated_price)
             ? '$' . number_format($comparebles_property->estimated_price)
             : '';
 
-        // col 7: Date (entry_date or uploaded_date)
+        // col 6: Date (entry_date or uploaded_date)
         $dateVal = !empty($comparebles_property->entry_date)
             ? $comparebles_property->entry_date
             : ($comparebles_property->property_uploaded_date ?? '');
         $col_date = $dateVal ? date('Y-m-d', strtotime($dateVal)) : '';
 
-        // col 8: $/SqFt
+        // col 7: $/SqFt
         $col_ppsqft = (!empty($comparebles_property->property_price) && !empty($comparebles_property->house_square_footage))
             ? '$' . number_format($comparebles_property->property_price / $comparebles_property->house_square_footage, 2)
             : '';
 
-        // col 9: Sq Ft
+        // col 8: Sq Ft
         $col_sqft = $comparebles_property->house_square_footage ?? '';
 
-        // col 10: Bed
+        // col 9: Bed
         $col_bed = $comparebles_property->bedrooms ?? '';
 
-        // col 11: Bath
+        // col 10: Bath
         $col_bath = $comparebles_property->bathrooms ?? '';
 
-        // col 12 (hidden): Lot
+        // col 11: Garage
+        $col_garage = $comparebles_property->garages ?? '';
+
+        // col 12: Lot
         $col_lot = $comparebles_property->lot_acreage ?? '';
 
         // col 13: Yr Blt
@@ -1335,7 +1335,6 @@ class PropertyController extends Controller
         $col_dom      = $datetime_now->diff($datetime_exp)->days;
 
         // Hidden detail columns (15-28)
-        $col_garage    = $comparebles_property->garages ?? '';
         $col_pool      = $comparebles_property->pool ?? '';
         $col_spa       = '';
         $col_condition = '';
@@ -1350,13 +1349,13 @@ class PropertyController extends Controller
         $col_origprice = '';
 
         // Column order MUST match the DataTable aoColumns definition in the view:
-        // 0:indicator, 1:address, 2:status, 3:list_price, 4:sale_price, 5:tmv, 6:date,
-        // 7:$/sqft, 8:sqft, 9:bed, 10:bath, 11:garage(h), 12:lot, 13:yr, 14:dist,
-        // 15:stories(h), 16:pool(h), 17:spa(h), 18:condition(h), 19:faces(h),
-        // 20:views(h), 21:flooring(h), 22:furnish(h), 23:financing(h), 24:forecl(h),
-        // 25:shortsale(h), 26:bankowned(h), 27:origprice(h), 28:dom(h), 29:tool_options
+        // 0:address, 1:status, 2:list_price, 3:sale_price, 4:tmv, 5:date,
+        // 6:$/sqft, 7:sqft, 8:bed, 9:bath, 10:garage, 11:lot, 12:yr, 13:dist,
+        // 14:stories(h), 15:pool(h), 16:spa(h), 17:condition(h), 18:faces(h),
+        // 19:views(h), 20:flooring(h), 21:furnish(h), 22:financing(h), 23:forecl(h),
+        // 24:shortsale(h), 25:bankowned(h), 26:origprice(h), 27:dom(h), 28:tool_options
         return [
-            $col_indicator, $col_address, $col_status,
+            $col_address, $col_status,
             $col_list_price, $col_sale_price, $col_tmv, $col_date,
             $col_ppsqft, $col_sqft, $col_bed, $col_bath,
             $col_garage, $col_lot, $col_yr, $col_dist,
